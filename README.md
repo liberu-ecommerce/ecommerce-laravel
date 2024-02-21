@@ -1,5 +1,15 @@
 # Liberu Ecommerce
 
+### Other active projects
+* https://github.com/liberu-accounting/accounting-laravel
+* https://github.com/liberu-automation/automation-laravel
+* https://github.com/liberu-cms/cms-laravel
+* https://github.com/liberu-crm/crm-laravel
+* https://github.com/liberu-maintenance/maintenance-laravel
+* https://github.com/liberu-real-estate/real-estate-laravel
+
+### Description
+
 Welcome to Liberu Ecommerce, our visionary open-source project that revolutionizes the world of online commerce by harnessing the capabilities of Laravel 11, PHP 8.3, Livewire 3, and Filament 3. Liberu Ecommerce is not just a platform for buying and selling; it's an innovative solution designed to provide a seamless and dynamic shopping experience for businesses and consumers alike.
 
 **Key Features:**
