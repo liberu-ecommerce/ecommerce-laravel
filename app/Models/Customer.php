@@ -24,7 +24,7 @@ class Customer extends Model
 
     public function orders()
     {
-        return $this->hasMany(Orders::class);
+        return $this->hasMany(Order::class);
     }
 
     public function invoices()
@@ -34,11 +34,11 @@ class Customer extends Model
 
     public function review()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(ProductReview::class);
     }
 
     public function rating()
     {
-        return $this->hasMany(Rating::class);
+        return $this->hasMany(ProductRating::class);
     }
 }
