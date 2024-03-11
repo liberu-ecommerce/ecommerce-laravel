@@ -64,9 +64,23 @@ Route::delete('/products/{product}', [ProductController::class, 'delete'])->name
 
 
 
+Route::middleware('auth')->group(function () {
+    Route::get('/download/{productId}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
+    Route::get('/download/file/{productId}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
+});
+
+
+
+
+Route::post('/reviews', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
+Route::post('/reviews/approve/{id}', 'App\Http\Controllers\ReviewController@approve')->name('reviews.approve');
+Route::get('/products/{product}/reviews', 'App\Http\Controllers\ReviewController@show')->name('reviews.show');
+Route::get('/products/{product}/ratings/average', 'App\Http\Controllers\RatingController@calculateAverageRating')->name('ratings.average');
+
 Route::get('/site-settings', 'App\Http\Controllers\SiteSettingController@index')->name('site_settings.index');
 Route::get('/site-settings/{id}/edit', 'App\Http\Controllers\SiteSettingController@edit')->name('site_settings.edit');
 Route::post('/site-settings/{id}', 'App\Http\Controllers\SiteSettingController@update')->name('site_settings.update');
+
 
 
 
