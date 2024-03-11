@@ -13,12 +13,13 @@ class InvoiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function arrangeTestScenario()
+    public function testAutomaticInvoiceGeneration()
     {
         // Arrange: Simulate order completion
         $order = Order::factory()->create();
 
         // Act: Trigger invoice generation
+        $this->actOnTestScenario($order);
         $response = $this->postJson('/api/orders/'.$order->id.'/complete');
 
         // Assert: Invoice is automatically generated with correct details
