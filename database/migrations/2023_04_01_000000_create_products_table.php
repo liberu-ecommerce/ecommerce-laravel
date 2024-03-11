@@ -1,5 +1,9 @@
 &lt;?php
 
+/**
+ * This migration file is responsible for creating the 'products' table in the database.
+ */
+
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -29,4 +33,6 @@ class CreateProductsTable extends Migration
     {
         Schema::dropIfExists('products');
     }
+}
+}
 }
