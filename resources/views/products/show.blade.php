@@ -1,4 +1,7 @@
 @extends('layouts.app')
+/**
+ * This Blade template is used for displaying a single product's details.
+ */
 
 @section('content')
 <div class="container">
