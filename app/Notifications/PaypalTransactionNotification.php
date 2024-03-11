@@ -1,5 +1,12 @@
 &lt;?php
 
+/**
+ * Notification class for PayPal transactions.
+ *
+ * This class is responsible for sending notifications related to PayPal transactions
+ * such as successful payments, subscription renewals, upcoming charges, and subscription cancellations.
+ */
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -61,3 +68,27 @@ class PaypalTransactionNotification extends Notification implements ShouldQueue
         ];
     }
 }
+/**
+ * Determines the channels through which the notification will be sent.
+ *
+ * @param mixed $notifiable The notifiable entity that will receive the notification.
+ * @return array The channels through which the notification should be sent.
+ */
+/**
+ * Builds the mail representation of the notification.
+ *
+ * @param mixed $notifiable The notifiable entity that will receive the notification.
+ * @return \Illuminate\Notifications\Messages\MailMessage The mail message configuration.
+ */
+/**
+ * Builds the Nexmo (SMS) representation of the notification.
+ *
+ * @param mixed $notifiable The notifiable entity that will receive the notification.
+ * @return \Illuminate\Notifications\Messages\NexmoMessage The Nexmo message configuration.
+ */
+/**
+ * Transforms the notification instance to an array.
+ *
+ * @param mixed $notifiable The notifiable entity that will receive the notification.
+ * @return array The array representation of the notification.
+ */
