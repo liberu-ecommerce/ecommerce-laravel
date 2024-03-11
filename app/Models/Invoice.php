@@ -13,11 +13,9 @@ class Invoice extends Model
     protected $table = 'invoices';
 
     protected $fillable = [
-        'customer_id',
         'order_id',
         'invoice_date',
         'total_amount',
-        'payment_status',
     ];
 
     public function order()
@@ -30,3 +28,11 @@ class Invoice extends Model
         return $this->belongsTo(Customer::class);
     }
 }
+    protected $casts = [
+        'invoice_date' => 'datetime',
+    ];
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class)->withPivot('quantity', 'price');
+    }
