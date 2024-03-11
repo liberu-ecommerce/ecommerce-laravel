@@ -7,9 +7,12 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
+| This file defines all web routes for the application, including views,
+| payment operations, and subscription management. Routes are organized
+| by functionality, such as checkout processes, payment methods, and
+| subscription actions, ensuring a structured approach to route management.
+| These routes are loaded by the RouteServiceProvider and are assigned to
+| the "web" middleware group.
 |
 */
 
@@ -41,7 +44,6 @@ Route::get('/checkout', function () {
 Route::post('/payment', 'App\Http\Controllers\StripePaymentController@createOneTimePayment')->name('payment.create');
 
 Route::get('/subscriptions', 'App\Http\Controllers\SubscriptionController@viewAvailableSubscriptions')->name('subscriptions.view');
-
 Route::post('/subscription', 'App\Http\Controllers\SubscriptionController@subscribeToPlan')->name('subscription.create');
 
 Route::patch('/subscription/change', 'App\Http\Controllers\SubscriptionController@changePlan')->name('subscription.change-plan');

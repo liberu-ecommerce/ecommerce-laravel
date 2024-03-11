@@ -1,5 +1,13 @@
 &lt;?php
 
+/**
+ * Handles PayPal payment and subscription operations.
+ *
+ * This controller is responsible for managing one-time payments and subscription
+ * services via PayPal. It includes functions for creating, updating, and canceling
+ * subscriptions, as well as processing one-time payments.
+ */
+
 namespace App\Http\Controllers;
 
 use App\Services\PaymentGatewayService;
@@ -57,3 +65,31 @@ class PaypalPaymentController extends Controller
         return response()->json($result);
     }
 }
+/**
+ * Processes a one-time payment through PayPal.
+ *
+ * @param Request $request The request object containing payment details.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the payment result.
+ * @throws \Exception Throws exception on payment processing failure.
+ */
+/**
+ * Creates a new subscription through PayPal.
+ *
+ * @param Request $request The request object containing subscription details.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the subscription creation result.
+ * @throws \Exception Throws exception on subscription creation failure.
+ */
+/**
+ * Updates an existing subscription through PayPal.
+ *
+ * @param Request $request The request object containing new subscription details.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the subscription update result.
+ * @throws \Exception Throws exception on subscription update failure.
+ */
+/**
+ * Cancels an existing subscription through PayPal.
+ *
+ * @param Request $request The request object containing the subscription ID.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the cancellation result.
+ * @throws \Exception Throws exception on subscription cancellation failure.
+ */

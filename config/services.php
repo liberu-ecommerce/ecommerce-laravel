@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Third Party Services Configuration
+ *
+ * This file is dedicated to storing the credentials and configurations for third-party services,
+ * including but not limited to PayPal and Stripe. It serves as a centralized location for managing
+ * access to various external APIs and services, facilitating easy integration and configuration
+ * changes across the application.
+ */
+
 return [
 
     /*
