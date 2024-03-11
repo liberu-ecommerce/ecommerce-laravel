@@ -19,3 +19,26 @@
     </div>
 </div>
 @endsection
+            <div class="card mt-4">
+                <div class="card-header">Inventory Logs</div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Quantity Change</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($product->inventoryLogs as $log)
+                                <tr>
+                                    <td>{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
+                                    <td>{{ $log->quantity_change }}</td>
+                                    <td>{{ $log->reason }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
