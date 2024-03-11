@@ -97,37 +97,8 @@ class PaymentGatewayService
         }
     public function processPaypalSubscription($paymentMethodId, $planId)
     {
-        $payer = new Payer();
-        $payer->setPaymentMethod('paypal');
-
-        $plan = new Plan();
-        $plan->setId($planId);
-
-        $payerInfo = new PayerInfo();
-        $payerInfo->setEmail('payer@example.com'); // This should be dynamically set based on user's email
-
-        $shippingAddress = new ShippingAddress();
-        $shippingAddress->setLine1('123 ABC Street')
-                        ->setCity('City')
-                        ->setState('State')
-                        ->setPostalCode('12345')
-                        ->setCountryCode('US');
-
-        $agreement = new Agreement();
-        $agreement->setName('Base Agreement')
-                  ->setDescription('Basic Agreement')
-                  ->setStartDate(gmdate("Y-m-d\TH:i:s\Z", strtotime("+30 days", time())))
-                  ->setPayer($payer)
-                  ->setPlan($plan)
-                  ->setPayerInfo($payerInfo)
-                  ->setShippingAddress($shippingAddress);
-
-        try {
-            $agreement->create($this->paypalContext);
-            return ['success' => true, 'agreementID' => $agreement->getId()];
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
+        $agreement = $this->setupPaypalSubscriptionDetails($planId, 'payer@example.com'); // This email should be dynamically set based on user's email
+        return $this->createPaypalSubscription($agreement);
     }
     private function setupPaypalPaymentDetails($amount)
     {
@@ -160,6 +131,45 @@ class PaymentGatewayService
         try {
             $payment->create($this->paypalContext);
             return ['success' => true, 'paymentID' => $payment->getId()];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    private function setupPaypalSubscriptionDetails($planId, $payerEmail)
+    {
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $plan = new Plan();
+        $plan->setId($planId);
+
+        $payerInfo = new PayerInfo();
+        $payerInfo->setEmail($payerEmail);
+
+        $shippingAddress = new ShippingAddress();
+        $shippingAddress->setLine1('123 ABC Street')
+                        ->setCity('City')
+                        ->setState('State')
+                        ->setPostalCode('12345')
+                        ->setCountryCode('US');
+
+        $agreement = new Agreement();
+        $agreement->setName('Base Agreement')
+                  ->setDescription('Basic Agreement')
+                  ->setStartDate(gmdate("Y-m-d\TH:i:s\Z", strtotime("+30 days", time())))
+                  ->setPayer($payer)
+                  ->setPlan($plan)
+                  ->setPayerInfo($payerInfo)
+                  ->setShippingAddress($shippingAddress);
+
+        return $agreement;
+    }
+
+    private function createPaypalSubscription($agreement)
+    {
+        try {
+            $agreement->create($this->paypalContext);
+            return ['success' => true, 'agreementID' => $agreement->getId()];
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
