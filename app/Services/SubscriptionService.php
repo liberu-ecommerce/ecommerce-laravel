@@ -26,6 +26,30 @@ class SubscriptionService
 
     public function createSubscription($paymentMethodId, $planId, $userDetails)
     {
+        $agreement = $this->setupSubscriptionDetails($planId, $userDetails);
+        return $this->createSubscriptionOnPaypal($agreement);
+            return ['success' => true, 'agreementID' => $agreement->getId()];
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function updateSubscription($subscriptionId, $planId)
+    {
+        // Logic to update subscription's plan on PayPal
+        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
+        return ['success' => true, 'message' => 'Subscription updated successfully'];
+    }
+
+    public function cancelSubscription($subscriptionId)
+    {
+        // Logic to cancel subscription on PayPal
+        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
+        return ['success' => true, 'message' => 'Subscription cancelled successfully'];
+    }
+}
+    private function setupSubscriptionDetails($planId, $userDetails)
+    {
         $payer = new Payer();
         $payer->setPaymentMethod('paypal');
 
@@ -51,6 +75,11 @@ class SubscriptionService
                   ->setPayerInfo($payerInfo)
                   ->setShippingAddress($shippingAddress);
 
+        return $agreement;
+    }
+
+    private function createSubscriptionOnPaypal($agreement)
+    {
         try {
             $agreement->create($this->paypalContext);
             return ['success' => true, 'agreementID' => $agreement->getId()];
@@ -58,18 +87,27 @@ class SubscriptionService
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-
-    public function updateSubscription($subscriptionId, $planId)
     {
-        // Logic to update subscription's plan on PayPal
+        // Prepare update details
+        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
+        return ['subscriptionId' => $subscriptionId, 'planId' => $planId];
+    }
+
+    private function updateSubscriptionOnPaypal($updateDetails)
+    {
+        // Perform update on PayPal
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['success' => true, 'message' => 'Subscription updated successfully'];
     }
-
-    public function cancelSubscription($subscriptionId)
     {
-        // Logic to cancel subscription on PayPal
+        // Prepare cancellation details
+        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
+        return ['subscriptionId' => $subscriptionId];
+    }
+
+    private function cancelSubscriptionOnPaypal($cancellationDetails)
+    {
+        // Perform cancellation on PayPal
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['success' => true, 'message' => 'Subscription cancelled successfully'];
     }
-}
