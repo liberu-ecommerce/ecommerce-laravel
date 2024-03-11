@@ -1,5 +1,13 @@
 &lt;?php
 
+/**
+ * Subscription Controller
+ *
+ * Manages user subscriptions using Stripe for payment processing and includes functionality
+ * for PayPal subscriptions through a separate service. It supports viewing available plans,
+ * subscribing to plans, changing plans, and canceling subscriptions.
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -112,3 +120,59 @@ use App\Services\SubscriptionService;
 
         return response()->json($result);
     }
+/**
+ * Displays available subscription plans.
+ *
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response containing all available plans.
+ */
+/**
+ * Subscribes the authenticated user to a plan.
+ *
+ * Validates the request, creates a new subscription for the user using the provided plan and payment method.
+ * Catches and handles incomplete payments.
+ *
+ * @param Request $request The request object containing 'plan' and 'payment_method'.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response indicating success or failure.
+ * @throws IncompletePayment If the payment is incomplete, throws an exception.
+ */
+/**
+ * Changes the plan for the authenticated user's subscription.
+ *
+ * Validates the request and swaps the user's current subscription to the new plan provided.
+ *
+ * @param Request $request The request object containing 'plan'.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response indicating success or failure.
+ * @throws \Exception If the plan swap fails, throws an exception.
+ */
+/**
+ * Cancels the authenticated user's subscription.
+ *
+ * Attempts to cancel the user's current subscription and returns a response indicating success or failure.
+ *
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response indicating success or failure.
+ * @throws \Exception If the cancellation fails, throws an exception.
+ */
+/**
+ * Creates a PayPal subscription for the user.
+ *
+ * Validates the request and uses the SubscriptionService to create a PayPal subscription with the provided details.
+ *
+ * @param Request $request The request object containing 'paymentMethodId', 'planId', and 'userDetails'.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the subscription creation result.
+ */
+/**
+ * Updates an existing PayPal subscription.
+ *
+ * Validates the request and uses the SubscriptionService to update the subscription with the new plan.
+ *
+ * @param Request $request The request object containing 'subscriptionId' and 'planId'.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the subscription update result.
+ */
+/**
+ * Cancels an existing PayPal subscription.
+ *
+ * Validates the request and uses the SubscriptionService to cancel the subscription.
+ *
+ * @param Request $request The request object containing 'subscriptionId'.
+ * @return \Illuminate\Http\JsonResponse Returns a JSON response with the cancellation result.
+ */
