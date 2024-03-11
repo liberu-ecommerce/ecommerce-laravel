@@ -1,3 +1,4 @@
+{{-- This view renders the product details page, including information about the product, its aggregate ratings, and reviews. --}}
 @extends('layouts.app')
 
 @section('content')

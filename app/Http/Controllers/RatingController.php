@@ -26,3 +26,19 @@ class RatingController extends Controller
         return response()->json(['averageRating' => $averageRating]);
     }
 }
+/**
+ * RatingController handles HTTP requests related to ratings.
+ * This includes storing new ratings and calculating average ratings for products.
+ */
+    /**
+     * Handles the request to store a new rating.
+     * 
+     * @param RatingRequest $request The request object containing rating details.
+     * @return \Illuminate\Http\JsonResponse A JSON response indicating success and the saved rating.
+     */
+    /**
+     * Calculates and returns the average rating for a given product ID.
+     * 
+     * @param int $productId The ID of the product.
+     * @return \Illuminate\Http\JsonResponse A JSON response containing the average rating.
+     */

@@ -28,3 +28,12 @@ class Rating extends Model
                     ->avg('rating');
     }
 }
+/**
+ * Rating model represents the rating data and contains business logic for rating-related operations.
+ */
+    public static function calculateAverageRating($productId)
+    {
+        return self::where('product_id', $productId)
+                    ->avg('rating');
+    }
+}

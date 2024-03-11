@@ -8,6 +8,12 @@ use App\Http\Requests\ReviewRequest;
 
 class ReviewController extends Controller
 {
+    /**
+     * Handles the request to store a new review.
+     * 
+     * @param ReviewRequest $request The request object containing review details.
+     * @return \Illuminate\Http\JsonResponse A JSON response indicating success and the saved review.
+     */
     public function store(ReviewRequest $request)
     {
         $review = new Review();
@@ -32,6 +38,21 @@ class ReviewController extends Controller
         return response()->json(['message' => 'Review approved successfully']);
     }
 
+    public function show($productId)
+    {
+        $reviews = Review::where('product_id', $productId)->where('approved', true)->get();
+        return response()->json($reviews);
+    }
+}
+/**
+ * ReviewController manages review-related actions such as storing, approving, and displaying reviews.
+ */
+    public function show($productId)
+    {
+        $reviews = Review::where('product_id', $productId)->where('approved', true)->get();
+        return response()->json($reviews);
+    }
+}
     public function show($productId)
     {
         $reviews = Review::where('product_id', $productId)->where('approved', true)->get();

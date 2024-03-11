@@ -1,3 +1,4 @@
+{{-- This view renders the reviews section for a product, including sorting and filtering options. --}}
 @extends('layouts.app')
 
 @section('content')
