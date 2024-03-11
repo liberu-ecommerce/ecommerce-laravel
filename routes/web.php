@@ -17,6 +17,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::prefix('payment_methods')->group(function () {
+    Route::get('/', 'PaymentMethodController@index')->name('payment_methods.index');
+    Route::post('/store', 'PaymentMethodController@addPaymentMethod')->name('payment_methods.store');
+    Route::get('/edit/{id}', 'PaymentMethodController@editPaymentMethod')->name('payment_methods.edit');
+    Route::post('/update/{id}', 'PaymentMethodController@editPaymentMethod')->name('payment_methods.update');
+    Route::delete('/destroy/{id}', 'PaymentMethodController@deletePaymentMethod')->name('payment_methods.destroy');
+    Route::post('/set_default/{id}', 'PaymentMethodController@setDefaultPaymentMethod')->name('payment_methods.setDefault');
+});
+
+
 Route::get('/checkout', function () {
     return view('checkout');
 })->name('checkout');
@@ -40,4 +50,5 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
 Route::patch('/products/{product}', [ProductController::class, 'update']);
 Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
+
 
