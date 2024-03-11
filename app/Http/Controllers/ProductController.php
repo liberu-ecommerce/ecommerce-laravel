@@ -10,12 +10,23 @@ class ProductController extends Controller
 {
     public function create(Request $request)
     {
+        // Handle Product File Upload
+        if ($request->hasFile('product_file')) {
+            $file = $request->file('product_file');
+            $filePath = $file->store('public/downloadable_products');
+            $fileUrl = Storage::url($filePath);
+        } else {
+            $fileUrl = null;
+        }
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric',
             'category' => 'required|string|max:255',
             'inventory_count' => 'required|integer',
+            // Include download limit in validation
+            'download_limit' => 'integer|nullable',
         ]);
 
         $product = Product::create($validatedData);
@@ -56,6 +67,15 @@ class ProductController extends Controller
             'category' => 'string|max:255',
             'inventory_count' => 'integer',
         ]);
+
+        // Handle Product File Upload for Update
+        if ($request->hasFile('product_file')) {
+            $file = $request->file('product_file');
+            $filePath = $file->store('public/downloadable_products');
+            $fileUrl = Storage::url($filePath);
+            // Update Downloadable Product entry
+            $product->downloadable()->updateOrCreate(['product_id' => $product->id], ['file_url' => $fileUrl, 'download_limit' => $request->download_limit]);
+        }
 
         $product->update($validatedData);
 
