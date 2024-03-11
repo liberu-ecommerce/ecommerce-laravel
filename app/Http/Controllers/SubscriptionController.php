@@ -67,3 +67,48 @@ class SubscriptionController extends Controller
         }
     }
 }
+use App\Services\SubscriptionService;
+
+    private $subscriptionService;
+
+    public function __construct(SubscriptionService $subscriptionService)
+    {
+        $this->subscriptionService = $subscriptionService;
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+    }
+
+    public function createPaypalSubscription(Request $request)
+    {
+        $request->validate([
+            'paymentMethodId' => 'required|string',
+            'planId' => 'required|string',
+            'userDetails' => 'required|array',
+        ]);
+
+        $result = $this->subscriptionService->createSubscription($request->input('paymentMethodId'), $request->input('planId'), $request->input('userDetails'));
+
+        return response()->json($result);
+    }
+
+    public function updatePaypalSubscription(Request $request)
+    {
+        $request->validate([
+            'subscriptionId' => 'required|string',
+            'planId' => 'required|string',
+        ]);
+
+        $result = $this->subscriptionService->updateSubscription($request->input('subscriptionId'), $request->input('planId'));
+
+        return response()->json($result);
+    }
+
+    public function cancelPaypalSubscription(Request $request)
+    {
+        $request->validate([
+            'subscriptionId' => 'required|string',
+        ]);
+
+        $result = $this->subscriptionService->cancelSubscription($request->input('subscriptionId'));
+
+        return response()->json($result);
+    }
