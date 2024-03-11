@@ -54,7 +54,8 @@ class InvoiceController extends Controller
     public function sendInvoiceToCustomer($id)
     {
         $invoice = Invoice::with('customer')->findOrFail($id);
-        Mail::to($invoice->customer->email)->send(new InvoiceMail($invoice));
+        $pdf = \Livewire\Livewire::mount('invoice-pdf', ['invoiceId' => $id])->httpResponse->getContent();
+        Mail::to($invoice->customer->email)->send(new InvoiceMail($invoice, $pdf));
         return response()->json(['message' => 'Invoice sent to customer successfully.']);
     }
 }
