@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+Route::get('/', 'App\Http\Controllers\HomeController@index');
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -50,5 +53,6 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
 Route::patch('/products/{product}', [ProductController::class, 'update']);
 Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
+
 
 
