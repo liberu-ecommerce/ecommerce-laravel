@@ -129,3 +129,38 @@ class PaymentGatewayService
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+    private function setupPaypalPaymentDetails($amount)
+    {
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $amountInstance = new Amount();
+        $amountInstance->setTotal($amount)
+               ->setCurrency('USD');
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amountInstance)
+                     ->setDescription('Payment transaction');
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl(url('/payment/success'))
+                     ->setCancelUrl(url('/payment/cancel'));
+
+        $payment = new Payment();
+        $payment->setIntent('sale')
+                ->setPayer($payer)
+                ->setTransactions([$transaction])
+                ->setRedirectUrls($redirectUrls);
+
+        return $payment;
+    }
+
+    private function createPaypalPayment($payment)
+    {
+        try {
+            $payment->create($this->paypalContext);
+            return ['success' => true, 'paymentID' => $payment->getId()];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
