@@ -60,4 +60,11 @@ Route::delete('/products/{product}', [ProductController::class, 'delete'])->name
 
 
 
+Route::post('/reviews', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
+Route::post('/reviews/approve/{id}', 'App\Http\Controllers\ReviewController@approve')->name('reviews.approve');
+Route::get('/products/{product}/reviews', 'App\Http\Controllers\ReviewController@show')->name('reviews.show');
+Route::get('/products/{product}/ratings/average', 'App\Http\Controllers\RatingController@calculateAverageRating')->name('ratings.average');
+
+
+
 
