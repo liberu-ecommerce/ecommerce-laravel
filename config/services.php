@@ -32,10 +32,10 @@ return [
     ],
 
 ];
-    'stripe' => [
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
-    ],
+    
+
+
+
 
     'paypal' => [
         'client_id' => env('PAYPAL_CLIENT_ID'),
@@ -49,3 +49,13 @@ return [
         ],
     ],
 ];
+
+        ''stripe' => [
+'model' => App\Models\User::class,
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook' => [
+            'secret' => env('STRIPE_WEBHOOK_SECRET'),
+        ],
+    ],
+
