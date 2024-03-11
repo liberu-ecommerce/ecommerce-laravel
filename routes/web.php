@@ -67,6 +67,13 @@ Route::delete('/products/{product}', [ProductController::class, 'delete'])->name
 
 
 
+Route::middleware('auth')->group(function () {
+    Route::get('/download/{productId}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
+    Route::get('/download/file/{productId}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
+});
+
+
+
 
 Route::post('/reviews', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
 Route::post('/reviews/approve/{id}', 'App\Http\Controllers\ReviewController@approve')->name('reviews.approve');
