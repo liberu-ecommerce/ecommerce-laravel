@@ -11,6 +11,11 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
+    /**
+     * Displays the home page with featured products and special offers.
+     *
+     * @return \Illuminate\View\View The home view populated with products and offers.
+     */
     public function index()
     {
         $featuredProducts = Product::where('is_featured', true)->get();
