@@ -25,8 +25,33 @@ class OrderController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $order = new Order($validator->validated());
-        $order->save();
+        // Instantiate PaymentGatewayService
+        $paymentGatewayService = new \App\Services\PaymentGatewayService();
+
+        // Process payment
+        $paymentDetails = [
+            // Assuming hypothetical structure; replace with actual as needed
+            'card_number' => $request->card_number,
+            'expiration_date' => $request->expiration_date,
+            'cvv' => $request->cvv,
+        ];
+        $paymentResult = $paymentGatewayService->processPayment(
+            $request->total_amount,
+            'USD', // Assuming the currency; replace with actual if different
+            'credit_card', // Assuming the payment method; adjust as necessary
+            $paymentDetails
+        );
+
+        // Check if payment was successful
+        if ($paymentResult['status'] == 'success') {
+            $order = new Order($validator->validated());
+            $order->payment_status = 'paid'; // Update payment status to 'paid'
+            $order->save();
+
+            return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
+        } else {
+            return response()->json(['message' => 'Payment failed', 'error' => $paymentResult['error']], 400);
+        }
 
         return response()->json(['message' => 'Order created successfully', 'order' => $order], 201);
     }
