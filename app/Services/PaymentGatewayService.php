@@ -7,6 +7,15 @@ use Illuminate\Support\Facades\Config;
 use Stripe\StripeClient;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Api\Amount;
+use PayPal\Api\Payer;
+use PayPal\Api\Payment;
+use PayPal\Api\RedirectUrls;
+use PayPal\Api\Transaction;
+use PayPal\Api\Agreement;
+use PayPal\Api\PayerInfo;
+use PayPal\Api\Plan;
+use PayPal\Api\ShippingAddress;
 
 class PaymentGatewayService
 {
@@ -59,3 +68,64 @@ class PaymentGatewayService
         return ['success' => false, 'error' => 'PayPal payment failed'];
     }
 }
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $amount = new Amount();
+        $amount->setTotal($amount)
+               ->setCurrency('USD');
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amount)
+                     ->setDescription('Payment transaction');
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl(url('/payment/success'))
+                     ->setCancelUrl(url('/payment/cancel'));
+
+        $payment = new Payment();
+        $payment->setIntent('sale')
+                ->setPayer($payer)
+                ->setTransactions([$transaction])
+                ->setRedirectUrls($redirectUrls);
+
+        try {
+            $payment->create($this->paypalContext);
+            return ['success' => true, 'paymentID' => $payment->getId()];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    public function processPaypalSubscription($paymentMethodId, $planId)
+    {
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $plan = new Plan();
+        $plan->setId($planId);
+
+        $payerInfo = new PayerInfo();
+        $payerInfo->setEmail('payer@example.com'); // This should be dynamically set based on user's email
+
+        $shippingAddress = new ShippingAddress();
+        $shippingAddress->setLine1('123 ABC Street')
+                        ->setCity('City')
+                        ->setState('State')
+                        ->setPostalCode('12345')
+                        ->setCountryCode('US');
+
+        $agreement = new Agreement();
+        $agreement->setName('Base Agreement')
+                  ->setDescription('Basic Agreement')
+                  ->setStartDate(gmdate("Y-m-d\TH:i:s\Z", strtotime("+30 days", time())))
+                  ->setPayer($payer)
+                  ->setPlan($plan)
+                  ->setPayerInfo($payerInfo)
+                  ->setShippingAddress($shippingAddress);
+
+        try {
+            $agreement->create($this->paypalContext);
+            return ['success' => true, 'agreementID' => $agreement->getId()];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }

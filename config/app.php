@@ -21,7 +21,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', cache('site_settings.app_name', 'Laravel')),
 
     /*
     |--------------------------------------------------------------------------
@@ -60,9 +60,8 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://yourdomain.com'),
-
-    'asset_url' => env('ASSET_URL'),
+    'url' => env('APP_URL', cache('site_settings.app_url', 'https://yourdomain.com')),
+    'asset_url' => env('ASSET_URL', cache('site_settings.asset_url')),
 
     /*
     |--------------------------------------------------------------------------
@@ -75,7 +74,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => cache('site_settings.timezone', 'UTC'),
 
     /*
     |--------------------------------------------------------------------------
@@ -88,7 +87,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => cache('site_settings.locale', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -101,7 +100,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en_US',
+    'fallback_locale' => cache('site_settings.fallback_locale', 'en_US'),
 
     /*
     |--------------------------------------------------------------------------
@@ -114,7 +113,7 @@ return [
     |
     */
 
-    'faker_locale' => 'en_US',
+    'faker_locale' => cache('site_settings.faker_locale', 'en_US'),
 
     /*
     |--------------------------------------------------------------------------
