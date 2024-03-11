@@ -31,6 +31,11 @@ class ProductController extends Controller
     }
 
     public function show($id)
+    /**
+     * List all products.
+     * 
+     * @return \Illuminate\Http\Response
+     */
     {
         $product = Product::find($id);
 
@@ -51,6 +56,16 @@ class ProductController extends Controller
 
         $validatedData = $request->validate([
             'name' => 'string|max:255',
+/**
+ * This file contains the ProductController class responsible for handling HTTP requests related to products,
+ * such as creating, listing, showing, updating, and deleting products.
+ */
+    /**
+     * Create a new product instance after a valid request.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
             'description' => 'string',
             'price' => 'numeric',
             'category' => 'string|max:255',
@@ -63,6 +78,13 @@ class ProductController extends Controller
     }
 
     public function delete($id)
+    /**
+     * Update the specified product in storage.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
     {
         $product = Product::find($id);
 
@@ -75,3 +97,15 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product deleted successfully']);
     }
 }
+    /**
+     * Display the specified product.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    /**
+     * Remove the specified product from storage.
+     * 
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
