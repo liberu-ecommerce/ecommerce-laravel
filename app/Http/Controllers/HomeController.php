@@ -1,3 +1,7 @@
+/**
+ * HomeController handles the requests for the home page of the ecommerce platform.
+ * It fetches and passes featured products and special offers to the home view.
+ */
 &lt;?php
 
 namespace App\Http\Controllers;
@@ -14,6 +18,11 @@ class HomeController extends Controller
         $specialOffers = Product::specialOffers()->get();
 
         return view('home', [
+            'products' => $featuredProducts,
+            'specialOffers' => $specialOffers,
+        ]);
+    }
+}
             'products' => $featuredProducts,
             'specialOffers' => $specialOffers,
         ]);
