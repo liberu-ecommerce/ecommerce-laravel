@@ -1,5 +1,12 @@
 &lt;?php
 
+/**
+ * Subscription Service
+ *
+ * Manages PayPal subscriptions, including creation, updating, and cancellation of subscriptions.
+ * Utilizes the PayPal API to interact with PayPal's subscription services.
+ */
+
 namespace App\Services;
 
 use PayPal\Api\Agreement;
@@ -73,3 +80,34 @@ class SubscriptionService
         return ['success' => true, 'message' => 'Subscription cancelled successfully'];
     }
 }
+/**
+ * Creates a new subscription on PayPal.
+ *
+ * This method sets up a new PayPal subscription using the provided payment method ID, plan ID, and user details.
+ * It creates a subscription agreement and attempts to execute it.
+ *
+ * @param string $paymentMethodId The PayPal payment method ID.
+ * @param string $planId The PayPal plan ID for the subscription.
+ * @param array $userDetails User details including email and shipping address.
+ * @return array Returns an array with 'success' status and either 'agreementID' on success, or 'error' message on failure.
+ * @throws \Exception Throws an exception if the subscription creation fails.
+ */
+/**
+ * Updates an existing subscription on PayPal.
+ *
+ * This method updates the plan of an existing PayPal subscription to the provided plan ID.
+ * The actual implementation would depend on PayPal's API and the application's design.
+ *
+ * @param string $subscriptionId The ID of the existing PayPal subscription.
+ * @param string $planId The new PayPal plan ID for the subscription.
+ * @return array Returns an array with 'success' status and a message indicating the update status.
+ */
+/**
+ * Cancels an existing subscription on PayPal.
+ *
+ * This method cancels a PayPal subscription using the provided subscription ID.
+ * The actual implementation would depend on PayPal's API and the application's design.
+ *
+ * @param string $subscriptionId The ID of the PayPal subscription to be cancelled.
+ * @return array Returns an array with 'success' status and a message indicating the cancellation status.
+ */
