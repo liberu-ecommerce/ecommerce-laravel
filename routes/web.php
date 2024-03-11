@@ -20,6 +20,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::post('/checkout/guest', 'App\Http\Controllers\CheckoutController@guestCheckout')->name('checkout.guest');
+Route::get('/checkout/summary', 'App\Http\Controllers\CheckoutController@summary')->name('checkout.summary');
+
+
 Route::prefix('payment_methods')->group(function () {
     Route::get('/', 'PaymentMethodController@index')->name('payment_methods.index');
     Route::post('/store', 'PaymentMethodController@addPaymentMethod')->name('payment_methods.store');
@@ -53,6 +57,7 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
 Route::patch('/products/{product}', [ProductController::class, 'update']);
 Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
+
 
 
 
