@@ -30,6 +30,12 @@ class ProductController extends Controller
         ]);
 
         $product = Product::create($validatedData);
+        
+        // Create an initial inventory log entry
+        $product->inventoryLogs()->create([
+            'quantity_change' => $validatedData['inventory_count'],
+            'reason' => 'Initial stock setup',
+        ]);
 
         return response()->json($product, Response::HTTP_CREATED);
     }
@@ -95,3 +101,11 @@ class ProductController extends Controller
         return response()->json(['message' => 'Product deleted successfully']);
     }
 }
+        // Check if inventory_count is being updated and log the change
+        if (isset($validatedData['inventory_count'])) {
+            $quantityChange = $validatedData['inventory_count'] - $product->getOriginal('inventory_count');
+            $product->inventoryLogs()->create([
+                'quantity_change' => $quantityChange,
+                'reason' => 'Inventory adjustment',
+            ]);
+        }
