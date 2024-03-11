@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * This file contains application-wide configuration settings.
+ * It includes settings for application name, environment, debug mode, URL, timezone, locale, and more.
+ */
+
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
