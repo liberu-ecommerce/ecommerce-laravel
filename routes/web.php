@@ -60,4 +60,10 @@ Route::delete('/products/{product}', [ProductController::class, 'delete'])->name
 
 
 
+Route::get('/site-settings', 'App\Http\Controllers\SiteSettingController@index')->name('site_settings.index');
+Route::get('/site-settings/{id}/edit', 'App\Http\Controllers\SiteSettingController@edit')->name('site_settings.edit');
+Route::post('/site-settings/{id}', 'App\Http\Controllers\SiteSettingController@update')->name('site_settings.update');
+
+
+
 
