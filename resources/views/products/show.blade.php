@@ -19,6 +19,11 @@
     </div>
 </div>
 @endsection
+
+                @if($product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
+                    <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-3">Download</a>
+                @endif
+
             <div class="card mt-4">
                 <div class="card-header">Inventory Logs</div>
                 <div class="card-body">
@@ -42,3 +47,4 @@
                     </table>
                 </div>
             </div>
+
