@@ -44,3 +44,6 @@
     </form>
 </div>
 @endsection
+/**
+ * This Blade template is used for rendering the product creation form.
+ */

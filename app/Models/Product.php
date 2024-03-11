@@ -46,3 +46,31 @@ class Product extends Model
 
 
 }
+/**
+ * This file contains the Product model, which represents the product entity in the database.
+ */
+    /**
+     * Get the category that the product belongs to.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    /**
+     * Get the cart items associated with the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    /**
+     * Get the order items associated with the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    /**
+     * Get the reviews associated with the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    /**
+     * Get the ratings associated with the product.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
