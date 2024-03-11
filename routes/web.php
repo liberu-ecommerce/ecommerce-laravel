@@ -16,3 +16,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::post('/orders/create', 'App\Http\Controllers\OrderController@createOrder')->name('orders.store');
+Route::get('/orders/confirmation/{orderId}', 'App\Http\Controllers\OrderController@showOrderConfirmation')->name('orders.confirmation');
+Route::get('/orders/history/{customerId}', 'App\Http\Controllers\OrderController@listUserOrders')->name('orders.history');
