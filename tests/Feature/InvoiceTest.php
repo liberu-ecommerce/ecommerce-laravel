@@ -13,7 +13,7 @@ class InvoiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testAutomaticInvoiceGeneration()
+    public function arrangeTestScenario()
     {
         // Arrange: Simulate order completion
         $order = Order::factory()->create();
