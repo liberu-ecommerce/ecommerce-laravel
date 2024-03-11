@@ -1,3 +1,7 @@
+/**
+ * Web routes file registers all the web routes for the ecommerce application.
+ * This includes routes for product viewing, checkout processes, payment methods, and user subscriptions.
+ */
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -41,7 +45,6 @@ Route::get('/checkout', function () {
 Route::post('/payment', 'App\Http\Controllers\StripePaymentController@createOneTimePayment')->name('payment.create');
 
 Route::get('/subscriptions', 'App\Http\Controllers\SubscriptionController@viewAvailableSubscriptions')->name('subscriptions.view');
-
 Route::post('/subscription', 'App\Http\Controllers\SubscriptionController@subscribeToPlan')->name('subscription.create');
 
 Route::patch('/subscription/change', 'App\Http\Controllers\SubscriptionController@changePlan')->name('subscription.change-plan');
