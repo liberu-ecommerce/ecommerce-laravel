@@ -43,3 +43,22 @@ class CheckoutController extends Controller
         // Verification logic...
     }
 }
+/**
+ * Handles checkout processes including guest checkout and payment verification.
+ */
+    /**
+     * Initiates a guest checkout process by storing the cart in the session.
+     *
+     * @param Request $request The current request instance.
+     */
+    /**
+     * Handles the checkout process for both guest and registered users.
+     *
+     * @param Request $request The current request instance.
+     */
+    /**
+     * Verifies the payment and shipping information provided during checkout.
+     *
+     * @param array $data The checkout data including email, shipping address, and payment method.
+     * @throws \Illuminate\Validation\ValidationException If validation fails.
+     */
