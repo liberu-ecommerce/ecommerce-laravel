@@ -60,4 +60,11 @@ Route::delete('/products/{product}', [ProductController::class, 'delete'])->name
 
 
 
+Route::middleware('auth')->group(function () {
+    Route::get('/download/{productId}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
+    Route::get('/download/file/{productId}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
+});
+
+
+
 
