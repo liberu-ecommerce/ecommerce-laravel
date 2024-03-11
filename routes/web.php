@@ -47,6 +47,10 @@ Route::post('/subscription', 'App\Http\Controllers\SubscriptionController@subscr
 Route::patch('/subscription/change', 'App\Http\Controllers\SubscriptionController@changePlan')->name('subscription.change-plan');
 
 Route::delete('/subscription/cancel', 'App\Http\Controllers\SubscriptionController@cancelSubscription')->name('subscription.cancel');
+Route::post('/paypal/payment', 'App\Http\Controllers\PayPalPaymentController@createOneTimePayment')->name('paypal.payment.create');
+Route::post('/paypal/subscription', 'App\Http\Controllers\PayPalPaymentController@createSubscription')->name('paypal.subscription.create');
+Route::patch('/paypal/subscription/update', 'App\Http\Controllers\PayPalPaymentController@updateSubscription')->name('paypal.subscription.update');
+Route::delete('/paypal/subscription/cancel', 'App\Http\Controllers\PayPalPaymentController@cancelSubscription')->name('paypal.subscription.cancel');
 
 use App\Http\Controllers\ProductController;
 
