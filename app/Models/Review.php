@@ -34,3 +34,12 @@ class Review extends Model
         $this->save();
     }
 }
+/**
+ * Review model represents the review data and contains business logic for review-related operations such as approval and rejection.
+ */
+        $this->save();
+    }
+}
+        $this->save();
+    }
+}
