@@ -1,5 +1,13 @@
 &lt;?php
 
+/**
+ * Payment Gateway Service
+ *
+ * This service handles payment transactions through Stripe and PayPal, offering methods for processing
+ * payments and managing subscriptions. It encapsulates the integration logic for both payment gateways
+ * and provides a unified interface for payment operations within the application.
+ */
+
 namespace App\Services;
 
 use App\Models\PaymentMethod;
@@ -129,3 +137,36 @@ class PaymentGatewayService
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+/**
+ * Processes a payment through Stripe.
+ *
+ * This method attempts to charge a payment method for a specified amount using Stripe. It requires
+ * a valid Stripe payment method ID and the amount to be charged.
+ *
+ * @param string $paymentMethodId The Stripe payment method ID.
+ * @param int $amount The amount to be charged in cents.
+ * @return array Returns an array with 'success' status and either 'data' with charge details on success, or 'error' message on failure.
+ * @throws \Stripe\Exception\ApiErrorException Throws an exception if the Stripe API call fails.
+ */
+/**
+ * Processes a payment through PayPal.
+ *
+ * This method simulates a PayPal payment process for demonstration purposes. In a real scenario, it would
+ * involve creating a payment, executing it after approval, etc.
+ *
+ * @param string $paymentMethodId The PayPal payment method ID.
+ * @param int $amount The amount to be charged.
+ * @return array Returns an array with 'success' status and either 'message' on success, or 'error' message on failure.
+ * @throws \PayPal\Exception\PayPalConnectionException Throws an exception if the PayPal API call fails.
+ */
+/**
+ * Processes a PayPal subscription.
+ *
+ * This method sets up a subscription agreement with PayPal using the provided payment method and plan ID.
+ * It involves creating a billing agreement and executing it after approval.
+ *
+ * @param string $paymentMethodId The PayPal payment method ID.
+ * @param string $planId The PayPal plan ID for the subscription.
+ * @return array Returns an array with 'success' status and either 'agreementID' on success, or 'error' message on failure.
+ * @throws \PayPal\Exception\PayPalConnectionException Throws an exception if the PayPal API call fails.
+ */
