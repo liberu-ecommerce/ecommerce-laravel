@@ -97,6 +97,46 @@ class PaymentGatewayService
         }
     public function processPaypalSubscription($paymentMethodId, $planId)
     {
+        $agreement = $this->setupPaypalSubscriptionDetails($planId, 'payer@example.com'); // This email should be dynamically set based on user's email
+        return $this->createPaypalSubscription($agreement);
+    }
+    private function setupPaypalPaymentDetails($amount)
+    {
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
+
+        $amountInstance = new Amount();
+        $amountInstance->setTotal($amount)
+               ->setCurrency('USD');
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amountInstance)
+                     ->setDescription('Payment transaction');
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl(url('/payment/success'))
+                     ->setCancelUrl(url('/payment/cancel'));
+
+        $payment = new Payment();
+        $payment->setIntent('sale')
+                ->setPayer($payer)
+                ->setTransactions([$transaction])
+                ->setRedirectUrls($redirectUrls);
+
+        return $payment;
+    }
+
+    private function createPaypalPayment($payment)
+    {
+        try {
+            $payment->create($this->paypalContext);
+            return ['success' => true, 'paymentID' => $payment->getId()];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    private function setupPaypalSubscriptionDetails($planId, $payerEmail)
+    {
         $payer = new Payer();
         $payer->setPaymentMethod('paypal');
 
@@ -104,7 +144,7 @@ class PaymentGatewayService
         $plan->setId($planId);
 
         $payerInfo = new PayerInfo();
-        $payerInfo->setEmail('payer@example.com'); // This should be dynamically set based on user's email
+        $payerInfo->setEmail($payerEmail);
 
         $shippingAddress = new ShippingAddress();
         $shippingAddress->setLine1('123 ABC Street')
@@ -122,6 +162,11 @@ class PaymentGatewayService
                   ->setPayerInfo($payerInfo)
                   ->setShippingAddress($shippingAddress);
 
+        return $agreement;
+    }
+
+    private function createPaypalSubscription($agreement)
+    {
         try {
             $agreement->create($this->paypalContext);
             return ['success' => true, 'agreementID' => $agreement->getId()];
