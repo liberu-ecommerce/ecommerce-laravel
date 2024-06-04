@@ -8,13 +8,14 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "filament/filament": "^3.2",
         "guzzlehttp/guzzle": "^7.8",
-        "laravel/framework": "dev-master",
+        "laravel/framework": "^11.0",
         "laravel/octane": "^2.3",
-        "laravel/sanctum": "dev-master",
-        "laravel/tinker": "^2.9"
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^2.9",
+	"livewire/livewire": "^3.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
