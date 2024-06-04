@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Mail\InvoiceMail;
+use App\Models\Invoice;
 
 class InvoiceTest extends TestCase
 {
@@ -58,6 +59,22 @@ class InvoiceTest extends TestCase
         $response = $this->get('/invoices/'.$invoice->id.'/pdf');
 
         // Assert: PDF is successfully generated
+
+    public function testEmailSendingWithInvoiceAttachment()
+    {
+        // Arrange: Create an invoice
+        $invoice = Invoice::factory()->create();
+
+        // Act: Build the mail
+        $mail = new InvoiceMail($invoice);
+
+        // Assert: Email contains the correct details
+        $this->assertContains('Your Invoice from Ecommerce', $mail->build()->subject);
+        $this->assertContains('invoice', $mail->build()->view);
+        $this->assertArraySubset([
+            'file' => $invoice->id
+        ], $mail->build()->attachments[0]);
+    }
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
