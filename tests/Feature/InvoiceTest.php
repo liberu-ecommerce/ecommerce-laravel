@@ -19,6 +19,7 @@ class InvoiceTest extends TestCase
         $order = Order::factory()->create();
 
         // Act: Trigger invoice generation
+        $this->actOnTestScenario($order);
         $response = $this->postJson('/api/orders/'.$order->id.'/complete');
 
         // Assert: Invoice is automatically generated with correct details
