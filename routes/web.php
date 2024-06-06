@@ -4,6 +4,11 @@
  */
 <?php
 
+/*
+ * Defines all web routes for the application.
+ * Maps URLs to controller actions.
+ */
+
 use Illuminate\Support\Facades\Route;
 
 /*
