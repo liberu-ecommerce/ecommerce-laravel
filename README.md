@@ -16,7 +16,7 @@
 * https://github.com/liberu-automation/automation-laravel
 * https://github.com/liberu-cms/cms-laravel
 * https://github.com/liberu-crm/crm-laravel
-* https://github.com/liberu-ecommerce/ecommerce-laravel
+* https://github.com/liberu-genealogy/genealogy-laravel
 * https://github.com/liberu-maintenance/maintenance-laravel
 * https://github.com/liberu-real-estate/real-estate-laravel
 
@@ -130,3 +130,9 @@ We look forward to your involvement, and together, we can create a vibrant and t
 
 ## License
 This project is licensed under the MIT license, granting you the freedom to utilize it for both personal and commercial projects. The MIT license ensures that you have the flexibility to adapt, modify, and distribute the project as per your needs. Feel free to incorporate it into your own ventures, whether they are personal endeavors or part of a larger commercial undertaking. The permissive nature of the MIT license empowers you to leverage this project without any unnecessary restrictions. Enjoy the benefits of this open and accessible license as you embark on your creative and entrepreneurial pursuits.
+
+## Contributors
+
+
+<a href = "https://github.com/liberu-ecommerce/ecommerce-laravel/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=liberu-ecommerce/ecommerce-laravel"/>
