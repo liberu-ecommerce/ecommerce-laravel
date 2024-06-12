@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', cache('site_settings.app_name', 'Laravel')),
+    'name' => env('APP_NAME', 'Laravel'),
 
     /*
     |--------------------------------------------------------------------------
@@ -55,8 +55,9 @@ return [
     |
     */
 
-    'url' => env('APP_URL', cache('site_settings.app_url', 'https://yourdomain.com')),
-    'asset_url' => env('ASSET_URL', cache('site_settings.asset_url')),
+    'url' => env('APP_URL', 'http://localhost'),
+
+    'asset_url' => env('ASSET_URL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -69,7 +70,7 @@ return [
     |
     */
 
-    'timezone' => cache('site_settings.timezone', 'UTC'),
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
@@ -82,7 +83,7 @@ return [
     |
     */
 
-    'locale' => cache('site_settings.locale', 'en'),
+    'locale' => 'en',
 
     /*
     |--------------------------------------------------------------------------
@@ -95,7 +96,7 @@ return [
     |
     */
 
-    'fallback_locale' => cache('site_settings.fallback_locale', 'en_US'),
+    'fallback_locale' => 'en',
 
     /*
     |--------------------------------------------------------------------------
@@ -108,7 +109,7 @@ return [
     |
     */
 
-    'faker_locale' => cache('site_settings.faker_locale', 'en_US'),
+    'faker_locale' => 'en_US',
 
     /*
     |--------------------------------------------------------------------------
@@ -166,9 +167,9 @@ return [
         App\Providers\AuthServiceProvider::class,
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
-        Laravel\Cashier\CashierServiceProvider::class,
         App\Providers\Filament\AdminPanelProvider::class,
         App\Providers\RouteServiceProvider::class,
+       // App\Providers\DigitalSignatureServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -187,3 +188,4 @@ return [
     ])->toArray(),
 
 ];
+        
