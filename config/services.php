@@ -42,12 +42,7 @@ return [
             'log.LogLevel' => 'ERROR',
         ],
     ],
-];
     
-
-
-
-
     'paypal' => [
         'client_id' => env('PAYPAL_CLIENT_ID'),
         'secret' => env('PAYPAL_SECRET'),
@@ -59,9 +54,9 @@ return [
             'log.LogLevel' => 'ERROR',
         ],
     ],
-];
 
-        ''stripe' => [
+
+        'stripe' => [
 'model' => App\Models\User::class,
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
@@ -70,3 +65,4 @@ return [
         ],
     ],
 
+];

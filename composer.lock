@@ -9106,7 +9106,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
+                "security": "https://github.com/sebastianbergmann/phpunit/security/
                 "source": "https://github.com/sebastianbergmann/phpunit/tree/11.2.1"
             },
             "funding": [
