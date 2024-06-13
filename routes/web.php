@@ -90,4 +90,4 @@ Route::post('/site-settings/{id}', 'App\Http\Controllers\SiteSettingController@u
 
 
 
-require __DIR__.'/socialstream.php';
+require __DIR__.'/socialstream.php';require __DIR__.'/socialstream.php';
