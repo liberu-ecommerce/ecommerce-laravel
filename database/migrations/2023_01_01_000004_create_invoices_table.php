@@ -14,8 +14,8 @@ return new class extends Migration
     {
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->constrained()->references('id')->on('customers')->onDelete('cascade');
-            $table->foreignId('order_id')->constrained()->references('id')->on('orders')->onDelete('cascade');
+            $table->foreignId('customer_id')->constrained();
+            $table->foreignId('order_id')->constrained();
             $table->timestamp('invoice_date');
             $table->decimal('total_amount', 10, 2);
             $table->string('payment_status', 50);
