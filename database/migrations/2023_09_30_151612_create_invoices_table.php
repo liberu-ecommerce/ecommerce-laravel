@@ -18,10 +18,7 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained();
             $table->timestamp('invoice_date');
             $table->decimal('total_amount', 10, 2);
-            $table->string('payment_status', 50); 
-
-            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
-            $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
+            $table->string('payment_status', 50);
             $table->timestamps();
         });
     }
