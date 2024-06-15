@@ -44,7 +44,10 @@ class Product extends Model
         return $this->hasMany(ProductRating::class);
     }
 
-
+    public function downloadable()
+    {
+        return $this->hasMany(DownloadableProduct::class);
+    }
 }
     public function downloadable()
     {
