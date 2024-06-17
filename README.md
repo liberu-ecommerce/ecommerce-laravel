@@ -8,6 +8,7 @@
 
 [![Install](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/install.yml/badge.svg)](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/install.yml)
 [![Tests](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/tests.yml/badge.svg)](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/tests.yml)
+[![Docker](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/main.yml/badge.svg)](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/main.yml)
 
 
 ## Our Projects
