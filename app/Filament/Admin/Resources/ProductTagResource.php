@@ -1,16 +1,13 @@
 <?php
-
 namespace App\Filament\Admin\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;
-use Filament\Forms\Form;
 use App\Models\ProductTag;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\ProductTagResource\Pages;
 use App\Filament\Admin\Resources\ProductTagResource\RelationManagers;
 
@@ -27,13 +24,13 @@ class ProductTagResource extends Resource
                 Forms\Components\Select::make('product_id')
                     ->label('Product')
                     ->required()
-                    ->options(Product::pluck('name', 'id'))
+                    ->options(fn() => Product::pluck('name', 'id')->toArray())
                     ->reactive(),
 
                 Forms\Components\Select::make('tag_id')
                     ->label('Tag')
                     ->required()
-                    ->options(ProductTag::pluck('name', 'id'))
+                    ->options(fn() => ProductTag::pluck('name', 'id')->toArray())
                     ->reactive()
             ]);
     }
@@ -45,24 +42,18 @@ class ProductTagResource extends Resource
                 Tables\Columns\TextColumn::make('product.name')->label('Product'),
                 Tables\Columns\TextColumn::make('tag.name')->label('Tag'),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\DeleteBulkAction::make(),
             ]);
     }
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
