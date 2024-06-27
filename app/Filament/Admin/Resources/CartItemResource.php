@@ -2,23 +2,19 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
 use App\Models\CartItem;
+use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\BelongsToSelect;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\CartItemResource\Pages;
-use App\Filament\Admin\Resources\CartItemResource\RelationManagers;
 
 class CartItemResource extends Resource
 {
     protected static ?string $model = CartItem::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
@@ -28,7 +24,6 @@ class CartItemResource extends Resource
                 BelongsToSelect::make('user_id')
                     ->relationship('user', 'name')
                     ->required(),
-
                 BelongsToSelect::make('product_id')
                     ->relationship('product', 'name')
                     ->required(),
@@ -38,7 +33,6 @@ class CartItemResource extends Resource
                 Forms\Components\TextInput::make('price')
                     ->numeric()
                     ->prefix('GBP')
-
             ]);
     }
 
@@ -60,7 +54,7 @@ class CartItemResource extends Resource
                 TextColumn::make('price')
             ])
             ->filters([
-                //
+                // Define filters here if needed
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -75,7 +69,7 @@ class CartItemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            // Define relations here if needed
         ];
     }
 
