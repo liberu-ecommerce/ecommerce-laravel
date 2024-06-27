@@ -2,65 +2,55 @@
 
 namespace App\Filament\Admin\Resources;
 
-use Filament\Forms;
-use Filament\Tables;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;
+use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\InvoiceResource\Pages;
-use App\Filament\Admin\Resources\InvoiceResource\RelationManagers;
 
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('customer_id')
-                    ->label('Customer')
-                    ->required()
-                    ->options(Customer::pluck('name', 'id'))
-                    ->reactive(),
-
-                Forms\Components\Select::make('order_id')
-                    ->label('Order')
-                    ->required()
-                    ->options(Order::pluck('id', 'id'))
-                    ->reactive(),
-
-                Forms\Components\DatePicker::make('invoice_date')
-                    ->label('Invoice Date')
-                    ->required(),
-
-                Forms\Components\TextInput::make('total_amount')
-                    ->label('Total Amount')
-                    ->required()
-                    ->numeric(),
-
-                Forms\Components\Select::make('payment_status')
-                    ->label('Payment Status')
-                    ->required()
-                    ->options([
-                        'pending' => 'Pending',
-                        'paid' => 'Paid',
-                        'cancelled' => 'Cancelled',
-                    ]),
-            ]);
+        return $form->schema([
+            Forms\Components\Select::make('customer_id')
+                ->label('Customer')
+                ->required()
+                ->options(Customer::pluck('name', 'id'))
+                ->reactive(),
+            Forms\Components\Select::make('order_id')
+                ->label('Order')
+                ->required()
+                ->options(Order::pluck('id', 'id'))
+                ->reactive(),
+            Forms\Components\DatePicker::make('invoice_date')
+                ->label('Invoice Date')
+                ->required(),
+            Forms\Components\TextInput::make('total_amount')
+                ->label('Total Amount')
+                ->required()
+                ->numeric(),
+            Forms\Components\Select::make('payment_status')
+                ->label('Payment Status')
+                ->required()
+                ->options([
+                    'pending' => 'Pending',
+                    'paid' => 'Paid',
+                    'cancelled' => 'Cancelled',
+                ]),
+        ]);
     }
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
+        return $table->columns([
                 Tables\Columns\TextColumn::make('customer.name')
                     ->label('Customer'),
                 Tables\Columns\TextColumn::make('order.id')
@@ -73,7 +63,7 @@ class InvoiceResource extends Resource
                     ->label('Payment Status'),
             ])
             ->filters([
-                //
+                // Define filters here if needed
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -88,7 +78,7 @@ class InvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            // Define relations here if needed
         ];
     }
 
