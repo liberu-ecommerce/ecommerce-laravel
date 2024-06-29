@@ -7,6 +7,22 @@
     <script src="https://js.stripe.com/v3/"></script>
     <style>
         /* Minimal styling for layout */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f9fafb;
+            margin: 0;
+        }
+        form {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
         .StripeElement {
             box-sizing: border-box;
             height: 40px;
@@ -14,12 +30,11 @@
             border: 1px solid transparent;
             border-radius: 4px;
             background-color: white;
-            box-shadow: 0 1px 3px 0 #e6ebf1;
-            -webkit-transition: box-shadow 150ms ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             transition: box-shadow 150ms ease;
         }
         .StripeElement--focus {
-            box-shadow: 0 1px 3px 0 #cfd7df;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         .StripeElement--invalid {
             border-color: #fa755a;
@@ -30,14 +45,21 @@
         #card-errors {
             color: #fa755a;
             margin-top: 10px;
+            font-size: 0.9rem;
         }
         button {
             background: #32325d;
             color: #ffffff;
             border: none;
-            padding: 8px 12px;
+            padding: 10px;
             border-radius: 4px;
+            font-size: 1rem;
             cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #4a4e69;
         }
     </style>
 </head>
@@ -52,52 +74,56 @@
     </form>
 
     <script>
-        var stripe = Stripe('{{ env("STRIPE_KEY") }}');
-        var elements = stripe.elements();
-        var style = {
-            base: {
-                color: "#32325d",
-            }
-        };
-
-        var card = elements.create("card", { style: style });
-        card.mount("#card-element");
-
-        card.on('change', function(event) {
-            var displayError = document.getElementById('card-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        });
-
-        var form = document.getElementById('payment-form');
-        form.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            stripe.createPaymentMethod({
-                type: 'card',
-                card: card,
-            }).then(function(result) {
-                if (result.error) {
-                    var errorElement = document.getElementById('card-errors');
-                    errorElement.textContent = result.error.message;
-                } else {
-                    fetch('/api/payment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                        },
-                        body: JSON.stringify({ payment_method_id: result.paymentMethod.id })
-                    }).then(function(response) {
-                        return response.json();
-                    }).then(function(paymentIntent) {
-                        console.log(paymentIntent);
-                        // Handle success or display error message
-                    });
+        document.addEventListener('DOMContentLoaded', function() {
+            var stripe = Stripe('{{ env("STRIPE_KEY") }}');
+            var elements = stripe.elements();
+            var style = {
+                base: {
+                    color: "#32325d",
                 }
+            };
+
+            var card = elements.create("card", { style: style });
+            card.mount("#card-element");
+
+            card.on('change', function(event) {
+                var displayError = document.getElementById('card-errors');
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = '';
+                }
+            });
+
+            var form = document.getElementById('payment-form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                stripe.createPaymentMethod({
+                    type: 'card',
+                    card: card,
+                }).then(function(result) {
+                    if (result.error) {
+                        var errorElement = document.getElementById('card-errors');
+                        errorElement.textContent = result.error.message;
+                    } else {
+                        fetch('/api/payment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                            },
+                            body: JSON.stringify({ payment_method_id: result.paymentMethod.id })
+                        }).then(function(response) {
+                            return response.json();
+                        }).then(function(paymentIntent) {
+                            console.log(paymentIntent);
+                            // Handle success or display error message
+                        }).catch(function(error) {
+                            console.error('Error:', error);
+                        });
+                    }
+                });
             });
         });
     </script>

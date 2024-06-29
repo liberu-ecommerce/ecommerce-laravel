@@ -31,3 +31,30 @@
         </x-button>
     </x-slot>
 </x-form-section>
+
+@push('styles')
+<style>
+    .x-form-section {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .x-form-section:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .col-span-6 {
+        grid-column: span 6 / span 6;
+    }
+    .sm\:col-span-4 {
+        grid-column: span 4 / span 4;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    // Optional JavaScript for handling specific actions on this page
+</script>
+@endpush
