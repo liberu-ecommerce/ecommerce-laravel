@@ -160,6 +160,7 @@ return [
          * Package Service Providers...
          */
         JoelButcher\Socialstream\Filament\SocialstreamPanelProvider::class,
+        JoelButcher\Socialstream\Filament\SocialstreamPanelProvider::class,
 
         /*
          * Application Service Providers...
@@ -169,8 +170,8 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\AppPanelProvider::class,
         App\Providers\RouteServiceProvider::class,
-       // App\Providers\DigitalSignatureServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -189,4 +190,3 @@ return [
     ])->toArray(),
 
 ];
-        
