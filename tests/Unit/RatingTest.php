@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 
 namespace Tests\Unit;
 
@@ -15,12 +15,10 @@ class RatingTest extends TestCase
         $productId = 1;
         $expectedAverage = 4.5;
 
-        Rating::unguard();
-        Rating::insert([
+        Rating::factory()->createMany([
             ['product_id' => $productId, 'rating' => 5],
             ['product_id' => $productId, 'rating' => 4],
         ]);
-        Rating::reguard();
 
         $averageRating = Rating::calculateAverageRating($productId);
 
