@@ -26,17 +26,29 @@
 
                 <div class="block mt-4">
                     <label for="remember_me" class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" id="remember_me" name="remember">
+
+                        <x-checkbox id="remember_me" name="remember" />
+
                         <span class="ml-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
                     </label>
                 </div>
 
                 <div class="flex items-center justify-end mt-4">
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-900 focus:outline-none focus:border-gray-900 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150 ml-4">
-                        {{ __('Log in') }}
-                    </button>
+                    @if (Route::has('password.request'))
+                        <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
+                            {{ __('Forgot your password?') }}
+                        </a>
+                    @endif
+
+                    <x-button class="ml-4">
+                        {{ __('Login') }}
+                    </x-button>
                 </div>
             </form>
-        </div>
+
+            @if (JoelButcher\Socialstream\Socialstream::show())
+                <x-socialstream />
+            @endif
+        </x-authentication-card>
     </div>
-@endsection
+</x-guest-layout>

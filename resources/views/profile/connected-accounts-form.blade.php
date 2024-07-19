@@ -8,28 +8,27 @@
     </x-slot>
 
     <x-slot name="content">
-        <div class="p-4 bg-red-500/10 text-red-500 border-l-4 border-red-600 rounded font-medium text-sm">
+        <div class="alert-box">
             {{ __('If you feel any of your connected accounts have been compromised, you should disconnect them immediately and change your password.') }}
         </div>
 
-        <div class="space-y-6 mt-6">
+        <div class="account-list">
             @foreach ($this->providers as $provider)
                 @php
-                    $account = null;
                     $account = $this->accounts->where('provider', $provider['id'])->first();
                 @endphp
 
                 <x-connected-account :provider="$provider" created-at="{{ $account?->created_at }}">
                     <x-slot name="action">
-                        @if (! is_null($account))
-                            <div class="flex items-center space-x-6">
-                                @if (Laravel\Jetstream\Jetstream::managesProfilePhotos() && ! is_null($account->avatar_path))
-                                    <button class="cursor-pointer ms-6 text-sm text-gray-500 hover:text-gray-700 focus:outline-none" wire:click="setAvatarAsProfilePhoto({{ $account->id }})">
+                        @if (!is_null($account))
+                            <div class="actions">
+                                @if (Laravel\Jetstream\Jetstream::managesProfilePhotos() && !is_null($account->avatar_path))
+                                    <button class="btn-link" wire:click="setAvatarAsProfilePhoto({{ $account->id }})">
                                         {{ __('Use Avatar as Profile Photo') }}
                                     </button>
                                 @endif
 
-                                @if (($this->accounts->count() > 1 || ! is_null(auth()->user()->getAuthPassword())))
+                                @if ($this->accounts->count() > 1 || !is_null(auth()->user()->getAuthPassword()))
                                     <x-danger-button wire:click="confirmRemoveAccount({{ $account->id }})" wire:loading.attr="disabled">
                                         {{ __('Remove') }}
                                     </x-danger-button>
@@ -41,7 +40,6 @@
                             </x-action-link>
                         @endif
                     </x-slot>
-
                 </x-connected-account>
             @endforeach
         </div>
@@ -79,3 +77,52 @@
         </x-dialog-modal>
     </x-slot>
 </x-action-section>
+
+@push('styles')
+<style>
+    .alert-box {
+        padding: 1rem;
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border-left: 4px solid #dc2626;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    .account-list {
+        margin-top: 1.5rem;
+        display: grid;
+        gap: 1.5rem;
+    }
+    .connected-account {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .connected-account:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+    .actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .btn-link {
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 0.875rem;
+        transition: color 0.3s;
+    }
+    .btn-link:hover {
+        color: #374151;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    // Optional JavaScript for handling specific actions on this page
+</script>
+@endpush
