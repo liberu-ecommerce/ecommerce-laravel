@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -45,7 +45,7 @@ jobs:
       run: vendor/bin/phpunit --coverage-clover=coverage.xml
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
          token: ${{ secrets.CODECOV_TOKEN }}
          files: ./coverage.xml
