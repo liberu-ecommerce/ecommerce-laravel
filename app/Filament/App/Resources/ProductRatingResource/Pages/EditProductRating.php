@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Admin\Resources\ProductRatingResource\Pages;
+namespace App\Filament\App\Resources\ProductRatingResource\Pages;
 
-use App\Filament\Admin\Resources\ProductRatingResource;
+use App\Filament\App\Resources\ProductRatingResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

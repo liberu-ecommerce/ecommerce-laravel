@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -9,7 +9,7 @@ use App\Models\Customer;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Admin\Resources\OrderResource\Pages;
+use App\Filament\App\Resources\OrderResource\Pages;
 
 class OrderResource extends Resource
 {

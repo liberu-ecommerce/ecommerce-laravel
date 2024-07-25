@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
-use App\Filament\Admin\Resources\SimpleProductResource\Pages;
-use App\Filament\Admin\Resources\SimpleProductResource\RelationManagers;
+use App\Filament\App\Resources\SimpleProductResource\Pages;
+use App\Filament\App\Resources\SimpleProductResource\RelationManagers;
 use App\Models\SimpleProduct;
 use Filament\Forms;
 use Filament\Forms\Form;

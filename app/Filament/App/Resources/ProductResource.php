@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -16,8 +16,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Admin\Resources\ProductResource\Pages;
-use App\Filament\Admin\Resources\ProductResource\RelationManagers;
+use App\Filament\App\Resources\ProductResource\Pages;
+use App\Filament\App\Resources\ProductResource\RelationManagers;
 
 class ProductResource extends Resource
 {

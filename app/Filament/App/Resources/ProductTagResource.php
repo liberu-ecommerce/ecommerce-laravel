@@ -1,5 +1,5 @@
 <?php
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -8,8 +8,8 @@ use App\Models\ProductTag;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Admin\Resources\ProductTagResource\Pages;
-use App\Filament\Admin\Resources\ProductTagResource\RelationManagers;
+use App\Filament\App\Resources\ProductTagResource\Pages;
+use App\Filament\App\Resources\ProductTagResource\RelationManagers;
 
 class ProductTagResource extends Resource
 {

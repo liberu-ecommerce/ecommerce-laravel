@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Admin\Resources\ProductTagResource\Pages;
+namespace App\Filament\App\Resources\ProductTagResource\Pages;
 
-use App\Filament\Admin\Resources\ProductTagResource;
+use App\Filament\App\Resources\ProductTagResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

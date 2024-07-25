@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -12,8 +12,8 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Admin\Resources\OrderItemResource\Pages;
-use App\Filament\Admin\Resources\OrderItemResource\RelationManagers;
+use App\Filament\App\Resources\OrderItemResource\Pages;
+use App\Filament\App\Resources\OrderItemResource\RelationManagers;
 
 class OrderItemResource extends Resource
 {

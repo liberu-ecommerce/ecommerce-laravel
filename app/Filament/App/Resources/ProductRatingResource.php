@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use Filament\Forms;
 use Filament\Tables;
@@ -14,8 +14,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Admin\Resources\ProductRatingResource\Pages;
-use App\Filament\Admin\Resources\ProductRatingResource\RelationManagers;
+use App\Filament\App\Resources\ProductRatingResource\Pages;
+use App\Filament\App\Resources\ProductRatingResource\RelationManagers;
 
 class ProductRatingResource extends Resource
 {

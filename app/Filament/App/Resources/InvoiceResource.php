@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use App\Models\Order;
 use App\Models\Invoice;
@@ -10,7 +10,7 @@ use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
-use App\Filament\Admin\Resources\InvoiceResource\Pages;
+use App\Filament\App\Resources\InvoiceResource\Pages;
 
 class InvoiceResource extends Resource
 {

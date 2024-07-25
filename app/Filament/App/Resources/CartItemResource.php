@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\App\Resources;
 
 use App\Models\CartItem;
 use Filament\Forms;
@@ -10,7 +10,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\BelongsToSelect;
-use App\Filament\Admin\Resources\CartItemResource\Pages;
+use App\Filament\App\Resources\CartItemResource\Pages;
 
 class CartItemResource extends Resource
 {
