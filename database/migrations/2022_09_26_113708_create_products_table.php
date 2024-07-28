@@ -23,6 +23,7 @@ return new class extends Migration
                 $table->boolean('is_variable')->default(0);
                 $table->boolean('is_grouped')->default(0);
                 $table->boolean('is_simple')->default(1);
+                $table->boolean('is_featured')->default(0);
                 $table->string('featured_image');
                 $table->timestamps();
             });
