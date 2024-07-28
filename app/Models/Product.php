@@ -49,7 +49,3 @@ class Product extends Model
         return $this->hasMany(DownloadableProduct::class);
     }
 }
-    public function downloadable()
-    {
-        return $this->hasMany(DownloadableProduct::class);
-    }
