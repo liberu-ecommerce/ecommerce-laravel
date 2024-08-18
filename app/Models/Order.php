@@ -13,14 +13,29 @@ class Order extends Model
 
     protected $fillable = [
         'customer_id',
+        'customer_email',
         'order_date',
         'total_amount',
         'payment_status',
         'shipping_status',
+        'shipping_address',
+        'shipping_method_id',
+        'payment_method',
+        'status',
     ];
 
-    public function customers()
+    public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function shippingMethod()
+    {
+        return $this->belongsTo(ShippingMethod::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }
