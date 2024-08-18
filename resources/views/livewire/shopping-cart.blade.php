@@ -1,5 +1,19 @@
 <div class="shopping-cart">
     <h2>Shopping Cart</h2>
+    @if (session()->has('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     @if(count($items) > 0)
         <div class="cart-table">
             <div class="cart-header">
@@ -14,7 +28,7 @@
                     <span>{{ $item['name'] }}</span>
                     <span>${{ number_format($item['price'], 2) }}</span>
                     <span>
-                        <input type="number" wire:model.lazy="items.{{ $id }}.quantity" wire:change="updateQuantity('{{ $id }}', $event.target.value)">
+                        <input type="number" wire:model.lazy="items.{{ $id }}.quantity" wire:change="updateQuantity('{{ $id }}', $event.target.value)" min="1">
                     </span>
                     <span>${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
                     <span>
@@ -24,9 +38,7 @@
             @endforeach
         </div>
         <div class="cart-summary">
-            <strong>Total: ${{ number_format(array_reduce($items, function ($carry, $item) {
-                return $carry + ($item['price'] * $item['quantity']);
-            }, 0), 2) }}</strong>
+            <strong>Total: ${{ number_format($this->calculateTotal(), 2) }}</strong>
         </div>
         <div class="cart-actions">
             <button wire:click="clearCart">Clear Cart</button>

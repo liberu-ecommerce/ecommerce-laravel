@@ -77,4 +77,52 @@ class ShoppingCartTest extends TestCase
                 return $totalPrice === 20.00 && count($items) === 1;
             });
     }
+
+    public function test_add_item_with_invalid_price()
+    {
+        $product = Product::factory()->create();
+        Livewire::test(ShoppingCart::class)
+            ->call('addToCart', $product->id, $product->name, -10)
+            ->assertHasErrors(['price' => 'Invalid price'])
+            ->assertSessionMissing('cart');
+    }
+
+    public function test_add_item_with_invalid_quantity()
+    {
+        $product = Product::factory()->create();
+        Livewire::test(ShoppingCart::class)
+            ->call('addToCart', $product->id, $product->name, $product->price, 0)
+            ->assertHasErrors(['quantity' => 'Quantity must be a positive integer'])
+            ->assertSessionMissing('cart');
+    }
+
+    public function test_update_quantity_with_invalid_value()
+    {
+        $product = Product::factory()->create();
+        Livewire::test(ShoppingCart::class)
+            ->call('addToCart', $product->id, $product->name, $product->price)
+            ->call('updateQuantity', $product->id, -1)
+            ->assertHasErrors(['quantity' => 'Quantity must be a positive integer'])
+            ->assertSessionHas('cart', function ($cart) use ($product) {
+                return $cart[$product->id]['quantity'] === 1;
+            });
+    }
+
+    public function test_update_quantity_for_non_existent_product()
+    {
+        Livewire::test(ShoppingCart::class)
+            ->call('updateQuantity', 999, 1)
+            ->assertHasErrors(['product' => 'Product not found in cart']);
+    }
+
+    public function test_calculate_total()
+    {
+        $product1 = Product::factory()->create(['price' => 10.00]);
+        $product2 = Product::factory()->create(['price' => 15.50]);
+        $component = Livewire::test(ShoppingCart::class)
+            ->call('addToCart', $product1->id, $product1->name, $product1->price, 2)
+            ->call('addToCart', $product2->id, $product2->name, $product2->price, 3);
+
+        $this->assertEquals(66.50, $component->instance()->calculateTotal());
+    }
 }
