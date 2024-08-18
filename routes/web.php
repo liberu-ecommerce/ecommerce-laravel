@@ -1,7 +1,3 @@
-/**
- * Web routes file registers all the web routes for the ecommerce application.
- * This includes routes for product viewing, checkout processes, payment methods, and user subscriptions.
- */
 <?php
 
 /*
