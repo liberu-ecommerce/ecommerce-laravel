@@ -3,14 +3,29 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\CheckoutController;
+use App\Models\Order;
+use App\Models\ShippingMethod;
+use App\Services\ShippingService;
+use App\Services\PaymentGatewayService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class CheckoutControllerTest extends TestCase
 {
+    use RefreshDatabase;
+
+    protected $shippingService;
+    protected $paymentGatewayService;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        $this->shippingService = $this->createMock(ShippingService::class);
+        $this->paymentGatewayService = $this->createMock(PaymentGatewayService::class);
+    }
+
     public function testGuestCheckout()
     {
         Session::shouldReceive('get')->once()->with('cart', [])->andReturn(['item1', 'item2']);
@@ -18,55 +33,76 @@ class CheckoutControllerTest extends TestCase
         Session::shouldReceive('put')->once()->with('is_guest', true);
 
         $request = Request::create('/checkout/guest', 'POST');
-        $controller = new CheckoutController();
+        $controller = new CheckoutController($this->shippingService, $this->paymentGatewayService);
         $controller->guestCheckout($request);
     }
 
-    public function testCheckoutAsGuest()
-    {
-        Session::shouldReceive('get')->once()->with('is_guest', false)->andReturn(true);
-        Session::shouldReceive('get')->once()->with('cart', [])->andReturn(['item1', 'item2']);
-        Session::shouldReceive('put')->times(2);
-
-        $request = Request::create('/checkout', 'POST');
-        $controller = new CheckoutController();
-        $controller->checkout($request);
-    }
-
-    public function testCheckoutAsRegisteredUser()
+    public function testInitiateCheckout()
     {
         Session::shouldReceive('get')->once()->with('is_guest', false)->andReturn(false);
+        Session::shouldReceive('get')->once()->with('cart', [])->andReturn(['item1', 'item2']);
 
-        $request = Request::create('/checkout', 'POST');
-        $controller = new CheckoutController();
-        $controller->checkout($request);
+        $this->shippingService->expects($this->once())
+            ->method('getAvailableShippingMethods')
+            ->willReturn([new ShippingMethod(['id' => 1, 'name' => 'Standard Shipping', 'price' => 5.00])]);
+
+        $request = Request::create('/checkout', 'GET');
+        $controller = new CheckoutController($this->shippingService, $this->paymentGatewayService);
+
+        $response = $controller->initiateCheckout($request);
+
+        $this->assertEquals('checkout.checkout', $response->name());
+        $this->assertArrayHasKey('cart', $response->getData());
+        $this->assertArrayHasKey('shippingMethods', $response->getData());
     }
 
-    public function testVerifyPaymentAndShippingInfoValidData()
+    public function testProcessCheckout()
     {
-        Validator::shouldReceive('make')->once()->andReturnSelf();
-        Validator::shouldReceive('fails')->once()->andReturn(false);
+        $shippingMethod = ShippingMethod::factory()->create();
+        $cart = [
+            ['product_id' => 1, 'quantity' => 2, 'price' => 10.00],
+            ['product_id' => 2, 'quantity' => 1, 'price' => 15.00],
+        ];
 
-        $controller = new CheckoutController();
-        $controller->verifyPaymentAndShippingInfo([
+        Session::shouldReceive('get')->once()->with('cart', [])->andReturn($cart);
+        Session::shouldReceive('forget')->once()->with('cart');
+
+        $this->paymentGatewayService->expects($this->once())
+            ->method('processPayment')
+            ->willReturn(['success' => true]);
+
+        $request = Request::create('/checkout/process', 'POST', [
             'email' => 'test@example.com',
-            'shipping_address' => '123 Main St',
+            'shipping_address' => '123 Test St',
+            'shipping_method_id' => $shippingMethod->id,
             'payment_method' => 'credit_card',
         ]);
+
+        $controller = new CheckoutController($this->shippingService, $this->paymentGatewayService);
+
+        $response = $controller->processCheckout($request);
+
+        $this->assertInstanceOf(\Illuminate\Http\RedirectResponse::class, $response);
+        $this->assertEquals(route('checkout.confirmation', ['order' => 1]), $response->getTargetUrl());
+
+        $this->assertDatabaseHas('orders', [
+            'customer_email' => 'test@example.com',
+            'shipping_address' => '123 Test St',
+            'shipping_method_id' => $shippingMethod->id,
+            'payment_method' => 'credit_card',
+            'status' => 'paid',
+        ]);
     }
 
-    public function testVerifyPaymentAndShippingInfoInvalidData()
+    public function testShowConfirmation()
     {
-        $this->expectException(ValidationException::class);
+        $order = Order::factory()->create();
 
-        Validator::shouldReceive('make')->once()->andReturnSelf();
-        Validator::shouldReceive('fails')->once()->andReturn(true);
+        $controller = new CheckoutController($this->shippingService, $this->paymentGatewayService);
 
-        $controller = new CheckoutController();
-        $controller->verifyPaymentAndShippingInfo([
-            'email' => 'invalid',
-            'shipping_address' => '',
-            'payment_method' => '',
-        ]);
+        $response = $controller->showConfirmation($order);
+
+        $this->assertEquals('checkout.confirmation', $response->name());
+        $this->assertEquals($order->id, $response->getData()['order']->id);
     }
 }
