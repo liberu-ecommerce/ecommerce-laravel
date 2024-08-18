@@ -3,11 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\BrowsingHistory;
+use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
+    protected $recommendationService;
+
+    public function __construct(RecommendationService $recommendationService)
+    {
+        $this->recommendationService = $recommendationService;
+    }
+
     public function create(Request $request)
     {
         // Handle Product File Upload
@@ -55,7 +64,24 @@ class ProductController extends Controller
             return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
         }
 
-        return response()->json($product);
+        // Track browsing history
+        if (auth()->check()) {
+            BrowsingHistory::create([
+                'user_id' => auth()->id(),
+                'product_id' => $product->id,
+            ]);
+        }
+
+        // Get recommendations
+        $recommendations = [];
+        if (auth()->check()) {
+            $recommendations = $this->recommendationService->getRecommendations(auth()->user());
+        }
+
+        return response()->json([
+            'product' => $product,
+            'recommendations' => $recommendations,
+        ]);
     }
 
     public function update(Request $request, $id)
