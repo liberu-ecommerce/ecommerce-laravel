@@ -49,7 +49,7 @@ class MenuSeeder extends Seeder
                 'children' => [
                     ['name' => 'Profile', 'url' => '/account/profile', 'order' => 1],
                     ['name' => 'Orders', 'url' => '/account/orders', 'order' => 2],
-                    ['name' => 'Wishlist', 'url' => '/account/wishlist', 'order' => 3],
+                    ['name' => 'Wishlist', 'url' => '/wishlist', 'order' => 3],
                 ]
             ],
             [
