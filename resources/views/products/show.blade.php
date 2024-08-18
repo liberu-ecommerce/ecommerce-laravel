@@ -15,6 +15,28 @@
                 </div>
             </div>
             <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>
+
+            @if(count($recommendations) > 0)
+                <div class="card mt-4">
+                    <div class="card-header">Recommended Products</div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($recommendations as $recommendedProduct)
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="/images/placeholder.png" alt="{{ $recommendedProduct->name }}" class="card-img-top">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ $recommendedProduct->name }}</h5>
+                                            <p class="card-text">${{ number_format($recommendedProduct->price, 2) }}</p>
+                                            <a href="{{ route('products.show', $recommendedProduct->id) }}" class="btn btn-sm btn-primary">View Product</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>
