@@ -16,38 +16,51 @@ class MenuSeeder extends Seeder
                 'order' => 1
             ],
             [
-                'name' => 'Properties',
-                'url' => '/properties',
+                'name' => 'Products',
+                'url' => '/products',
                 'order' => 2,
                 'children' => [
-                    ['name' => 'For Sale', 'url' => '/properties/for-sale', 'order' => 1],
-                    ['name' => 'For Rent', 'url' => '/properties/for-rent', 'order' => 2],
+                    ['name' => 'All Products', 'url' => '/products', 'order' => 1],
+                    ['name' => 'Categories', 'url' => '/products/categories', 'order' => 2],
+                    ['name' => 'New Arrivals', 'url' => '/products/new-arrivals', 'order' => 3],
+                    ['name' => 'Sale', 'url' => '/products/sale', 'order' => 4],
                 ]
             ],
             [
-                'name' => 'Services',
-                'url' => '/services',
+                'name' => 'Shop',
+                'url' => '/shop',
                 'order' => 3,
                 'children' => [
-                    ['name' => 'Buying', 'url' => '/services/buying', 'order' => 1],
-                    ['name' => 'Selling', 'url' => '/services/selling', 'order' => 2],
-                    ['name' => 'Renting', 'url' => '/services/renting', 'order' => 3],
+                    ['name' => 'Men', 'url' => '/shop/men', 'order' => 1],
+                    ['name' => 'Women', 'url' => '/shop/women', 'order' => 2],
+                    ['name' => 'Kids', 'url' => '/shop/kids', 'order' => 3],
+                    ['name' => 'Accessories', 'url' => '/shop/accessories', 'order' => 4],
+                ]
+            ],
+            [
+                'name' => 'Cart',
+                'url' => '/cart',
+                'order' => 4
+            ],
+            [
+                'name' => 'My Account',
+                'url' => '/account',
+                'order' => 5,
+                'children' => [
+                    ['name' => 'Profile', 'url' => '/account/profile', 'order' => 1],
+                    ['name' => 'Orders', 'url' => '/account/orders', 'order' => 2],
+                    ['name' => 'Wishlist', 'url' => '/account/wishlist', 'order' => 3],
                 ]
             ],
             [
                 'name' => 'About',
                 'url' => '/about',
-                'order' => 4
+                'order' => 6
             ],
             [
                 'name' => 'Contact',
                 'url' => '/contact',
-                'order' => 5
-            ],
-            [
-                'name' => 'Calculators',
-                'url' => '/calculators',
-                'order' => 6
+                'order' => 7
             ],
         ];
 
