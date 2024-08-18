@@ -47,15 +47,24 @@ class CheckoutController extends Controller
             'shipping_address' => 'required|string|max:255',
             'shipping_method_id' => 'required|exists:shipping_methods,id',
             'payment_method' => 'required|string|max:255',
+            'coupon_code' => 'nullable|string|max:255',
         ]);
-
+    
         $cart = $request->session()->get('cart', []);
         $shippingMethod = ShippingMethod::findOrFail($checkoutData['shipping_method_id']);
-
-        $order = $this->createOrder($cart, $checkoutData, $shippingMethod);
-
+    
+        $coupon = null;
+        if (!empty($checkoutData['coupon_code'])) {
+            $coupon = $this->validateCoupon($checkoutData['coupon_code']);
+            if (!$coupon) {
+                return back()->withErrors(['coupon' => 'Invalid coupon code.']);
+            }
+        }
+    
+        $order = $this->createOrder($cart, $checkoutData, $shippingMethod, $coupon);
+    
         $paymentResult = $this->processPayment($order, $checkoutData['payment_method']);
-
+    
         if ($paymentResult['success']) {
             $this->finalizeOrder($order);
             return redirect()->route('checkout.confirmation', ['order' => $order->id]);
@@ -84,13 +93,43 @@ class CheckoutController extends Controller
         return $order;
     }
 
-    protected function calculateTotalAmount($cart, $shippingPrice)
+    protected function calculateTotalAmount($cart, $shippingPrice, $coupon = null)
     {
         $total = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));
 
-        return $total + $shippingPrice;
+        // Apply bulk purchase discount
+        $totalItems = array_sum(array_column($cart, 'quantity'));
+        if ($totalItems >= 10) {
+            $bulkDiscount = $total * 0.05; // 5% discount for 10 or more items
+            $total -= $bulkDiscount;
+        }
+
+        $subtotal = $total + $shippingPrice;
+
+        // Apply coupon discount
+        if ($coupon && $coupon->isValid() && $subtotal >= $coupon->min_purchase_amount) {
+            if ($coupon->type === 'percentage') {
+                $discount = $subtotal * ($coupon->value / 100);
+            } else {
+                $discount = $coupon->value;
+            }
+            $subtotal -= $discount;
+        }
+
+        return max($subtotal, 0);
+    }
+    
+    protected function validateCoupon($code)
+    {
+        $coupon = Coupon::where('code', $code)->first();
+    
+        if (!$coupon || !$coupon->isValid()) {
+            return null;
+        }
+    
+        return $coupon;
     }
 
     protected function processPayment($order, $paymentMethod)
