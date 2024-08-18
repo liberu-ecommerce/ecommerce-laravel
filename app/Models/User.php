@@ -35,6 +35,11 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     use TwoFactorAuthenticatable;
     use HasTeams;
 
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *

@@ -12,6 +12,20 @@
                     <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
                     <p><strong>Category:</strong> {{ $product->category }}</p>
                     <p><strong>Inventory Count:</strong> {{ $product->inventory_count }}</p>
+                    @auth
+                        @if(auth()->user()->wishlist()->where('product_id', $product->id)->exists())
+                            <form action="{{ route('wishlist.remove', $product) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">Remove from Wishlist</button>
+                            </form>
+                        @else
+                            <form action="{{ route('wishlist.add', $product) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">Add to Wishlist</button>
+                            </form>
+                        @endif
+                    @endauth
                 </div>
             </div>
             <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>

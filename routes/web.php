@@ -63,6 +63,15 @@ Route::put('/products/{product}', [ProductController::class, 'update'])->name('p
 Route::patch('/products/{product}', [ProductController::class, 'update']);
 Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/{product}', [WishlistController::class, 'add'])->name('wishlist.add');
+    Route::delete('/wishlist/{product}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+    Route::post('/wishlist/share', [WishlistController::class, 'share'])->name('wishlist.share');
+});
+
+Route::get('/wishlist/shared/{shareToken}', [WishlistController::class, 'sharedWishlist'])->name('wishlist.shared');
+
 
 
 Route::middleware('auth')->group(function () {
