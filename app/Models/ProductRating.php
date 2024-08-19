@@ -14,7 +14,10 @@ class ProductRating extends Model
     protected $fillable = [
         'product_id',
         'customer_id',
-        'rating',
+        'overall_rating',
+        'quality_rating',
+        'value_rating',
+        'price_rating',
     ];
 
     public function product()
@@ -25,6 +28,11 @@ class ProductRating extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function getAverageRating()
+    {
+        return ($this->overall_rating + $this->quality_rating + $this->value_rating + $this->price_rating) / 4;
     }
 }
 
