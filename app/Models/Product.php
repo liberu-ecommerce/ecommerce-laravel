@@ -48,4 +48,27 @@ class Product extends Model
     {
         return $this->hasMany(DownloadableProduct::class);
     }
+
+    public function scopeSearch($query, $keyword)
+    {
+        return $query->where(function ($q) use ($keyword) {
+            $q->where('name', 'like', '%' . $keyword . '%')
+              ->orWhere('description', 'like', '%' . $keyword . '%');
+        });
+    }
+
+    public function scopeCategory($query, $category)
+    {
+        return $query->where('category', $category);
+    }
+
+    public function scopePriceRange($query, $min, $max)
+    {
+        return $query->when($min, function ($q) use ($min) {
+                $q->where('price', '>=', $min);
+            })
+            ->when($max, function ($q) use ($max) {
+                $q->where('price', '<=', $max);
+            });
+    }
 }
