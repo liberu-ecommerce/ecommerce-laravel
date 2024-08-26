@@ -17,6 +17,7 @@ class Product extends Model
         'price',
         'category',
         'inventory_count',
+        'low_stock_threshold',
     ];
 
     public function categories()
@@ -70,5 +71,10 @@ class Product extends Model
             ->when($max, function ($q) use ($max) {
                 $q->where('price', '<=', $max);
             });
+    }
+
+    public function isLowStock()
+    {
+        return $this->inventory_count <= $this->low_stock_threshold;
     }
 }
