@@ -145,8 +145,22 @@ class CheckoutController extends Controller
         // Update inventory
         foreach ($order->items as $item) {
             $product = $item->product;
+            $oldInventory = $product->inventory_count;
             $product->inventory_count -= $item->quantity;
             $product->save();
+
+            // Create InventoryLog entry
+            InventoryLog::create([
+                'product_id' => $product->id,
+                'quantity_change' => -$item->quantity,
+                'reason' => 'Order #' . $order->id,
+            ]);
+
+            // Check for low stock
+            if ($product->isLowStock()) {
+                $admins = User::where('is_admin', true)->get();
+                Notification::send($admins, new LowStockNotification($product));
+            }
         }
 
         // Clear the cart

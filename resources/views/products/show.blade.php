@@ -12,6 +12,11 @@
                     <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
                     <p><strong>Category:</strong> {{ $product->category }}</p>
                     <p><strong>Inventory Count:</strong> {{ $product->inventory_count }}</p>
+                    @if($product->inventory_count > 0)
+                        <p class="text-success"><strong>In Stock</strong></p>
+                    @else
+                        <p class="text-danger"><strong>Out of Stock</strong></p>
+                    @endif
                     @auth
                         @if(auth()->user()->wishlist()->where('product_id', $product->id)->exists())
                             <form action="{{ route('wishlist.remove', $product) }}" method="POST">
@@ -26,6 +31,12 @@
                             </form>
                         @endif
                     @endauth
+                    @if($product->inventory_count > 0)
+                        <form action="{{ route('cart.add', $product) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
+                        </form>
+                    @endif
                 </div>
             </div>
             <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>
@@ -43,6 +54,9 @@
                                             <h5 class="card-title">{{ $recommendedProduct->name }}</h5>
                                             <p class="card-text">${{ number_format($recommendedProduct->price, 2) }}</p>
                                             <a href="{{ route('products.show', $recommendedProduct->id) }}" class="btn btn-sm btn-primary">View Product</a>
+                                            @if($recommendedProduct->inventory_count == 0)
+                                                <p class="text-danger mt-2">Out of Stock</p>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

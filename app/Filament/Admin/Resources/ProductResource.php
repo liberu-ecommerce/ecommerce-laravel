@@ -41,6 +41,11 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->minValue(0),
+                Forms\Components\TextInput::make('low_stock_threshold')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->label('Low Stock Threshold'),
                 Forms\Components\Select::make('tags')
                     ->multiple()
                     ->relationship('tags', 'name')
@@ -64,6 +69,28 @@ class ProductResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('adjustInventory')
+                    ->label('Adjust Inventory')
+                    ->icon('heroicon-o-adjustments')
+                    ->action(function (Product $record, array $data): void {
+                        $record->inventory_count += $data['adjustment'];
+                        $record->save();
+                        
+                        InventoryLog::create([
+                            'product_id' => $record->id,
+                            'quantity_change' => $data['adjustment'],
+                            'reason' => $data['reason'],
+                        ]);
+                    })
+                    ->form([
+                        Forms\Components\TextInput::make('adjustment')
+                            ->label('Quantity Adjustment')
+                            ->required()
+                            ->integer(),
+                        Forms\Components\TextInput::make('reason')
+                            ->label('Reason for Adjustment')
+                            ->required(),
+                    ]),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -92,6 +119,26 @@ class ProductResource extends Resource
 
     protected static function export(Collection $records)
     {
-        // Implement export functionality here
+        $csv = Writer::createFromString('');
+        
+        $csv->insertOne(['Name', 'SKU', 'Category', 'Price', 'Inventory Count', 'Low Stock Threshold', 'Status']);
+        
+        foreach ($records as $record) {
+            $csv->insertOne([
+                $record->name,
+                $record->sku,
+                $record->category->name,
+                $record->price,
+                $record->inventory_count,
+                $record->low_stock_threshold,
+                $record->inventory_count > $record->low_stock_threshold ? 'In Stock' : ($record->inventory_count > 0 ? 'Low Stock' : 'Out of Stock'),
+            ]);
+        }
+        
+        $filename = 'inventory_report_' . date('Y-m-d') . '.csv';
+        $path = storage_path('app/public/' . $filename);
+        file_put_contents($path, $csv->getContent());
+        
+        return response()->download($path)->deleteFileAfterSend();
     }
 }
