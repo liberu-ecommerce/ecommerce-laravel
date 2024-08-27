@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\OrderHistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,6 +29,10 @@ Route::get('/shipping', [ShippingController::class, 'index'])->name('shipping.in
 Route::post('/shipping', [ShippingController::class, 'store'])->name('shipping.store');
 Route::put('/shipping/{shippingMethod}', [ShippingController::class, 'update'])->name('shipping.update');
 Route::delete('/shipping/{shippingMethod}', [ShippingController::class, 'destroy'])->name('shipping.destroy');
+
+// Order history routes
+Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.history');
+Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
 
 Route::prefix('payment_methods')->group(function () {
     Route::get('/', 'PaymentMethodController@index')->name('payment_methods.index');
