@@ -12,6 +12,18 @@ use App\Models\Order;
 
 class CheckoutController extends Controller
 {
+use App\Services\ShippingService;
+use App\Models\ShippingMethod;
+use App\Models\Order;
+use App\Models\Coupon;
+use App\Models\InventoryLog;
+use App\Models\User;
+use App\Notifications\LowStockNotification;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Notification;
+
+class CheckoutController extends Controller
+{
     protected $shippingService;
     protected $paymentGatewayService;
 
@@ -35,9 +47,10 @@ class CheckoutController extends Controller
         }
 
         $cart = $request->session()->get('cart', []);
-        $shippingMethods = $this->shippingService->getAvailableShippingMethods($cart);
+        $shippingAddress = $request->session()->get('shipping_address', null);
+        $shippingMethods = $this->shippingService->getAvailableShippingMethods($cart, $shippingAddress);
 
-        return view('checkout.checkout', compact('cart', 'shippingMethods'));
+        return view('checkout.checkout', compact('cart', 'shippingMethods', 'shippingAddress'));
     }
 
     public function processCheckout(Request $request)
@@ -53,6 +66,12 @@ class CheckoutController extends Controller
         $cart = $request->session()->get('cart', []);
         $shippingMethod = ShippingMethod::findOrFail($checkoutData['shipping_method_id']);
     
+        // Verify address
+        $verifiedAddress = $this->shippingService->verifyAddress($checkoutData['shipping_address']);
+        if (!$verifiedAddress) {
+            return back()->withErrors(['shipping_address' => 'Invalid shipping address. Please check and try again.']);
+        }
+    
         $coupon = null;
         if (!empty($checkoutData['coupon_code'])) {
             $coupon = $this->validateCoupon($checkoutData['coupon_code']);
@@ -61,7 +80,8 @@ class CheckoutController extends Controller
             }
         }
     
-        $order = $this->createOrder($cart, $checkoutData, $shippingMethod, $coupon);
+        $shippingCost = $this->shippingService->calculateShippingCost($shippingMethod, $cart, $verifiedAddress);
+        $order = $this->createOrder($cart, $checkoutData, $shippingMethod, $shippingCost, $coupon);
     
         $paymentResult = $this->processPayment($order, $checkoutData['payment_method']);
     
@@ -73,13 +93,14 @@ class CheckoutController extends Controller
         }
     }
 
-    protected function createOrder($cart, $checkoutData, $shippingMethod)
+    protected function createOrder($cart, $checkoutData, $shippingMethod, $shippingCost, $coupon = null)
     {
         $order = new Order();
         $order->customer_email = $checkoutData['email'];
         $order->shipping_address = $checkoutData['shipping_address'];
         $order->shipping_method_id = $shippingMethod->id;
-        $order->total_amount = $this->calculateTotalAmount($cart, $shippingMethod->price);
+        $order->shipping_cost = $shippingCost;
+        $order->total_amount = $this->calculateTotalAmount($cart, $shippingCost, $coupon);
         $order->save();
 
         foreach ($cart as $item) {
@@ -93,7 +114,7 @@ class CheckoutController extends Controller
         return $order;
     }
 
-    protected function calculateTotalAmount($cart, $shippingPrice, $coupon = null)
+    protected function calculateTotalAmount($cart, $shippingCost, $coupon = null)
     {
         $total = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
@@ -106,7 +127,7 @@ class CheckoutController extends Controller
             $total -= $bulkDiscount;
         }
 
-        $subtotal = $total + $shippingPrice;
+        $subtotal = $total + $shippingCost;
 
         // Apply coupon discount
         if ($coupon && $coupon->isValid() && $subtotal >= $coupon->min_purchase_amount) {
