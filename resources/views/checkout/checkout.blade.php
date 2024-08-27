@@ -41,24 +41,23 @@
         <div class="form-group">
             <label for="payment_method">Payment Method</label>
             <select class="form-control" id="payment_method" name="payment_method" required>
-                <option value="credit_card">Credit Card</option>
+                <option value="stripe">Credit Card (Stripe)</option>
                 <option value="paypal">PayPal</option>
+                <!-- Add more payment options here as they become available -->
             </select>
         </div>
 
-        <div id="credit_card_fields" style="display: none;">
-            <div class="form-group">
-                <label for="card_number">Card Number</label>
-                <input type="text" class="form-control" id="card_number" name="card_number">
+        <div id="stripe_fields" style="display: none;">
+            <div id="card-element">
+                <!-- A Stripe Element will be inserted here. -->
             </div>
-            <div class="form-group">
-                <label for="expiry_date">Expiry Date</label>
-                <input type="text" class="form-control" id="expiry_date" name="expiry_date" placeholder="MM/YY">
-            </div>
-            <div class="form-group">
-                <label for="cvv">CVV</label>
-                <input type="text" class="form-control" id="cvv" name="cvv">
-            </div>
+            <!-- Used to display form errors. -->
+            <div id="card-errors" role="alert"></div>
+        </div>
+
+        <div id="paypal_fields" style="display: none;">
+            <!-- PayPal button will be rendered here -->
+            <div id="paypal-button-container"></div>
         </div>
 
         <h2>Order Summary</h2>
@@ -96,12 +95,14 @@
             <span id="total"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary">Complete Checkout</button>
+        <button type="submit" class="btn btn-primary" id="submit-button">Complete Checkout</button>
     </form>
 </div>
 @endsection
 
 @push('scripts')
+<script src="https://js.stripe.com/v3/"></script>
+<script src="https://www.paypal.com/sdk/js?client-id={{ config('services.paypal.client_id') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('checkout-form');
@@ -111,6 +112,16 @@
         const shippingCostSpan = document.getElementById('shipping_cost');
         const totalSpan = document.getElementById('total');
         const addressFeedback = document.getElementById('address-feedback');
+        const paymentMethodSelect = document.getElementById('payment_method');
+        const stripeFields = document.getElementById('stripe_fields');
+        const paypalFields = document.getElementById('paypal_fields');
+        const submitButton = document.getElementById('submit-button');
+
+        // Stripe setup
+        const stripe = Stripe('{{ config('services.stripe.key') }}');
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
 
         function updateOrderSummary() {
             const cart = @json($cart);
@@ -147,12 +158,56 @@
         shippingAddressInput.addEventListener('blur', verifyAddress);
         shippingMethodSelect.addEventListener('change', updateOrderSummary);
 
-        document.getElementById('payment_method').addEventListener('change', function() {
-            var creditCardFields = document.getElementById('credit_card_fields');
-            if (this.value === 'credit_card') {
-                creditCardFields.style.display = 'block';
+        paymentMethodSelect.addEventListener('change', function() {
+            if (this.value === 'stripe') {
+                stripeFields.style.display = 'block';
+                paypalFields.style.display = 'none';
+                submitButton.style.display = 'block';
+            } else if (this.value === 'paypal') {
+                stripeFields.style.display = 'none';
+                paypalFields.style.display = 'block';
+                submitButton.style.display = 'none';
+            }
+        });
+
+        // PayPal setup
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: totalSpan.textContent.replace('$', '')
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                    // Handle successful payment
+                    alert('Transaction completed by ' + details.payer.name.given_name);
+                    // You can add code here to submit the form or make an AJAX call to your server
+                });
+            }
+        }).render('#paypal-button-container');
+
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (paymentMethodSelect.value === 'stripe') {
+                const {token, error} = await stripe.createToken(cardElement);
+                if (error) {
+                    const errorElement = document.getElementById('card-errors');
+                    errorElement.textContent = error.message;
+                } else {
+                    // Insert the token ID into the form so it gets submitted to the server
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.setAttribute('type', 'hidden');
+                    hiddenInput.setAttribute('name', 'stripeToken');
+                    hiddenInput.setAttribute('value', token.id);
+                    form.appendChild(hiddenInput);
+                    form.submit();
+                }
             } else {
-                creditCardFields.style.display = 'none';
+                form.submit();
             }
         });
 
