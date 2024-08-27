@@ -32,11 +32,15 @@
                         @endif
                     @endauth
                     @if($product->inventory_count > 0)
-                        <form action="{{ route('cart.add', $product) }}" method="POST">
+                        <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
                         </form>
                     @endif
+                    <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-primary mt-2">Add to Compare</button>
+                    </form>
                 </div>
             </div>
             <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>
