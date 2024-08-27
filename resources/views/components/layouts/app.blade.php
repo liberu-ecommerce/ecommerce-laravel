@@ -7,7 +7,13 @@
         <meta name="csrf-token" content="{{ csrf_token() }}" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <title>{{ config('app.name') }}</title>
+        <title>{{ $metaTitle ?? config('app.name') }}</title>
+        <meta name="description" content="{{ $metaDescription ?? '' }}">
+        <meta name="keywords" content="{{ $metaKeywords ?? '' }}">
+
+        @if(isset($canonicalUrl))
+            <link rel="canonical" href="{{ $canonicalUrl }}" />
+        @endif
 
         <style>
             [x-cloak] {

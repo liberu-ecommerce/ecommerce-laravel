@@ -58,13 +58,11 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    public function show($id)
+    public function show($category, $product)
     {
-        $product = Product::find($id);
-
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], Response::HTTP_NOT_FOUND);
-        }
+        $product = Product::whereHas('categories', function ($query) use ($category) {
+            $query->where('slug', $category);
+        })->where('slug', $product)->firstOrFail();
 
         // Track browsing history
         if (auth()->check()) {
@@ -80,10 +78,12 @@ class ProductController extends Controller
             $recommendations = $this->recommendationService->getRecommendations(auth()->user());
         }
 
-        return response()->json([
-            'product' => $product,
-            'recommendations' => $recommendations,
-        ]);
+        $metaTitle = $product->meta_title ?? $product->name;
+        $metaDescription = $product->meta_description ?? $product->short_description;
+        $metaKeywords = $product->meta_keywords;
+        $canonicalUrl = route('products.show', ['category' => $category, 'product' => $product->slug]);
+
+        return view('products.show', compact('product', 'recommendations', 'metaTitle', 'metaDescription', 'metaKeywords', 'canonicalUrl'));
     }
 
     public function update(Request $request, $id)

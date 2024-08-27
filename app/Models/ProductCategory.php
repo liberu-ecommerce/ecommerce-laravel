@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ProductCategory extends Model
 {
@@ -12,7 +13,10 @@ class ProductCategory extends Model
     protected $table = 'product_categories';
 
     protected $fillable = [
-        'name',   
+        'name',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
     ];
 
     public function products()
@@ -20,4 +24,8 @@ class ProductCategory extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function getSlugAttribute()
+    {
+        return Str::slug($this->name);
+    }
 }
