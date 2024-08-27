@@ -8,6 +8,7 @@ use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class ProductController extends Controller
 {
@@ -154,6 +155,45 @@ class ProductController extends Controller
         $products = $query->paginate(12);
 
         return view('products.search', compact('products'));
+    }
+
+    public function addToCompare(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        $compareList = Session::get('compare_list', []);
+
+        if (!in_array($id, $compareList) && count($compareList) < 4) {
+            $compareList[] = $id;
+            Session::put('compare_list', $compareList);
+            return redirect()->back()->with('success', 'Product added to comparison.');
+        } elseif (in_array($id, $compareList)) {
+            return redirect()->back()->with('info', 'Product is already in the comparison list.');
+        } else {
+            return redirect()->back()->with('error', 'You can compare up to 4 products at a time.');
+        }
+    }
+
+    public function compare()
+    {
+        $compareList = Session::get('compare_list', []);
+        $products = Product::whereIn('id', $compareList)->get();
+
+        return view('products.compare', compact('products'));
+    }
+
+    public function removeFromCompare($id)
+    {
+        $compareList = Session::get('compare_list', []);
+        $compareList = array_diff($compareList, [$id]);
+        Session::put('compare_list', $compareList);
+
+        return redirect()->back()->with('success', 'Product removed from comparison.');
+    }
+
+    public function clearCompare()
+    {
+        Session::forget('compare_list');
+        return redirect()->route('products.list')->with('success', 'Comparison list cleared.');
     }
 }
         // Check if inventory_count is being updated and log the change

@@ -65,6 +65,12 @@ Route::put('/products/{product}', [ProductController::class, 'update'])->name('p
 Route::patch('/products/{product}', [ProductController::class, 'update']);
 Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
+// New comparison routes
+Route::post('/products/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');
+Route::get('/products/compare', [ProductController::class, 'compare'])->name('products.compare');
+Route::delete('/products/{product}/compare', [ProductController::class, 'removeFromCompare'])->name('products.removeFromCompare');
+Route::delete('/products/compare/clear', [ProductController::class, 'clearCompare'])->name('products.clearCompare');
+
 Route::middleware('auth')->group(function () {
     Route::get('/download/{productId}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
     Route::get('/download/file/{productId}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
