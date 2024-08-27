@@ -29,18 +29,6 @@
                     <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required />
                 </div>
 
-                <div class="mt-4">
-                    <x-label for="role" value="{{ __('Role') }}" />
-                    <select id="role" name="role" class="block mt-1 w-full border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm" required>
-                        <option value="">Select a role</option>
-                        <option value="tenant">Tenant</option>
-                        <option value="buyer">Buyer</option>
-                        <option value="seller">Seller</option>
-                        <option value="landlord">Landlord</option>
-                        <option value="contractor">Contractor</option>
-                    </select>
-                </div>
-
                 <div class="flex items-center justify-end mt-4">
                     <a class="underline text-sm text-gray-600 hover:text-gray-900" href="{{ route('login') }}">
                         {{ __('Already registered?') }}

@@ -36,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
                     Rule::unique(User::class),
                 ],
                 'password' => $this->passwordRules(),
-                'role' => ['required', 'string', Rule::in(['tenant', 'buyer', 'seller', 'landlord', 'contractor'])],
+                // 'role' => ['required', 'string', Rule::in(['tenant', 'buyer', 'seller', 'landlord', 'contractor'])],
             ])->validate();
 
            
@@ -49,7 +49,7 @@ class CreateNewUser implements CreatesNewUsers
                     $team = $this->assignOrCreateTeam($user);
                     $user->switchTeam($team);
                     setPermissionsTeamId($team->id);
-                    $user->assignRole($input['role']);
+                    // $user->assignRole($input['role']);
                 });
             });
             // $user = DB::transaction(function () use ($input) {
@@ -62,11 +62,11 @@ class CreateNewUser implements CreatesNewUsers
             //     });
             // });
 
-            Log::info('User created successfully', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'role' => $input['role'],
-            ]);
+            // Log::info('User created successfully', [
+            //     'user_id' => $user->id,
+            //     'email' => $user->email,
+            //     'role' => $input['role'],
+            // ]);
     
             return $user;
         } catch (\Illuminate\Validation\ValidationException $e) {

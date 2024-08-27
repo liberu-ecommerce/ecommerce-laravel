@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\SiteSettings;
+use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Cache;
 
 class SiteSettingsService
@@ -10,7 +10,7 @@ class SiteSettingsService
     public function get($key = null)
     {
         $settings = Cache::remember(config('site-settings.cache_key'), config('site-settings.cache_duration'), function () {
-            return SiteSettings::first() ?? new SiteSettings();
+            return SiteSetting::first() ?? new SiteSetting();
         });
 
         return $key ? $settings->$key : $settings;
