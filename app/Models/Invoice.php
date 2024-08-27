@@ -18,6 +18,10 @@ class Invoice extends Model
         'total_amount',
     ];
 
+    protected $casts = [
+        'invoice_date' => 'datetime',
+    ];
+
     public function order()
     {
         return $this->belongsTo(Order::class);
@@ -27,12 +31,9 @@ class Invoice extends Model
     {
         return $this->belongsTo(Customer::class);
     }
-}
-    protected $casts = [
-        'invoice_date' => 'datetime',
-    ];
 
     public function products()
     {
         return $this->belongsToMany(Product::class)->withPivot('quantity', 'price');
     }
+}

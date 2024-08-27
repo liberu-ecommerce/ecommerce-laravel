@@ -22,17 +22,17 @@ class UserSeeder extends Seeder
         ]);
         $adminUser->assignRole('admin');
 
-        $staffUser = User::create([
-            'name' => 'Staff User',
-            'email' => 'staff@example.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $staffUser->assignRole('staff');
+        // $staffUser = User::create([
+        //     'name' => 'Staff User',
+        //     'email' => 'staff@example.com',
+        //     'password' => Hash::make('password'),
+        //     'email_verified_at' => now(),
+        // ]);
+        // $staffUser->assignRole('staff');
 
         // Create teams for admin and staff users
        $this->createTeamForUser($adminUser);
-        $this->createTeamForUser($staffUser);
+        // $this->createTeamForUser($staffUser);
 
         // Create additional users with teams
    //     User::factory(8)->create()->each(function ($user) {

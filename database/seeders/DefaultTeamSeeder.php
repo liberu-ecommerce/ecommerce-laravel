@@ -19,12 +19,5 @@ class DefaultTeamSeeder extends Seeder
             'personal_team' => false,
             'user_id' => 1,
         ]);
-
-        Branch::create([
-            'name' => 'Default Branch',
-            'address' => '123 Main St, City, Country',
-            'phone_number' => '+1234567890',
-            'team_id' => $team->id,
-        ]);
     }
 }

@@ -62,11 +62,11 @@ class CreateNewUser implements CreatesNewUsers
             //     });
             // });
 
-            Log::info('User created successfully', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-                'role' => $input['role'],
-            ]);
+            // Log::info('User created successfully', [
+            //     'user_id' => $user->id,
+            //     'email' => $user->email,
+            //     'role' => $input['role'],
+            // ]);
     
             return $user;
         } catch (\Illuminate\Validation\ValidationException $e) {

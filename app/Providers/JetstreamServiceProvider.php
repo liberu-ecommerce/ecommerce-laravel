@@ -38,10 +38,10 @@ class JetstreamServiceProvider extends ServiceProvider
         Jetstream::deleteUsersUsing(DeleteUser::class);
     
         // Use our modified CreatePersonalTeam listener
-        \Illuminate\Support\Facades\Event::listen(
-            \Illuminate\Auth\Events\Registered::class,
-            \App\Listeners\CreatePersonalTeam::class
-        );
+        // \Illuminate\Support\Facades\Event::listen(
+        //     \Illuminate\Auth\Events\Registered::class,
+        //     \App\Listeners\CreatePersonalTeam::class
+        // );
     }
 
     /**

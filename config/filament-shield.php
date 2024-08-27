@@ -86,4 +86,9 @@ return [
         'enabled' => false,
     ],
 
+    'panels' => [
+        'admin' => ['admin'],
+    ],
+
+
 ];

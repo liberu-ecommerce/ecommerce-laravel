@@ -20,11 +20,12 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             SiteSettingsSeeder::class,
-            PermissionsSeeder::class,
+            // PermissionsSeeder::class,
             RolesSeeder::class,
             DefaultTeamSeeder::class,
             UserSeeder::class,
             MenuSeeder::class,
         ]);
+        $this->call(PermissionsTableSeeder::class);
     }
 }
