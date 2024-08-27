@@ -18,6 +18,9 @@ class Product extends Model
         'category',
         'inventory_count',
         'low_stock_threshold',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
     ];
 
     public function categories()
@@ -76,5 +79,10 @@ class Product extends Model
     public function isLowStock()
     {
         return $this->inventory_count <= $this->low_stock_threshold;
+    }
+
+    public function getSlugAttribute()
+    {
+        return \Str::slug($this->name);
     }
 }

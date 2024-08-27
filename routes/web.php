@@ -60,30 +60,32 @@ Route::get('/products/create', [ProductController::class, 'create'])->name('prod
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
 Route::get('/products', [ProductController::class, 'list'])->name('products.list');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-Route::patch('/products/{product}', [ProductController::class, 'update']);
-Route::delete('/products/{product}', [ProductController::class, 'delete'])->name('products.delete');
+Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
+Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
+Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
 // New comparison routes
-Route::post('/products/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');
+Route::post('/product/{category}/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');
 Route::get('/products/compare', [ProductController::class, 'compare'])->name('products.compare');
-Route::delete('/products/{product}/compare', [ProductController::class, 'removeFromCompare'])->name('products.removeFromCompare');
+Route::delete('/product/{category}/{product}/compare', [ProductController::class, 'removeFromCompare'])->name('products.removeFromCompare');
 Route::delete('/products/compare/clear', [ProductController::class, 'clearCompare'])->name('products.clearCompare');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/download/{productId}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
-    Route::get('/download/file/{productId}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
+    Route::get('/download/{category}/{product}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
+    Route::get('/download/file/{category}/{product}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
 });
 
 Route::post('/reviews', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
 Route::post('/reviews/approve/{id}', 'App\Http\Controllers\ReviewController@approve')->name('reviews.approve');
-Route::get('/products/{product}/reviews', 'App\Http\Controllers\ReviewController@show')->name('reviews.show');
+Route::get('/product/{category}/{product}/reviews', 'App\Http\Controllers\ReviewController@show')->name('reviews.show');
 Route::post('/reviews/{id}/vote', 'App\Http\Controllers\ReviewController@vote')->name('reviews.vote');
-Route::get('/products/{product}/ratings/average', 'App\Http\Controllers\RatingController@calculateAverageRating')->name('ratings.average');
+Route::get('/product/{category}/{product}/ratings/average', 'App\Http\Controllers\RatingController@calculateAverageRating')->name('ratings.average');
 
 Route::get('/site-settings', 'App\Http\Controllers\SiteSettingController@index')->name('site_settings.index');
 Route::get('/site-settings/{id}/edit', 'App\Http\Controllers\SiteSettingController@edit')->name('site_settings.edit');
 Route::post('/site-settings/{id}', 'App\Http\Controllers\SiteSettingController@update')->name('site_settings.update');
+
+Route::get('/sitemap.xml', 'App\Http\Controllers\SitemapController@index')->name('sitemap.xml');
 
 require __DIR__.'/socialstream.php';
