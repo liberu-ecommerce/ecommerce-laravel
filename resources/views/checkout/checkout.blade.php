@@ -1,97 +1,162 @@
 @extends('layouts.app')
 
 @section('content')
-&lt;div class="container">
-    &lt;h1>Checkout&lt;/h1>
+<div class="container">
+    <h1>Checkout</h1>
 
     @if ($errors->any())
-        &lt;div class="alert alert-danger">
-            &lt;ul>
+        <div class="alert alert-danger">
+            <ul>
                 @foreach ($errors->all() as $error)
-                    &lt;li>{{ $error }}&lt;/li>
+                    <li>{{ $error }}</li>
                 @endforeach
-            &lt;/ul>
-        &lt;/div>
+            </ul>
+        </div>
     @endif
 
-    &lt;form action="{{ route('checkout.process') }}" method="POST">
+    <form action="{{ route('checkout.process') }}" method="POST" id="checkout-form">
         @csrf
-        &lt;div class="form-group">
-            &lt;label for="email">Email Address&lt;/label>
-            &lt;input type="email" class="form-control" id="email" name="email" required>
-        &lt;/div>
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
 
-        &lt;div class="form-group">
-            &lt;label for="shipping_address">Shipping Address&lt;/label>
-            &lt;textarea class="form-control" id="shipping_address" name="shipping_address" required>&lt;/textarea>
-        &lt;/div>
+        <div class="form-group">
+            <label for="shipping_address">Shipping Address</label>
+            <textarea class="form-control" id="shipping_address" name="shipping_address" required>{{ $shippingAddress }}</textarea>
+            <small id="address-feedback" class="form-text text-muted"></small>
+        </div>
 
-        &lt;div class="form-group">
-            &lt;label for="shipping_method">Shipping Method&lt;/label>
-            &lt;select class="form-control" id="shipping_method" name="shipping_method_id" required>
+        <div class="form-group">
+            <label for="shipping_method">Shipping Method</label>
+            <select class="form-control" id="shipping_method" name="shipping_method_id" required>
                 @foreach($shippingMethods as $method)
-                    &lt;option value="{{ $method->id }}">{{ $method->name }} - ${{ number_format($method->price, 2) }} ({{ $method->estimated_delivery_time }})&lt;/option>
+                    <option value="{{ $method->id }}" data-base-rate="{{ $method->base_rate }}">
+                        {{ $method->name }} - ${{ number_format($method->base_rate, 2) }} ({{ $method->estimated_delivery_time }})
+                    </option>
                 @endforeach
-            &lt;/select>
-        &lt;/div>
+            </select>
+        </div>
 
-        &lt;div class="form-group">
-            &lt;label for="payment_method">Payment Method&lt;/label>
-            &lt;select class="form-control" id="payment_method" name="payment_method" required>
-                &lt;option value="credit_card">Credit Card&lt;/option>
-                &lt;option value="paypal">PayPal&lt;/option>
-            &lt;/select>
-        &lt;/div>
+        <div class="form-group">
+            <label for="payment_method">Payment Method</label>
+            <select class="form-control" id="payment_method" name="payment_method" required>
+                <option value="credit_card">Credit Card</option>
+                <option value="paypal">PayPal</option>
+            </select>
+        </div>
 
-        &lt;div id="credit_card_fields" style="display: none;">
-            &lt;div class="form-group">
-                &lt;label for="card_number">Card Number&lt;/label>
-                &lt;input type="text" class="form-control" id="card_number" name="card_number">
-            &lt;/div>
-            &lt;div class="form-group">
-                &lt;label for="expiry_date">Expiry Date&lt;/label>
-                &lt;input type="text" class="form-control" id="expiry_date" name="expiry_date" placeholder="MM/YY">
-            &lt;/div>
-            &lt;div class="form-group">
-                &lt;label for="cvv">CVV&lt;/label>
-                &lt;input type="text" class="form-control" id="cvv" name="cvv">
-            &lt;/div>
-        &lt;/div>
+        <div id="credit_card_fields" style="display: none;">
+            <div class="form-group">
+                <label for="card_number">Card Number</label>
+                <input type="text" class="form-control" id="card_number" name="card_number">
+            </div>
+            <div class="form-group">
+                <label for="expiry_date">Expiry Date</label>
+                <input type="text" class="form-control" id="expiry_date" name="expiry_date" placeholder="MM/YY">
+            </div>
+            <div class="form-group">
+                <label for="cvv">CVV</label>
+                <input type="text" class="form-control" id="cvv" name="cvv">
+            </div>
+        </div>
 
-        &lt;h2>Order Summary&lt;/h2>
-        &lt;table class="table">
-            &lt;thead>
-                &lt;tr>
-                    &lt;th>Product&lt;/th>
-                    &lt;th>Quantity&lt;/th>
-                    &lt;th>Price&lt;/th>
-                &lt;/tr>
-            &lt;/thead>
-            &lt;tbody>
+        <h2>Order Summary</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
                 @foreach($cart as $item)
-                    &lt;tr>
-                        &lt;td>{{ $item['name'] }}&lt;/td>
-                        &lt;td>{{ $item['quantity'] }}&lt;/td>
-                        &lt;td>${{ number_format($item['price'], 2) }}&lt;/td>
-                    &lt;/tr>
+                    <tr>
+                        <td>{{ $item['name'] }}</td>
+                        <td>{{ $item['quantity'] }}</td>
+                        <td>${{ number_format($item['price'], 2) }}</td>
+                    </tr>
                 @endforeach
-            &lt;/tbody>
-        &lt;/table>
+            </tbody>
+        </table>
 
-        &lt;button type="submit" class="btn btn-primary">Complete Checkout&lt;/button>
-    &lt;/form>
-&lt;/div>
+        <div class="form-group">
+            <label for="subtotal">Subtotal:</label>
+            <span id="subtotal"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="shipping_cost">Shipping Cost:</label>
+            <span id="shipping_cost"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="total">Total:</label>
+            <span id="total"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Complete Checkout</button>
+    </form>
+</div>
 @endsection
 
 @push('scripts')
-&lt;script>
-    document.getElementById('payment_method').addEventListener('change', function() {
-        var creditCardFields = document.getElementById('credit_card_fields');
-        if (this.value === 'credit_card') {
-            creditCardFields.style.display = 'block';
-        } else {
-            creditCardFields.style.display = 'none';
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checkout-form');
+        const shippingAddressInput = document.getElementById('shipping_address');
+        const shippingMethodSelect = document.getElementById('shipping_method');
+        const subtotalSpan = document.getElementById('subtotal');
+        const shippingCostSpan = document.getElementById('shipping_cost');
+        const totalSpan = document.getElementById('total');
+        const addressFeedback = document.getElementById('address-feedback');
+
+        function updateOrderSummary() {
+            const cart = @json($cart);
+            const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const shippingMethod = shippingMethodSelect.options[shippingMethodSelect.selectedIndex];
+            const shippingCost = parseFloat(shippingMethod.dataset.baseRate);
+            const total = subtotal + shippingCost;
+
+            subtotalSpan.textContent = `$${subtotal.toFixed(2)}`;
+            shippingCostSpan.textContent = `$${shippingCost.toFixed(2)}`;
+            totalSpan.textContent = `$${total.toFixed(2)}`;
         }
+
+        function verifyAddress() {
+            const address = shippingAddressInput.value;
+            fetch(`/api/verify-address?address=${encodeURIComponent(address)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.isValid) {
+                        addressFeedback.textContent = 'Address verified';
+                        addressFeedback.className = 'form-text text-success';
+                    } else {
+                        addressFeedback.textContent = 'Invalid address. Please check and try again.';
+                        addressFeedback.className = 'form-text text-danger';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    addressFeedback.textContent = 'Unable to verify address at this time.';
+                    addressFeedback.className = 'form-text text-warning';
+                });
+        }
+
+        shippingAddressInput.addEventListener('blur', verifyAddress);
+        shippingMethodSelect.addEventListener('change', updateOrderSummary);
+
+        document.getElementById('payment_method').addEventListener('change', function() {
+            var creditCardFields = document.getElementById('credit_card_fields');
+            if (this.value === 'credit_card') {
+                creditCardFields.style.display = 'block';
+            } else {
+                creditCardFields.style.display = 'none';
+            }
+        });
+
+        updateOrderSummary();
     });
-&lt;/script>
+</script>
 @endpush
