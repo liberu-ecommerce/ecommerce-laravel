@@ -21,12 +21,12 @@ class HomeController extends Controller
         $featuredProducts = Product::where('is_featured', true)->take(6)->get();
         $latestProducts = Product::latest()->take(6)->get();
         // Assuming 'specialOffers' is a method or scope on the Product model that retrieves special offers
-        $specialOffers = Product::specialOffers()->get();
+        // $specialOffers = Product::specialOffers()->get();
 
         return view('home', [
             'featuredProducts' => $featuredProducts,
             'latestProducts' => $latestProducts,
-            'specialOffers' => $specialOffers,
+            'specialOffers' => [], //$specialOffers,
         ]);
     }
 }
