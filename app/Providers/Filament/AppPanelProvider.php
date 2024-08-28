@@ -44,19 +44,19 @@ class AppPanelProvider extends PanelProvider
             ->login([AuthenticatedSessionController::class, 'create'])
             ->registration()
             ->passwordReset()
-            ->emailVerification()
+            // ->emailVerification()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Gray,
             ])
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Profile')
-                    ->icon('heroicon-o-user-circle')
-                    ->url(fn () => $this->shouldRegisterMenuItem()
-                        ? url(EditProfile::getUrl())
-                        : url($panel->getPath())),
-            ])
+            // ->userMenuItems([
+            //     MenuItem::make()
+            //         ->label('Profile')
+            //         ->icon('heroicon-o-user-circle')
+            //         ->url(fn () => $this->shouldRegisterMenuItem()
+            //             ? url(EditProfile::getUrl())
+            //             : url($panel->getPath())),
+            // ])
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
             ->pages([
@@ -98,20 +98,20 @@ class AppPanelProvider extends PanelProvider
         //     ]);
         // }
 
-        if (Features::hasTeamFeatures()) {
-            $panel
-                ->tenant(Team::class, ownershipRelationship: 'team')
-                ->tenantRegistration(Pages\CreateTeam::class)
-                ->tenantProfile(Pages\EditTeam::class)
-                ->userMenuItems([
-                    MenuItem::make()
-                        ->label('Team Settings')
-                        ->icon('heroicon-o-cog-6-tooth')
-                        ->url(fn () => $this->shouldRegisterMenuItem()
-                            ? url(Pages\EditTeam::getUrl())
-                            : url($panel->getPath())),
-                ]);
-        }
+        // if (Features::hasTeamFeatures()) {
+        //     $panel
+        //         ->tenant(Team::class, ownershipRelationship: 'team')
+        //         ->tenantRegistration(Pages\CreateTeam::class)
+        //         ->tenantProfile(Pages\EditTeam::class)
+        //         ->userMenuItems([
+        //             MenuItem::make()
+        //                 ->label('Team Settings')
+        //                 ->icon('heroicon-o-cog-6-tooth')
+        //                 ->url(fn () => $this->shouldRegisterMenuItem()
+        //                     ? url(Pages\EditTeam::getUrl())
+        //                     : url($panel->getPath())),
+        //         ]);
+        // }
 
         return $panel;
     }
@@ -131,10 +131,10 @@ class AppPanelProvider extends PanelProvider
         /**
          * Listen and create personal team for new accounts.
          */
-        Event::listen(
-            Registered::class,
-            CreatePersonalTeam::class,
-        );
+        // Event::listen(
+        //     Registered::class,
+        //     CreatePersonalTeam::class,
+        // );
 
         /**
          * Listen and switch team if tenant was changed.
