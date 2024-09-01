@@ -7,7 +7,7 @@
     @php
         $user = auth()->user();
         $role = $user->getRoleNames()->first() ?? 'user';
-        $dashboardUrl = $role === 'admin' ? '/admin' : '/' . $role;
+        $dashboardUrl = $role === 'admin' ? '/admin' : '/app';
     @endphp
 @endif
 <nav class="bg-white border-gray-200 dark:bg-gray-900">
@@ -28,12 +28,6 @@
 
         <div class="flex items-center space-x-3 rtl:space-x-reverse">
             @if (auth()->check())
-                @php
-                    $user = auth()->user();
-                    $role = $user->getRoleNames()->first() ?? 'user';
-                    $dashboardUrl = $role === 'admin' ? '/admin' : '/' . $role;
-                @endphp
-
                 <a href="{{ $dashboardUrl }}"
                     class="hover:text-blue-700 px-3 py-2 rounded-md text-sm font-medium lg:hidden">
                     {{ ucfirst($role) }} Dashboard
