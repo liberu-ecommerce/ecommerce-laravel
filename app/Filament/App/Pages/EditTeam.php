@@ -7,6 +7,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Pages\Tenancy\EditTenantProfile;
+use Illuminate\Support\Facades\Auth;
 
 class EditTeam extends EditTenantProfile
 {
@@ -16,12 +17,7 @@ class EditTeam extends EditTenantProfile
 
     public static function getLabel(): string
     {
-        return 'Edit Team';
-    }
-
-    public function mount(): void
-    {
-        abort_unless($this->user()->canCreateTeams(), 403);
+        return 'Edit Store';
     }
 
     protected function getFormSchema(): array
@@ -50,15 +46,15 @@ class EditTeam extends EditTenantProfile
         return redirect()->route('filament.pages.edit-team', ['team' => $team]);
     }
 
-    public function getBreadcrumbs(): array
-    {
-        return [
-            url()->current() => 'Create Team',
-        ];
-    }
-
     private function user(): User
     {
         return Filament::auth()->user();
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'team' => Filament::getTenant(),
+        ];
     }
 }

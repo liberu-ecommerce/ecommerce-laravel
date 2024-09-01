@@ -15,12 +15,9 @@ class CreateTeam extends RegisterTenant
 
     public $name = '';
 
-    protected ?string $maxWidth = '2xl';
 
-    public function mount(): void
-    {
-        // abort_unless(Filament::auth()->user()->canCreateTeams(), 403);
-    }
+
+    protected ?string $maxWidth = '2xl';
 
     protected function getFormSchema(): array
     {
@@ -46,6 +43,6 @@ class CreateTeam extends RegisterTenant
 
     public static function getLabel(): string
     {
-        return 'Create Team';
+        return 'Create Store';
     }
 }

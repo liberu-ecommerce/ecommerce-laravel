@@ -102,15 +102,15 @@ class AppPanelProvider extends PanelProvider
             $panel
                 ->tenant(Team::class, ownershipRelationship: 'team')
                 ->tenantRegistration(Pages\CreateTeam::class)
-                ->tenantProfile(Pages\EditTeam::class)
-                ->userMenuItems([
-                    MenuItem::make()
-                        ->label('Team Settings')
-                        ->icon('heroicon-o-cog-6-tooth')
-                        ->url(fn () => $this->shouldRegisterMenuItem()
-                            ? url(Pages\EditTeam::getUrl())
-                            : url($panel->getPath())),
-                ]);
+                ->tenantProfile(Pages\EditTeam::class);
+                // ->userMenuItems([
+                //     MenuItem::make()
+                //         ->label('Team Settings')
+                //         ->icon('heroicon-o-cog-6-tooth')
+                //         ->url(fn () => $this->shouldRegisterMenuItem()
+                //             ? url(Pages\EditTeam::getUrl())
+                //             : url($panel->getPath())),
+                // ]);
         }
 
         return $panel;
