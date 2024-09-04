@@ -16,7 +16,7 @@ class ListProducts extends ListRecords
             Actions\CreateAction::make(),
             Actions\Action::make('import')
                 ->label('Import Products')
-                ->icon('heroicon-o-upload')
+                ->icon('heroicon-o-arrow-up-tray')
                 ->action(fn () => $this->import()),
         ];
     }

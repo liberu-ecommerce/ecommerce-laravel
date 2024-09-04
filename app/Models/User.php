@@ -37,7 +37,16 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
     use HasTeams;
-    use HasPanelShield;
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        $user = auth()->user();
+        if ($panel->getId() === "admin" && !$user->hasRole('admin')) {
+            return false;
+        }
+
+        return true; // TODO: Check panel and role
+    }
 
     public function wishlist()
     {

@@ -9,7 +9,7 @@ return [
         'navigation_group' => true,
         'is_globally_searchable' => false,
         'show_model_path' => true,
-        'is_scoped_to_tenant' => true,
+        'is_scoped_to_tenant' => false,
         'cluster' => null,
     ],
 
@@ -18,14 +18,14 @@ return [
     ],
 
     'super_admin' => [
-        'enabled' => true,
+        'enabled' => false,
         'name' => 'super_admin',
-        'define_via_gate' => false,
+        'define_via_gate' => true,
         'intercept_gate' => 'before', // after
     ],
 
     'panel_user' => [
-        'enabled' => true,
+        'enabled' => false,
         'name' => 'panel_user',
     ],
 

@@ -80,8 +80,8 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
                 TeamsPermission::class,
+                Authenticate::class,
             ])
             ->plugins([
                 // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
