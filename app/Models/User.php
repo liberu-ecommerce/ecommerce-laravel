@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -36,7 +37,16 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
     use HasTeams;
-    use HasPanelShield;
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        $user = auth()->user();
+        if ($panel->getId() === "admin" && !$user->hasRole('admin')) {
+            return false;
+        }
+
+        return true; // TODO: Check panel and role
+    }
 
     public function wishlist()
     {
@@ -134,5 +144,10 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    public function membership(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class)->withPivot(['role']);
     }
 }

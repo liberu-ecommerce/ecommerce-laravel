@@ -5,10 +5,10 @@ namespace App\Filament\Admin\Resources;
 use App\Filament\Admin\Resources\CouponResource\Pages;
 use App\Models\Coupon;
 use Filament\Forms;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -36,9 +36,9 @@ class CouponResource extends Resource
                     ->required()
                     ->numeric()
                     ->label(fn ($get) => $get('type') === 'percentage' ? 'Discount Percentage' : 'Discount Amount'),
-                Forms\Components\DatePicker::make('valid_from')
+                Forms\Components\DateTimePicker::make('valid_from')
                     ->required(),
-                Forms\Components\DatePicker::make('valid_until')
+                Forms\Components\DateTimePicker::make('valid_until')
                     ->required(),
                 Forms\Components\TextInput::make('max_uses')
                     ->numeric()

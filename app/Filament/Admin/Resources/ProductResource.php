@@ -7,18 +7,20 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductTag;
 use Filament\Forms;
-use Filament\Resources\Form;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
+use League\Csv\Writer;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form
     {
@@ -61,12 +63,12 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('price')->money('usd')->sortable(),
                 Tables\Columns\TextColumn::make('category.name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('inventory_count')->sortable(),
-                Tables\Columns\TagsColumn::make('tags.name'),
+                // Tables\Columns\TagsColumn::make('tags.name'),
             ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('category')
-                    ->relationship('category', 'name'),
-            ])
+            // ->filters([
+            //     Tables\Filters\SelectFilter::make('category')
+            //         ->relationship('category', 'name'),
+            // ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('adjustInventory')
@@ -76,11 +78,11 @@ class ProductResource extends Resource
                         $record->inventory_count += $data['adjustment'];
                         $record->save();
                         
-                        InventoryLog::create([
-                            'product_id' => $record->id,
-                            'quantity_change' => $data['adjustment'],
-                            'reason' => $data['reason'],
-                        ]);
+                        // InventoryLog::create([
+                        //     'product_id' => $record->id,
+                        //     'quantity_change' => $data['adjustment'],
+                        //     'reason' => $data['reason'],
+                        // ]);
                     })
                     ->form([
                         Forms\Components\TextInput::make('adjustment')
@@ -96,7 +98,7 @@ class ProductResource extends Resource
                 Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\BulkAction::make('export')
                     ->label('Export Selected')
-                    ->icon('heroicon-o-download')
+                    ->icon('heroicon-o-arrow-down-tray')
                     ->action(fn (Collection $records) => static::export($records)),
             ]);
     }
