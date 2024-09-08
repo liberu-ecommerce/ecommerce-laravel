@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('code')->unique();
             $table->enum('type', ['percentage', 'fixed']);
             $table->decimal('value', 10, 2);
-            $table->timestamp('valid_from');
-            $table->timestamp('valid_until');
+            $table->timestamp('valid_from')->nullable();
+            $table->timestamp('valid_until')->nullable();
             $table->integer('max_uses')->nullable();
             $table->decimal('min_purchase_amount', 10, 2)->nullable();
             $table->timestamps();
