@@ -47,16 +47,15 @@ class ProductResource extends Resource
 
                 Forms\Components\Toggle::make('is_variable')
                     ->label('Variable'),
-
                 Forms\Components\Toggle::make('is_grouped')
                     ->label('Grouped'),
-
                 Forms\Components\Toggle::make('is_simple')
                     ->label('Simple'),
 
-                ImageColumn::make('featured_image')
+                Forms\Components\FileUpload::make('featured_image')
+                    ->image()
                     ->label('Featured Image'),
-
+                    
                 Forms\Components\TextInput::make('meta_title')
                     ->label('Meta Title')
                     ->maxLength(60)
