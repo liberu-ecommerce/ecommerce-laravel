@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('order_date');
             $table->integer('total_amount');
-            $table->integer('payment_status');
-            $table->integer('shipping_status');
+            $table->string('payment_status');
+            $table->string('shipping_status');
             $table->timestamps();
         });
     }
