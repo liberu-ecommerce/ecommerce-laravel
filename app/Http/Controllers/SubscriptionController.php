@@ -1,7 +1,8 @@
-&lt;?php
+<?php
 
 namespace App\Http\Controllers;
 
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Cashier\Exceptions\IncompletePayment;
@@ -10,8 +11,12 @@ use Stripe\Plan;
 
 class SubscriptionController extends Controller
 {
-    public function __construct()
+   
+    private $subscriptionService;
+
+    public function __construct(SubscriptionService $subscriptionService)
     {
+        $this->subscriptionService = $subscriptionService;
         Stripe::setApiKey(env('STRIPE_SECRET'));
     }
 
@@ -66,16 +71,9 @@ class SubscriptionController extends Controller
             return response()->json(['success' => false, 'error' => $exception->getMessage()], 400);
         }
     }
-}
-use App\Services\SubscriptionService;
 
-    private $subscriptionService;
 
-    public function __construct(SubscriptionService $subscriptionService)
-    {
-        $this->subscriptionService = $subscriptionService;
-        Stripe::setApiKey(env('STRIPE_SECRET'));
-    }
+    
 
     public function createPaypalSubscription(Request $request)
     {
@@ -112,3 +110,4 @@ use App\Services\SubscriptionService;
 
         return response()->json($result);
     }
+}

@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 
 namespace App\Services;
 
@@ -7,7 +7,6 @@ use PayPal\Api\Payer;
 use PayPal\Api\PayerInfo;
 use PayPal\Api\Plan;
 use PayPal\Api\ShippingAddress;
-use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
 use Illuminate\Support\Facades\Config;
 
@@ -17,17 +16,18 @@ class SubscriptionService
 
     public function __construct()
     {
-        $this->paypalContext = new ApiContext(new OAuthTokenCredential(
-            Config::get('services.paypal.client_id'),
-            Config::get('services.paypal.secret')
-        ));
-        $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
+        // $this->paypalContext = new ApiContext(new OAuthTokenCredential(
+        //     Config::get('services.paypal.client_id'),
+        //     Config::get('services.paypal.secret')
+        // ));
+        // $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
     }
 
     public function createSubscription($paymentMethodId, $planId, $userDetails)
     {
-        $agreement = $this->setupSubscriptionDetails($planId, $userDetails);
-        return $this->createSubscriptionOnPaypal($agreement);
+        try {
+            $agreement = $this->setupSubscriptionDetails($planId, $userDetails);
+        // return $this->createSubscriptionOnPaypal($agreement);
             return ['success' => true, 'agreementID' => $agreement->getId()];
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
@@ -47,7 +47,7 @@ class SubscriptionService
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['success' => true, 'message' => 'Subscription cancelled successfully'];
     }
-}
+
     private function setupSubscriptionDetails($planId, $userDetails)
     {
         $payer = new Payer();
@@ -86,8 +86,7 @@ class SubscriptionService
         } catch (\Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
-    }
-    {
+   
         // Prepare update details
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['subscriptionId' => $subscriptionId, 'planId' => $planId];
@@ -98,8 +97,7 @@ class SubscriptionService
         // Perform update on PayPal
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['success' => true, 'message' => 'Subscription updated successfully'];
-    }
-    {
+    
         // Prepare cancellation details
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['subscriptionId' => $subscriptionId];
@@ -111,3 +109,4 @@ class SubscriptionService
         // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
         return ['success' => true, 'message' => 'Subscription cancelled successfully'];
     }
+}

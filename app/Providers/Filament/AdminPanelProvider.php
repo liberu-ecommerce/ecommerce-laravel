@@ -35,9 +35,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login([AuthenticatedSessionController::class, 'create'])
-            ->passwordReset()
-            ->emailVerification()
+            // ->login([AuthenticatedSessionController::class, 'create'])
+            // ->passwordReset()
+            // ->emailVerification()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Gray,
@@ -84,18 +84,18 @@ class AdminPanelProvider extends PanelProvider
         // }
 
         if (Features::hasTeamFeatures()) {
-            $panel
-                ->tenant(Team::class, ownershipRelationship: 'team')
-                ->tenantRegistration(Pages\CreateTeam::class)
-                ->tenantProfile(Pages\EditTeam::class)
-                ->userMenuItems([
-                    MenuItem::make()
-                        ->label('Team Settings')
-                        ->icon('heroicon-o-cog-6-tooth')
-                        ->url(fn () => $this->shouldRegisterMenuItem()
-                            ? url(Pages\EditTeam::getUrl())
-                            : url($panel->getPath())),
-                ]);
+            // $panel
+            //     ->tenant(Team::class, ownershipRelationship: 'team')
+            //     ->tenantRegistration(Pages\CreateTeam::class)
+            //     ->tenantProfile(Pages\EditTeam::class)
+            //     ->userMenuItems([
+            //         MenuItem::make()
+            //             ->label('Team Settings')
+            //             ->icon('heroicon-o-cog-6-tooth')
+            //             ->url(fn () => $this->shouldRegisterMenuItem()
+            //                 ? url(Pages\EditTeam::getUrl())
+            //                 : url($panel->getPath())),
+            //     ]);
         }
 
         return $panel;
@@ -103,15 +103,7 @@ class AdminPanelProvider extends PanelProvider
 
     public function boot()
     {
-        /**
-         * Disable Fortify routes.
-         */
-        Fortify::$registersRoutes = false;
-
-        /**
-         * Disable Jetstream routes.
-         */
-        Jetstream::$registersRoutes = false;
+       
     }
 
     public function shouldRegisterMenuItem(): bool

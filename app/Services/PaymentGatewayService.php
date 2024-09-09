@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 
 namespace App\Services;
 
@@ -11,20 +11,20 @@ class PaymentGatewayService
 {
     protected $paymentGateway;
 
-    public function __construct(string $gateway)
-    {
-        $this->paymentGateway = PaymentGatewayFactory::create($gateway);
-    }
-
     public function __construct()
     {
-        $this->stripeClient = new StripeClient(Config::get('services.stripe.secret'));
-        $this->paypalContext = new ApiContext(new OAuthTokenCredential(
-            Config::get('services.paypal.client_id'),
-            Config::get('services.paypal.secret')
-        ));
-        $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
+        // $this->paymentGateway = PaymentGatewayFactory::create($gateway);
     }
+
+    // public function __construct()
+    // {
+    //     $this->stripeClient = new StripeClient(Config::get('services.stripe.secret'));
+    //     $this->paypalContext = new ApiContext(new OAuthTokenCredential(
+    //         Config::get('services.paypal.client_id'),
+    //         Config::get('services.paypal.secret')
+    //     ));
+    //     $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
+    // }
 
     public function processPayment(float $amount, array $paymentDetails): array
     {

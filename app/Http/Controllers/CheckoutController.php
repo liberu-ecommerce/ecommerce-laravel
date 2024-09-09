@@ -1,4 +1,4 @@
-&lt;?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -9,17 +9,10 @@ use App\Models\ShippingMethod;
 use App\Services\ShippingService;
 use App\Services\PaymentGatewayService;
 use App\Models\Order;
-
-class CheckoutController extends Controller
-{
-use App\Services\ShippingService;
-use App\Models\ShippingMethod;
-use App\Models\Order;
 use App\Models\Coupon;
 use App\Models\InventoryLog;
 use App\Models\User;
 use App\Notifications\LowStockNotification;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Notification;
 
 use App\Factories\PaymentGatewayFactory;
