@@ -54,21 +54,24 @@ class ProductResource extends Resource
 
                 Forms\Components\FileUpload::make('featured_image')
                     ->image()
+                    ->disk('public')
+                    ->directory('products')
+                    ->visibility('public')
                     ->label('Featured Image'),
-                    
-                Forms\Components\TextInput::make('meta_title')
-                    ->label('Meta Title')
-                    ->maxLength(60)
-                    ->helperText('Recommended length: 50-60 characters'),
 
-                Forms\Components\Textarea::make('meta_description')
-                    ->label('Meta Description')
-                    ->maxLength(160)
-                    ->helperText('Recommended length: 150-160 characters'),
+                // Forms\Components\TextInput::make('meta_title')
+                //     ->label('Meta Title')
+                //     ->maxLength(60)
+                //     ->helperText('Recommended length: 50-60 characters'),
 
-                Forms\Components\TagsInput::make('meta_keywords')
-                    ->label('Meta Keywords')
-                    ->helperText('Enter keywords separated by commas'),
+                // Forms\Components\Textarea::make('meta_description')
+                //     ->label('Meta Description')
+                //     ->maxLength(160)
+                //     ->helperText('Recommended length: 150-160 characters'),
+
+                // Forms\Components\TagsInput::make('meta_keywords')
+                //     ->label('Meta Keywords')
+                //     ->helperText('Enter keywords separated by commas'),
             ]);
     }
 
