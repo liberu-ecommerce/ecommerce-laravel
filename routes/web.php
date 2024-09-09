@@ -3,8 +3,18 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PaypalPaymentController;
+use App\Http\Controllers\RatingController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SiteSettingController;
+use App\Http\Controllers\StripePaymentController;
+use App\Http\Controllers\SubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,7 +27,7 @@ use App\Http\Controllers\OrderHistoryController;
 |
 */
 
-Route::get('/', 'App\Http\Controllers\HomeController@index');
+Route::get('/', [HomeController::class, 'index']);
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('checkout.initiate');
@@ -35,25 +45,25 @@ Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.hi
 Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
 
 Route::prefix('payment_methods')->group(function () {
-    Route::get('/', 'PaymentMethodController@index')->name('payment_methods.index');
-    Route::post('/store', 'PaymentMethodController@addPaymentMethod')->name('payment_methods.store');
-    Route::get('/edit/{id}', 'PaymentMethodController@editPaymentMethod')->name('payment_methods.edit');
-    Route::post('/update/{id}', 'PaymentMethodController@editPaymentMethod')->name('payment_methods.update');
-    Route::delete('/destroy/{id}', 'PaymentMethodController@deletePaymentMethod')->name('payment_methods.destroy');
-    Route::post('/set_default/{id}', 'PaymentMethodController@setDefaultPaymentMethod')->name('payment_methods.setDefault');
+    Route::get('/', [PaymentMethodController::class,'index'])->name('payment_methods.index');
+    Route::post('/store', [PaymentMethodController::class, 'addPaymentMethod'])->name('payment_methods.store');
+    Route::get('/edit/{id}', [PaymentMethodController::class, 'editPaymentMethod'])->name('payment_methods.edit');
+    Route::post('/update/{id}', [PaymentMethodController::class, 'editPaymentMethod'])->name('payment_methods.update');
+    Route::delete('/destroy/{id}', [PaymentMethodController::class, 'deletePaymentMethod'])->name('payment_methods.destroy');
+    Route::post('/set_default/{id}', [PaymentMethodController::class, 'setDefaultPaymentMethod'])->name('payment_methods.setDefault');
 });
 
-Route::post('/payment', 'App\Http\Controllers\StripePaymentController@createOneTimePayment')->name('payment.create');
+Route::post('/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('payment.create');
 
-Route::get('/subscriptions', 'App\Http\Controllers\SubscriptionController@viewAvailableSubscriptions')->name('subscriptions.view');
-Route::post('/subscription', 'App\Http\Controllers\SubscriptionController@subscribeToPlan')->name('subscription.create');
-Route::patch('/subscription/change', 'App\Http\Controllers\SubscriptionController@changePlan')->name('subscription.change-plan');
-Route::delete('/subscription/cancel', 'App\Http\Controllers\SubscriptionController@cancelSubscription')->name('subscription.cancel');
+Route::get('/subscriptions', [SubscriptionController::class, 'viewAvailableSubscriptions'])->name('subscriptions.view');
+Route::post('/subscription', [SubscriptionController::class, 'subscribeToPlan'])->name('subscription.create');
+Route::patch('/subscription/change', [SubscriptionController::class, 'changePlan'])->name('subscription.change-plan');
+Route::delete('/subscription/cancel', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel');
 
-Route::post('/paypal/payment', 'App\Http\Controllers\PayPalPaymentController@createOneTimePayment')->name('paypal.payment.create');
-Route::post('/paypal/subscription', 'App\Http\Controllers\PayPalPaymentController@createSubscription')->name('paypal.subscription.create');
-Route::patch('/paypal/subscription/update', 'App\Http\Controllers\PayPalPaymentController@updateSubscription')->name('paypal.subscription.update');
-Route::delete('/paypal/subscription/cancel', 'App\Http\Controllers\PayPalPaymentController@cancelSubscription')->name('paypal.subscription.cancel');
+Route::post('/paypal/payment', [PaypalPaymentController::class, 'createOneTimePayment'])->name('paypal.payment.create');
+Route::post('/paypal/subscription', [PayPalPaymentController::class, 'createSubscription'])->name('paypal.subscription.create');
+Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
+Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
 // Product routes
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
@@ -72,20 +82,20 @@ Route::delete('/product/{category}/{product}/compare', [ProductController::class
 Route::delete('/products/compare/clear', [ProductController::class, 'clearCompare'])->name('products.clearCompare');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/download/{category}/{product}', 'App\Http\Controllers\DownloadController@generateSecureLink')->name('download.generate-link');
-    Route::get('/download/file/{category}/{product}', 'App\Http\Controllers\DownloadController@serveFile')->name('download.serve-file');
+    Route::get('/download/{category}/{product}', [DownloadController::class, 'generateSecureLink'])->name('download.generate-link');
+    Route::get('/download/file/{category}/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
 });
 
-Route::post('/reviews', 'App\Http\Controllers\ReviewController@store')->name('reviews.store');
-Route::post('/reviews/approve/{id}', 'App\Http\Controllers\ReviewController@approve')->name('reviews.approve');
-Route::get('/product/{category}/{product}/reviews', 'App\Http\Controllers\ReviewController@show')->name('reviews.show');
-Route::post('/reviews/{id}/vote', 'App\Http\Controllers\ReviewController@vote')->name('reviews.vote');
-Route::get('/product/{category}/{product}/ratings/average', 'App\Http\Controllers\RatingController@calculateAverageRating')->name('ratings.average');
+Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/reviews/approve/{id}', [ReviewController::class, 'approve'])->name('reviews.approve');
+Route::get('/product/{category}/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
+Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('reviews.vote');
+Route::get('/product/{category}/{product}/ratings/average', [RatingController::class, 'calculateAverageRating'])->name('ratings.average');
 
-Route::get('/site-settings', 'App\Http\Controllers\SiteSettingController@index')->name('site_settings.index');
-Route::get('/site-settings/{id}/edit', 'App\Http\Controllers\SiteSettingController@edit')->name('site_settings.edit');
-Route::post('/site-settings/{id}', 'App\Http\Controllers\SiteSettingController@update')->name('site_settings.update');
+Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
+Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->name('site_settings.edit');
+Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->name('site_settings.update');
 
-Route::get('/sitemap.xml', 'App\Http\Controllers\SitemapController@index')->name('sitemap.xml');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
 require __DIR__.'/socialstream.php';

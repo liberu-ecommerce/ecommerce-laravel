@@ -75,19 +75,6 @@ class ReviewController extends Controller
         $review->save();
         return response()->json(['message' => 'Vote recorded successfully']);
     }
-}
-/**
- * ReviewController manages review-related actions such as storing, approving, and displaying reviews.
- */
-    public function show($productId)
-    {
-        $reviews = Review::where('product_id', $productId)->where('approved', true)->get();
-        return response()->json($reviews);
-    }
-}
-    public function show($productId)
-    {
-        $reviews = Review::where('product_id', $productId)->where('approved', true)->get();
-        return response()->json($reviews);
-    }
+
+
 }

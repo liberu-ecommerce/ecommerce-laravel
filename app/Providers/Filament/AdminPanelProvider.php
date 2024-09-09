@@ -35,9 +35,9 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login([AuthenticatedSessionController::class, 'create'])
-            ->passwordReset()
-            ->emailVerification()
+            // ->login([AuthenticatedSessionController::class, 'create'])
+            // ->passwordReset()
+            // ->emailVerification()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Gray,

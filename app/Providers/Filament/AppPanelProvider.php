@@ -41,9 +41,9 @@ class AppPanelProvider extends PanelProvider
             ->default()
             ->id('app')
             ->path('app')
-            ->login([AuthenticatedSessionController::class, 'create'])
-            ->registration()
-            ->passwordReset()
+            // ->login([AuthenticatedSessionController::class, 'create'])
+            // ->registration()
+            // ->passwordReset()
             // ->emailVerification()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
