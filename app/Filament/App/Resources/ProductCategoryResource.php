@@ -27,19 +27,19 @@ class ProductCategoryResource extends Resource
                     ->required()
                     ->maxLength(255),
 
-                Forms\Components\TextInput::make('meta_title')
-                    ->label('Meta Title')
-                    ->maxLength(60)
-                    ->helperText('Recommended length: 50-60 characters'),
+                // Forms\Components\TextInput::make('meta_title')
+                //     ->label('Meta Title')
+                //     ->maxLength(60)
+                //     ->helperText('Recommended length: 50-60 characters'),
 
-                Forms\Components\Textarea::make('meta_description')
-                    ->label('Meta Description')
-                    ->maxLength(160)
-                    ->helperText('Recommended length: 150-160 characters'),
+                // Forms\Components\Textarea::make('meta_description')
+                //     ->label('Meta Description')
+                //     ->maxLength(160)
+                //     ->helperText('Recommended length: 150-160 characters'),
 
-                Forms\Components\TagsInput::make('meta_keywords')
-                    ->label('Meta Keywords')
-                    ->helperText('Enter keywords separated by commas'),
+                // Forms\Components\TagsInput::make('meta_keywords')
+                //     ->label('Meta Keywords')
+                //     ->helperText('Enter keywords separated by commas'),
             ]);
     }
 
