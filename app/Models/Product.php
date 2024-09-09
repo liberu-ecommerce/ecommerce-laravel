@@ -35,6 +35,11 @@ class Product extends Model implements Orderable
         return $this->belongsTo(ProductCategory::class);
     }
 
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class);
+    }
+
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);

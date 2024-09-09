@@ -9,7 +9,8 @@ return new class extends Migration
 
     protected $tables = [
         'product_categories', 'products', 'payment_methods', 'customers', 'wishlists', 'orders',
-        'coupons', 'groups', 'product_reviews', 'downloadable_products', 'images', 'cart_items'
+        'coupons', 'groups', 'product_reviews', 'downloadable_products', 'images', 'cart_items',
+        'collections'
     ];
 
     /**
