@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
 
-    private string $table = 'order_items';
+    private string $table = 'collection_items';
     /**
      * Run the migrations.
      */
@@ -15,10 +15,9 @@ return new class extends Migration
     {
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->morphs('orderable');
-            $table->integer('quantity');
-            $table->decimal('price, 10, 2');
+            $table->foreignId('collection_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->foreignId('product_id')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->integer('quantity')->default(1);
             $table->timestamps();
         });
     }

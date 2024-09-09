@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Interfaces\Orderable;
+use Illuminate\Support\Str;
 use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+class Product extends Model implements Orderable
 {
     use HasFactory;
     use IsTenantModel;
@@ -31,6 +33,11 @@ class Product extends Model
     public function categories()
     {
         return $this->belongsTo(ProductCategory::class);
+    }
+
+    public function collections()
+    {
+        return $this->belongsToMany(Collection::class);
     }
 
     public function cartItems()
@@ -88,6 +95,16 @@ class Product extends Model
 
     public function getSlugAttribute()
     {
-        return \Str::slug($this->name);
+        return Str::slug($this->name);
+    }
+
+    public function getPrice(): float
+    {
+        return $this->price;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
     }
 }
