@@ -121,12 +121,12 @@ class AppPanelProvider extends PanelProvider
         /**
          * Disable Fortify routes.
          */
-        Fortify::$registersRoutes = false;
+        // Fortify::$registersRoutes = false;
 
         /**
          * Disable Jetstream routes.
          */
-        Jetstream::$registersRoutes = false;
+        // Jetstream::$registersRoutes = false;
 
         /**
          * Listen and create personal team for new accounts.
