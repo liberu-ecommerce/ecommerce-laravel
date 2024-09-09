@@ -73,5 +73,10 @@ class Team extends JetstreamTeam
         return $this->hasMany(ProductCategory::class);
     }
 
+    public function collections(): HasMany
+    {
+        return $this->hasMany(Collection::class);
+    }
+
   
 }
