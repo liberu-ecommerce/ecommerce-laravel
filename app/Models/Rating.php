@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Rating extends Model
 {
+    use HasFactory;
+
     protected $table = 'ratings';
 
     protected $fillable = [
@@ -22,15 +25,6 @@ class Rating extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public static function calculateAverageRating($productId)
-    {
-        return self::where('product_id', $productId)
-                    ->avg('rating');
-    }
-}
-/**
- * Rating model represents the rating data and contains business logic for rating-related operations.
- */
     public static function calculateAverageRating($productId)
     {
         return self::where('product_id', $productId)
