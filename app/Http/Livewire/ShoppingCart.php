@@ -25,12 +25,12 @@ class ShoppingCart extends Component
             $this->addError('price', 'Invalid price');
             return;
         }
-    
+
         if (!is_int($quantity) || $quantity < 1) {
             $this->addError('quantity', 'Quantity must be a positive integer');
             return;
         }
-    
+
         if (isset($this->items[$productId])) {
             $this->items[$productId]['quantity'] += $quantity;
         } else {
@@ -40,23 +40,23 @@ class ShoppingCart extends Component
                 'quantity' => $quantity,
             ];
         }
-    
+
         Session::put('cart', $this->items);
         $this->emit('cartUpdated');
     }
-    
+
     public function updateQuantity($productId, $quantity)
     {
         if (!isset($this->items[$productId])) {
             $this->addError('product', 'Product not found in cart');
             return;
         }
-    
+
         if (!is_int($quantity) || $quantity < 1) {
             $this->addError('quantity', 'Quantity must be a positive integer');
             return;
         }
-    
+
         $this->items[$productId]['quantity'] = $quantity;
         Session::put('cart', $this->items);
         $this->emit('cartUpdated');
@@ -74,14 +74,14 @@ class ShoppingCart extends Component
     {
         $this->items = [];
         Session::forget('cart');
-
-public function calculateTotal()
-{
-    $total = 0;
-    foreach ($this->items as $item) {
-        $total += $item['price'] * $item['quantity'];
     }
-    return round($total, 2);
-}
+
+    public function calculateTotal()
+    {
+        $total = 0;
+        foreach ($this->items as $item) {
+            $total += $item['price'] * $item['quantity'];
+        }
+        return round($total, 2);
     }
 }

@@ -26,6 +26,7 @@ class ProductFactory extends Factory
             "long_description" => $this->faker->paragraph(),
             "category_id" => ProductCategory::factory(),
             'featured_image' => $this->faker->imageUrl(640, 480, 'products'),
+            'price' => $this->faker->randomFloat(2, 10, 1000),
         ];
     }
 }

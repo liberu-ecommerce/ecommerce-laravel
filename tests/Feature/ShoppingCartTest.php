@@ -7,9 +7,12 @@ use App\Http\Livewire\ShoppingCart;
 use Livewire\Livewire;
 use Illuminate\Support\Facades\Session;
 use App\Models\Product;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ShoppingCartTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_add_single_item_to_cart()
     {
         $product = Product::factory()->create(['price' => 9.99]);
