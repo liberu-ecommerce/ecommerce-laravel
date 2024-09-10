@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Feature;
 
 use App\Http\Controllers\RatingController;
 use App\Http\Requests\RatingRequest;
@@ -34,7 +34,8 @@ class RatingControllerTest extends TestCase
 
     public function testCalculateAverageRating()
     {
-        Rating::shouldReceive('calculateAverageRating')
+        Mockery::mock(Rating::class)
+            ->shouldReceive('calculateAverageRating')
             ->with(1)
             ->once()
             ->andReturn(4.5);

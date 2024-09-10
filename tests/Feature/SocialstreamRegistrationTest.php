@@ -1,6 +1,6 @@
 <?php
 
-namespace tests;
+namespace Tests\Feature;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
