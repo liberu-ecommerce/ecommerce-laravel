@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
-use Illuminate\Http\Request;
+use App\Models\Order;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ReviewRequest;
 
 class ReviewController extends Controller
@@ -16,11 +17,13 @@ class ReviewController extends Controller
      */
     public function store(ReviewRequest $request)
     {
+        $validatedData = $request->validated();
+
         $review = new Review();
         $review->user_id = Auth::id();
-        $review->product_id = $request->product_id;
-        $review->rating = $request->rating;
-        $review->review = $request->review;
+        $review->product_id = $validatedData['product_id'];
+        $review->rating = $validatedData['rating'];
+        $review->review = $validatedData['review'];
         $review->approved = false; // Reviews are not approved by default
 
         // Check if the user has purchased the product
