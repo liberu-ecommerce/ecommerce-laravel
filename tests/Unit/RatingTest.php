@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Product;
 use App\Models\Rating;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,7 +13,7 @@ class RatingTest extends TestCase
 
     public function testCalculateAverageRating()
     {
-        $productId = 1;
+        $productId = Product::factory()->create()->id;
         $expectedAverage = 4.5;
 
         Rating::factory()->createMany([
