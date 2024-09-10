@@ -1,9 +1,8 @@
 <?php
 
-use PHPUnit\Framework\Attributes\DataProvider;
-
 namespace tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Session;
 use JoelButcher\Socialstream\Providers;
@@ -24,11 +23,11 @@ class SocialstreamRegistrationTest extends TestCase
             $this->markTestSkipped("Registration support with the $provider provider is not enabled.");
         }
 
-        config()->set("services.$provider", [
+        config(["services.$provider" => [
             'client_id' => 'client-id',
             'client_secret' => 'client-secret',
             'redirect' => "http://localhost/oauth/$provider/callback",
-        ]);
+        ]]);
 
         $response = $this->get("/oauth/$provider");
         $response->assertRedirectContains($provider);
