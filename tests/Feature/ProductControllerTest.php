@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Http\Controllers\ProductController;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 
 class ProductControllerTest extends TestCase
@@ -79,18 +80,11 @@ class ProductControllerTest extends TestCase
     ]);
     }
 
-    public function testUpdate()
+    public function testUpdatesLogs()
     {
         $product = Product::factory()->create();
-
-        $payload = [
-            'name' => $this->faker->name,
-            'description' => $this->faker->sentence,
-            'price' => $this->faker->randomFloat(2, 0, 100),
-            'category' => $this->faker->word,
-            'inventory_count' => $this->faker->numberBetween(0, 100),
-        ];
-
+        $payload = $product->toArray();
+       
         $response = $this->put("/products/{$product->id}", $payload);
 
         $response->assertStatus(200);
