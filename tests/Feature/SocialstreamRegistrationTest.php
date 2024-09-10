@@ -1,5 +1,7 @@
 <?php
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 namespace tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,9 +17,7 @@ class SocialstreamRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /**
-     * @dataProvider socialiteProvidersDataProvider
-     */
+    #[DataProvider('socialiteProvidersDataProvider')]
     public function test_users_get_redirected_correctly(string $provider): void
     {
         if (! Providers::enabled($provider)) {
@@ -34,9 +34,7 @@ class SocialstreamRegistrationTest extends TestCase
         $response->assertRedirectContains($provider);
     }
 
-    /**
-     * @dataProvider socialiteProvidersDataProvider
-     */
+    #[DataProvider('socialiteProvidersDataProvider')]
     public function test_users_can_register_using_socialite_providers(string $socialiteProvider)
     {
         if (! FortifyFeatures::enabled(FortifyFeatures::registration())) {
@@ -73,9 +71,6 @@ class SocialstreamRegistrationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    /**
-     * @return array<int, array<int, string>>
-     */
     public static function socialiteProvidersDataProvider(): array
     {
         return [
