@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Review;
-use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ReviewRequest;
 use App\Models\Order;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
@@ -29,12 +28,12 @@ class ReviewController extends Controller
         $review->approved = false; // Reviews are not approved by default
 
         // Check if the user has purchased the product
-        $hasOrderedProduct = Order::where('user_id', Auth::id())
-            ->whereHas('orderItems', function ($query) use ($request) {
-                $query->where('product_id', $request->product_id);
-            })->exists();
+        // $hasOrderedProduct = Order::where('user_id', Auth::id())
+        //     ->whereHas('orderItems', function ($query) use ($request) {
+        //         $query->where('product_id', $request->product_id);
+        //     })->exists();
 
-        $review->is_verified_purchase = $hasOrderedProduct;
+        // $review->is_verified_purchase = $hasOrderedProduct;
 
         $review->save();
 

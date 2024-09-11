@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -58,11 +59,9 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    public function show($category, $product)
+    public function show($category, Product $product)
     {
-        $product = Product::whereHas('categories', function ($query) use ($category) {
-            $query->where('slug', $category);
-        })->where('slug', $product)->firstOrFail();
+        // $product = Product::where('id', $product)->firstOrFail();
 
         // Track browsing history
         if (auth()->check()) {

@@ -75,6 +75,17 @@ Route::put('/product/{category}/{product}', [ProductController::class, 'update']
 Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
 Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
+
+// Ratings and reviews
+Route::get('/product/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
+Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/reviews/approve/{id}', [ReviewController::class, 'approve'])->name('reviews.approve');
+Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('reviews.vote');
+
+Route::get('/product/{product}/ratings/average', [RatingController::class, 'calculateAverageRating'])->name('ratings.average');
+Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+
+
 // New comparison routes
 Route::post('/product/{category}/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');
 Route::get('/products/compare', [ProductController::class, 'compare'])->name('products.compare');
@@ -86,11 +97,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/download/file/{category}/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
 });
 
-Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-Route::post('/reviews/approve/{id}', [ReviewController::class, 'approve'])->name('reviews.approve');
-Route::get('/product/{category}/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
-Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('reviews.vote');
-Route::get('/product/{category}/{product}/ratings/average', [RatingController::class, 'calculateAverageRating'])->name('ratings.average');
 
 Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
 Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->name('site_settings.edit');
