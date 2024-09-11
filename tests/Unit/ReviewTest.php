@@ -12,7 +12,7 @@ class ReviewTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testApprove()
+    public function testReviewCanBeApproved()
     {
         $user = User::factory()->create();
         $product = Product::factory()->create();
@@ -25,6 +25,8 @@ class ReviewTest extends TestCase
             'approved' => false,
         ]);
 
+        $this->assertFalse($review->approved);
+
         $review->approve();
 
         $this->assertTrue($review->approved);
@@ -34,7 +36,7 @@ class ReviewTest extends TestCase
         ]);
     }
 
-    public function testReject()
+    public function testReviewCanBeRejected()
     {
         $user = User::factory()->create();
         $product = Product::factory()->create();
@@ -47,6 +49,8 @@ class ReviewTest extends TestCase
             'approved' => true,
         ]);
 
+        $this->assertTrue($review->approved);
+
         $review->reject();
 
         $this->assertFalse($review->approved);
@@ -54,5 +58,41 @@ class ReviewTest extends TestCase
             'id' => $review->id,
             'approved' => false,
         ]);
+    }
+
+    public function testApprovedReviewRemainsApprovedIfApprovedAgain()
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $review = Review::create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'rating' => 5,
+            'review' => 'Fantastic product!',
+            'approved' => true,
+        ]);
+
+        $review->approve();
+
+        $this->assertTrue($review->approved);
+    }
+
+    public function testRejectedReviewRemainsRejectedIfRejectedAgain()
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+
+        $review = Review::create([
+            'user_id' => $user->id,
+            'product_id' => $product->id,
+            'rating' => 2,
+            'review' => 'Disappointing quality.',
+            'approved' => false,
+        ]);
+
+        $review->reject();
+
+        $this->assertFalse($review->approved);
     }
 }
