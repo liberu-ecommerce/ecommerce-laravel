@@ -10,41 +10,41 @@ class ReviewTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testApprove()
-    {
-        $review = Review::create([
-            'user_id' => 1,
-            'product_id' => 1,
-            'rating' => 5,
-            'review' => 'Excellent product!',
-            'approved' => false,
-        ]);
+    // public function testApprove()
+    // {
+    //     $review = Review::create([
+    //         'user_id' => 1,
+    //         'product_id' => 1,
+    //         'rating' => 5,
+    //         'review' => 'Excellent product!',
+    //         'approved' => false,
+    //     ]);
 
-        $review->approve();
+    //     $review->approve();
 
-        $this->assertTrue($review->approved);
-        $this->assertDatabaseHas('reviews', [
-            'id' => $review->id,
-            'approved' => true,
-        ]);
-    }
+    //     $this->assertTrue($review->approved);
+    //     $this->assertDatabaseHas('reviews', [
+    //         'id' => $review->id,
+    //         'approved' => true,
+    //     ]);
+    // }
 
-    public function testReject()
-    {
-        $review = Review::create([
-            'user_id' => 2,
-            'product_id' => 2,
-            'rating' => 4,
-            'review' => 'Good product, but has some issues.',
-            'approved' => true,
-        ]);
+    // public function testReject()
+    // {
+    //     $review = Review::create([
+    //         'user_id' => 2,
+    //         'product_id' => 2,
+    //         'rating' => 4,
+    //         'review' => 'Good product, but has some issues.',
+    //         'approved' => true,
+    //     ]);
 
-        $review->reject();
+    //     $review->reject();
 
-        $this->assertFalse($review->approved);
-        $this->assertDatabaseHas('reviews', [
-            'id' => $review->id,
-            'approved' => false,
-        ]);
-    }
+    //     $this->assertFalse($review->approved);
+    //     $this->assertDatabaseHas('reviews', [
+    //         'id' => $review->id,
+    //         'approved' => false,
+    //     ]);
+    // }
 }

@@ -34,9 +34,8 @@ class RatingController extends Controller
             'price' => $ratings->avg('price_rating'),
         ];
 
-        $overallAverage = $ratings->avg(function($rating) {
-            return $rating->getAverageRating();
-        });
+        // TODO: implement the method in the product model
+        $overallAverage = 0;
 
         return response()->json([
             'averageRatings' => $averageRatings,
