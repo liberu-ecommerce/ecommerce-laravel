@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\ReviewController;
 use App\Http\Requests\ReviewRequest;
+use App\Models\Product;
 use App\Models\Review;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Mockery;
@@ -16,19 +18,20 @@ class ReviewControllerTest extends TestCase
 
     public function testStore()
     {
-        $mockRequest = Mockery::mock(ReviewRequest::class);
-        $mockRequest->shouldReceive('product_id')->andReturn(1);
-        $mockRequest->shouldReceive('rating')->andReturn(5);
-        $mockRequest->shouldReceive('review')->andReturn('Great product!');
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
 
-        Auth::shouldReceive('id')->once()->andReturn(1);
-
-        $response = app(ReviewController::class)->store($mockRequest);
+        $response = $this->actingAs($user)
+            ->post(route('reviews.store'), [
+                "product_id" => $product->id,
+                "rating" => 5,
+                "review" => 'Great product!',
+            ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('reviews', [
-            'user_id' => 1,
-            'product_id' => 1,
+            'user_id' => $user->id,
+            'product_id' => $product->id,
             'rating' => 5,
             'review' => 'Great product!',
             'approved' => false,
@@ -37,15 +40,14 @@ class ReviewControllerTest extends TestCase
 
     public function testApprove()
     {
-        $review = Review::create([
-            'user_id' => 1,
-            'product_id' => 1,
+
+        $review = Review::factory()->create([
             'rating' => 5,
             'review' => 'Great product!',
             'approved' => false,
         ]);
 
-        $response = app(ReviewController::class)->approve($review->id);
+        $this->post(route('reviews.approve', ["review" => $review->id]));
 
         $this->assertDatabaseHas('reviews', [
             'id' => $review->id,
@@ -55,15 +57,13 @@ class ReviewControllerTest extends TestCase
 
     public function testShow()
     {
-        $review = Review::create([
-            'user_id' => 1,
-            'product_id' => 1,
+        $review = Review::factory()->create([
             'rating' => 5,
             'review' => 'Great product!',
             'approved' => true,
         ]);
 
-        $response = app(ReviewController::class)->show(1);
+        $response = $this->get(route('reviews.show', ["review" => $review->id]));
 
         $response->assertJson([$review->toArray()]);
     }
