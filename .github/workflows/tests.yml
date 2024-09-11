@@ -18,7 +18,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
-
+        extensions: xdebug
     
     - name: Start database
       run: sudo /etc/init.d/mysql start
@@ -42,7 +42,7 @@ jobs:
       run: php artisan db:seed
       
     - name: Run tests
-      run: vendor/bin/phpunit --coverage-clover=coverage.xml
+      run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage.xml
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
