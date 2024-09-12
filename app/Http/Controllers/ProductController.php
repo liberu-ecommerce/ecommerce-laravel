@@ -22,7 +22,7 @@ class ProductController extends Controller
         $this->recommendationService = $recommendationService;
     }
 
-    public function index(Request $request)
+    public function index()
     {
         $products = QueryBuilder::for(Product::class)
             ->allowedFilters([
@@ -34,7 +34,7 @@ class ProductController extends Controller
             ])
             ->allowedSorts(['name', 'price', 'created_at'])
             ->paginate();
-            
+
         return view('products.index', compact('products'));
     }
 

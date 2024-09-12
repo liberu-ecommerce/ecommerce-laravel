@@ -171,7 +171,7 @@ class ProductControllerTest extends TestCase
     // Test sorting products by name in ascending order
     public function test_sort_products_by_name_ascending()
     {
-        $products = Product::factory()->count(3)->sequence(
+        Product::factory()->count(3)->sequence(
             ['name' => 'Product 3'],
             ['name' => 'Product 1'],
             ['name' => 'Product 2']
@@ -181,7 +181,7 @@ class ProductControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('products.index');
-        $response->assertViewHas('products', function ($viewProducts) use ($products) {
+        $response->assertViewHas('products', function ($viewProducts) {
             return $viewProducts->pluck('name')->toArray() === ['Product 1', 'Product 2', 'Product 3'];
         });
     }
@@ -199,7 +199,7 @@ class ProductControllerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertViewIs('products.index');
-        $response->assertViewHas('products', function ($viewProducts) use ($products) {
+        $response->assertViewHas('products', function ($viewProducts) {
             return $viewProducts->pluck('name')->toArray() === ['Product 3', 'Product 2', 'Product 1'];
         });
     }
