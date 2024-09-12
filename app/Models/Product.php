@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Interfaces\Orderable;
 use Illuminate\Support\Str;
 use App\Traits\IsTenantModel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -86,6 +87,16 @@ class Product extends Model implements Orderable
             ->when($max, function ($q) use ($max) {
                 $q->where('price', '<=', $max);
             });
+    }
+
+    public function scopePriceMin(Builder $query, $min): void
+    {
+        $query->where('price', '>=', (float) $min);
+    }
+
+    public function scopePriceMax(Builder $query, $max): void
+    {
+        $query->where('price', '<=', (float) $max);
     }
 
     public function isLowStock()
