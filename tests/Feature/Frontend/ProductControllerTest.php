@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Frontend;
 
+use App\Models\Product;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -15,27 +16,68 @@ class ProductControllerTest extends TestCase
         $response = $this->get(route('products.index'));
 
         $response->assertStatus(200);
-        // $response->assertViewIs('products.index');
-        // $response->assertViewHas('products', function ($products) {
-        //     return $products->isEmpty();
-        // });
+        $response->assertViewIs('products.index');
+        $response->assertViewHas('products', function ($products) {
+            return $products->isEmpty();
+        });
     }
 
-    private function test_list_products_with_one_product()
+    // Test listing products with one product
+    public function test_list_products_with_one_product()
     {
-        // Test logic here
+        $productName = "Test Product";
+        $product = Product::factory()->create([
+            "name" => $productName
+        ]);
+
+        $response = $this->get(route('products.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('products.index');
+        $response->assertViewHas('products', function ($products) use ($product, $productName) {
+            return (
+                $products->count() === 1
+                && $products->first()->id === $product->id
+                && $products->first()->name === $productName
+            );
+        });
     }
 
-    private function test_list_products_with_multiple_products()
+
+    // Test listing products with multiple products
+    public function test_list_products_with_multiple_products()
     {
-        // Test logic here
+        $products = Product::factory()->count(3)->sequence(
+            ["name" => "Product 1"],
+            ["name" => "Product 2"],
+            ["name" => "Product 3"]
+        )->create();
+
+        $response = $this->get(route('products.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('products.index');
+        $response->assertViewHas('products', function ($viewProducts) use ($products) {
+            if ($viewProducts->count() !== 3) {
+                return false;
+            }
+
+            $viewProductNames = $viewProducts->pluck('name');
+            $productNames = $products->pluck('name');
+
+            return $productNames->every(fn ($name) => $viewProductNames->contains($name));
+        });
     }
 
-    // Test showing a single product
-    private function test_show_product_returns_404_for_non_existent_product()
+
+    // Test showing a single product returns 404 for non-existent product
+    public function test_show_product_returns_404_for_non_existent_product()
     {
-        // Test logic here
+        $response = $this->get(route('products.show', ['product' => 999]));
+
+        $response->assertStatus(404);
     }
+
 
     private function test_show_product_returns_correct_product()
     {

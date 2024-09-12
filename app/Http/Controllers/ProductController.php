@@ -26,6 +26,30 @@ class ProductController extends Controller
         return view('products.index', compact('products'));
     }
 
+    public function show(Product $product)
+    {
+        // // Track browsing history
+        // if (auth()->check()) {
+        //     BrowsingHistory::create([
+        //         'user_id' => auth()->id(),
+        //         'product_id' => $product->id,
+        //     ]);
+        // }
+
+        // // Get recommendations
+        // $recommendations = [];
+        // if (auth()->check()) {
+        //     $recommendations = $this->recommendationService->getRecommendations(auth()->user());
+        // }
+
+        // $metaTitle = $product->meta_title ?? $product->name;
+        // $metaDescription = $product->meta_description ?? $product->short_description;
+        // $metaKeywords = $product->meta_keywords;
+        // $canonicalUrl = route('products.show', ['category' => $category, 'product' => $product->slug]);
+
+        return view('products.show', compact('product'));
+    }
+
     public function create(Request $request)
     {
         // Handle Product File Upload
@@ -60,31 +84,7 @@ class ProductController extends Controller
 
     
 
-    public function show($category, Product $product)
-    {
-        // $product = Product::where('id', $product)->firstOrFail();
-
-        // Track browsing history
-        if (auth()->check()) {
-            BrowsingHistory::create([
-                'user_id' => auth()->id(),
-                'product_id' => $product->id,
-            ]);
-        }
-
-        // Get recommendations
-        $recommendations = [];
-        if (auth()->check()) {
-            $recommendations = $this->recommendationService->getRecommendations(auth()->user());
-        }
-
-        $metaTitle = $product->meta_title ?? $product->name;
-        $metaDescription = $product->meta_description ?? $product->short_description;
-        $metaKeywords = $product->meta_keywords;
-        $canonicalUrl = route('products.show', ['category' => $category, 'product' => $product->slug]);
-
-        return view('products.show', compact('product', 'recommendations', 'metaTitle', 'metaDescription', 'metaKeywords', 'canonicalUrl'));
-    }
+    
 
     public function update(Request $request, $id)
     {

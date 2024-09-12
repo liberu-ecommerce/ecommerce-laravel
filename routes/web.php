@@ -68,10 +68,11 @@ Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'c
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 
-Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
+// Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
 Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
 Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
