@@ -293,6 +293,7 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('products.index');
         $response->assertViewHas('products', function ($viewProducts) {
+            dump($viewProducts);
             return $viewProducts->pluck('price')->toArray() === [25, 35, 45];
         });
     }
