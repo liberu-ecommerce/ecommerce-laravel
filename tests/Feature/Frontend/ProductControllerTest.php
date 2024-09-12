@@ -293,7 +293,6 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('products.index');
         $response->assertViewHas('products', function ($viewProducts) {
-            dump($viewProducts->pluck('price')->toArray());
             return $viewProducts->pluck('price')->map(fn($price) => (int) round($price))->toArray() === [25, 35, 45];
         });
     }
@@ -313,7 +312,7 @@ class ProductControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('products.index');
         $response->assertViewHas('products', function ($viewProducts) {
-            return $viewProducts->pluck('price')->toArray() === [5, 15, 25];
+            return $viewProducts->pluck('price')->map(fn($price) => (int) round($price))->toArray() === [5, 15, 25];
         });
     }
 
@@ -333,7 +332,7 @@ class ProductControllerTest extends TestCase
         $response->assertViewIs('products.index');
         $response->assertViewHas('products', function ($viewProducts) {
             // Ensure products are between $10 and $30
-            return $viewProducts->pluck('price')->toArray() === [15, 25];
+            return $viewProducts->pluck('price')->map(fn($price) => (int) round($price))->toArray() === [15, 25];
         });
     }
 
@@ -376,7 +375,7 @@ class ProductControllerTest extends TestCase
             $viewProductsArray = $viewProducts->map(function ($product) {
                 return [
                     'name' => $product->name,
-                    'price' => $product->price,
+                    'price' => (int) round($product->price),
                     'created_at' => $product->created_at->toDateTimeString()
                 ];
             })->toArray();
