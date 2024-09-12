@@ -29,6 +29,11 @@ use App\Http\Controllers\SubscriptionController;
 
 Route::get('/', [HomeController::class, 'index']);
 
+// Product routes
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('checkout.initiate');
 Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
@@ -65,15 +70,12 @@ Route::post('/paypal/subscription', [PayPalPaymentController::class, 'createSubs
 Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
 Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
-// Product routes
-Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-Route::get('/products', [ProductController::class, 'list'])->name('products.list');
-Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
-Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
-Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
-Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
-Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
+
+// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+// Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
+// Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
+// Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
+// Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
 
 // Ratings and reviews

@@ -37,15 +37,15 @@
                             <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
                         </form>
                     @endif
-                    <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
+                    {{-- <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-primary mt-2">Add to Compare</button>
-                    </form>
+                    </form> --}}
                 </div>
             </div>
             <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>
 
-            @if(count($recommendations) > 0)
+            @if(isset($recommendations) && count($recommendations) > 0)
                 <div class="card mt-4">
                     <div class="card-header">Recommended Products</div>
                     <div class="card-body">
@@ -77,6 +77,7 @@
     <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-3">Download</a>
 @endif
 
+@isset($product->inventoryLogs)
 <div class="card mt-4">
     <div class="card-header">Inventory Logs</div>
     <div class="card-body">
@@ -100,6 +101,7 @@
         </table>
     </div>
 </div>
+@endisset
 
 <script type="application/ld+json">
 {
