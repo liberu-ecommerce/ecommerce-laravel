@@ -189,7 +189,7 @@ class ProductControllerTest extends TestCase
     // Test sorting products by name in descending order
     public function test_sort_products_by_name_descending()
     {
-        $products = Product::factory()->count(3)->sequence(
+        Product::factory()->count(3)->sequence(
             ['name' => 'Product 3'],
             ['name' => 'Product 1'],
             ['name' => 'Product 2']
@@ -280,7 +280,7 @@ class ProductControllerTest extends TestCase
 
     public function test_filter_products_by_price_min()
     {
-        $products = Product::factory()->count(5)->sequence(
+        Product::factory()->count(5)->sequence(
             ['price' => 5],
             ['price' => 15],
             ['price' => 25],
@@ -299,7 +299,7 @@ class ProductControllerTest extends TestCase
 
     public function test_filter_products_by_price_max()
     {
-        $products = Product::factory()->count(5)->sequence(
+        Product::factory()->count(5)->sequence(
             ['price' => 5],
             ['price' => 15],
             ['price' => 25],
@@ -318,7 +318,7 @@ class ProductControllerTest extends TestCase
 
     public function test_filter_products_by_price_range()
     {
-        $products = Product::factory()->count(5)->sequence(
+        Product::factory()->count(5)->sequence(
             ['price' => 5],
             ['price' => 15],
             ['price' => 25],
@@ -349,7 +349,7 @@ class ProductControllerTest extends TestCase
             Carbon::now()->subDays(1)
         ];
 
-        $products = Product::factory()->count(5)->sequence(
+        Product::factory()->count(5)->sequence(
             ['name' => 'AlphaX', 'price' => 15, 'created_at' => $timestamps[4]],
             ['name' => 'Bravo', 'price' => 25, 'created_at' => $timestamps[1]],
             ['name' => 'CharlieX', 'price' => 40, 'created_at' => $timestamps[2]],
