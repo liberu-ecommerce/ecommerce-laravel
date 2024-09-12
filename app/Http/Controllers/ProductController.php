@@ -20,6 +20,12 @@ class ProductController extends Controller
         $this->recommendationService = $recommendationService;
     }
 
+    public function index(Request $request)
+    {
+        $products = Product::paginate();
+        return view('products.index', compact('products'));
+    }
+
     public function create(Request $request)
     {
         // Handle Product File Upload
@@ -52,12 +58,7 @@ class ProductController extends Controller
         return response()->json($product, Response::HTTP_CREATED);
     }
 
-    public function list()
-    {
-        $products = Product::all();
-
-        return response()->json($products);
-    }
+    
 
     public function show($category, Product $product)
     {

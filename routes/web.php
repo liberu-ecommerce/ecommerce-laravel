@@ -66,10 +66,11 @@ Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'up
 Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
 // Product routes
-Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-Route::get('/products', [ProductController::class, 'list'])->name('products.list');
+Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+
 Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
 Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
