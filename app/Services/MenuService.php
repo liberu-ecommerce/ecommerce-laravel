@@ -14,7 +14,7 @@ class MenuService
 
         $menu = SpatieMenu::new()
             ->addClass('flex items-center space-x-4')
-            ->addItemClass('px-4 py-2 rounded-md bg-green-700 text-white hover:bg-green-600 transition duration-300 ease-in-out');
+            ->addItemClass('p-2 flex items-center text-sm text-white focus:outline-none focus:text-white');
 
         $this->createMenuItems($menuItems)->each(function ($item) use ($menu) {
             $menu->add($item);
