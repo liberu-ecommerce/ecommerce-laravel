@@ -112,4 +112,8 @@ Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->na
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
+Route::get('/contact', function() {
+    return view('contact');
+})->name('contact');
+
 require __DIR__.'/socialstream.php';
