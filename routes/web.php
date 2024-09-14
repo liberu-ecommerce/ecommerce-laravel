@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
+use App\Http\Controllers\Frontend\ProductController;
+use App\Http\Controllers\Frontend\ProductCategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\HomeController;
@@ -32,6 +33,11 @@ Route::get('/', [HomeController::class, 'index']);
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+// Category routes
+Route::get('/categories', [ProductCategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/{category}', [ProductCategoryController::class, 'show'])->name('categories.show');
+Route::get('/categories/{category}/products', [ProductCategoryController::class, 'products'])->name('categories.products');
 
 
 // Checkout routes

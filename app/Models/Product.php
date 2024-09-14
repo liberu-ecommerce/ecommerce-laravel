@@ -8,6 +8,7 @@ use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model implements Orderable
 {
@@ -31,7 +32,7 @@ class Product extends Model implements Orderable
         'meta_keywords',
     ];
 
-    public function categories()
+    public function category()
     {
         return $this->belongsTo(ProductCategory::class);
     }
@@ -39,6 +40,11 @@ class Product extends Model implements Orderable
     public function collections()
     {
         return $this->belongsToMany(Collection::class);
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
     public function cartItems()
@@ -70,7 +76,7 @@ class Product extends Model implements Orderable
     {
         return $query->where(function ($q) use ($keyword) {
             $q->where('name', 'like', '%' . $keyword . '%')
-              ->orWhere('description', 'like', '%' . $keyword . '%');
+                ->orWhere('description', 'like', '%' . $keyword . '%');
         });
     }
 
@@ -82,8 +88,8 @@ class Product extends Model implements Orderable
     public function scopePriceRange($query, $min, $max)
     {
         return $query->when($min, function ($q) use ($min) {
-                $q->where('price', '>=', $min);
-            })
+            $q->where('price', '>=', $min);
+        })
             ->when($max, function ($q) use ($max) {
                 $q->where('price', '<=', $max);
             });
