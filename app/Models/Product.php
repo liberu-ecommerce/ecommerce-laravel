@@ -44,7 +44,7 @@ class Product extends Model implements Orderable
 
     public function images(): HasMany
     {
-        return $this->hasMany(ProductImage::class)->orderBy('order');;
+        return $this->hasMany(ProductImage::class)->orderBy('order');
     }
 
     public function cartItems()
