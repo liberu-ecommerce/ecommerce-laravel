@@ -219,36 +219,61 @@ class ProductCategoryControllerTest extends TestCase
         });
     }
 
-
-    // Test fetching a category products page
-    public function test_can_view_category_products()
+    // Test can view the category products page
+    public function test_can_view_category_products_page()
     {
-        $category = ProductCategory::factory()->create([
-            'name' => 'Shoes',
-        ]);
-        $products = Product::factory()->count(3)->create([
-            'category_id' => $category->id,
-        ]);
+        $category = ProductCategory::factory()->create();
 
         $response = $this->get(route('categories.products', ["category" => $category]));
 
         $response->assertStatus(200);
         $response->assertViewIs('categories.products');
-        $response->assertViewHas('products', function ($viewProducts) use ($products) {
-            return (
-                $viewProducts->count() === 3 && $viewProducts->pluck('id')->diff($products->pluck('id'))->isEmpty()
-            );
+        $response->assertViewHas('products', function ($viewProducts) {
+            return $viewProducts->count() === 0;
         });
     }
 
 
-    // Test retrieving a category with multiple products
-    private function test_can_retrieve_category_with_multiple_products()
+    // Test category products page shows only products belonging to the specific category
+    public function test_category_products_page_shows_only_its_own_products()
     {
+        $category1 = ProductCategory::factory()->create();
+        $category2 = ProductCategory::factory()->create();
+
+        $products = Product::factory()->count(5)->sequence(
+            ['name' => 'Product 1', 'category_id' => $category1->id],
+            ['name' => 'Product 2', 'category_id' => $category2->id],
+            ['name' => 'Product 3', 'category_id' => $category1->id],
+            ['name' => 'Product 4', 'category_id' => $category2->id],
+            ['name' => 'Product 5', 'category_id' => $category2->id]
+        )->create();
+
+        $response = $this->get(route('categories.products', ["category" => $category1]));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('categories.products');
+        $response->assertViewHas('products', function ($viewProducts) use ($products) {
+            $category1Products = collect([$products->get(0), $products->get(2)]);
+            return (
+                $viewProducts->count() === 2 &&
+                $viewProducts->pluck('id')->diff($category1Products->pluck('id'))->isEmpty()
+            );
+        });
     }
 
     // Test fetching products for a given category with pagination
-    private function test_can_view_paginated_products_for_category()
+    public function test_can_view_paginated_products_for_category()
     {
+        $category = ProductCategory::factory()->create();
+        Product::factory()->count(5)->create(['category_id' => $category->id]);
+        config(['pagination.per_page' => 3]);
+
+        $response = $this->get(route('categories.products', ['category' => $category, 'page' => 2]));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('categories.products');
+        $response->assertViewHas('products', function ($viewProducts) {
+            return $viewProducts->count() === 2;
+        });
     }
 }

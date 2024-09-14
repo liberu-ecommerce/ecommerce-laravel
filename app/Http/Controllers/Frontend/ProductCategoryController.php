@@ -26,7 +26,7 @@ class ProductCategoryController extends Controller
         return view('categories.show', compact('category'));
     }
 
-    public function products(ProductCategory $category)
+    public function products(Request $request, ProductCategory $category)
     {
         $products = QueryBuilder::for(Product::class)
             ->allowedFilters([
@@ -38,7 +38,8 @@ class ProductCategoryController extends Controller
             ])
             ->where('category_id', $category->id)
             ->allowedSorts(['name', 'price', 'created_at'])
-            ->paginate();
+            ->paginate(config('pagination.per_page'))
+            ->appends($request->query());
 
         return view('categories.products', compact('category', 'products'));
     }
