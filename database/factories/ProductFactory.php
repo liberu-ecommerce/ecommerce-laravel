@@ -17,6 +17,7 @@ class ProductFactory extends Factory
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
     protected $model = Product::class;
+    
     /**
      * Define the model's default state.
      *

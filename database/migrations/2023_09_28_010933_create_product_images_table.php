@@ -6,16 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private string $table = 'product_image';
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create($this->table, function (Blueprint $table) {
+        Schema::create('product_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained();
-            $table->foreignId('image_id')->constrained();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->string('image');
+            $table->integer('order')->default(1);
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_image');
+        Schema::dropIfExists('product_images');
     }
 };
