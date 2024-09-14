@@ -22,7 +22,7 @@ class ProductImagesTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('products.show');
         $response->assertViewHas('product', function ($viewProduct) {
-            return !is_null($viewProduct->images) && $viewProduct->images->isEmpty(); 
+            return $viewProduct->images !== null && $viewProduct->images->isEmpty(); 
         });
     }
 
