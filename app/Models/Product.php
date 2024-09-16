@@ -42,6 +42,11 @@ class Product extends Model implements Orderable
         return $this->belongsToMany(Collection::class);
     }
 
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('order');
@@ -70,6 +75,20 @@ class Product extends Model implements Orderable
     public function downloadable()
     {
         return $this->hasMany(DownloadableProduct::class);
+    }
+
+    public function scopeWithTag($query, Tag $tag)
+    {
+        return $query->whereHas('tags', function ($query) use ($tag) {
+            $query->where('tags.id', $tag->id);
+        });
+    }
+
+    public function scopeWithTagNames($query, array $tagNames)
+    {
+        return $query->whereHas('tags', function ($query) use ($tagNames) {
+            $query->whereIn('name', $tagNames);
+        });
     }
 
     public function scopeSearch($query, $keyword)
