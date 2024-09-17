@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-class Collection extends Model implements Orderable
+class ProductCollection extends Model implements Orderable
 {
     use HasFactory;
     use IsTenantModel;
+
+    protected $table = "collections";
 
     protected $fillable = [
         'name',
@@ -31,7 +33,7 @@ class Collection extends Model implements Orderable
 
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'collection_items')
+        return $this->belongsToMany(Product::class, 'collection_items', 'collection_id')
             ->withPivot('quantity');
     }
 }

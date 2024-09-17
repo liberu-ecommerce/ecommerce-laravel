@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name');
             $table->boolean('is_child')->default(0);
             $table->unsignedBigInteger('child_of')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
