@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model implements Orderable
 {
@@ -50,6 +51,12 @@ class Product extends Model implements Orderable
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('order');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->featured_image;
+        // return asset(Storage::url($this->featured_image));
     }
 
     public function cartItems()

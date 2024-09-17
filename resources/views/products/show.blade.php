@@ -1,16 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container p-8">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">{{ $product->name }}</div>
+                <div class="card-header">
+                    <h2 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+                        {{ $product->name }}
+                    </h2>
+                </div>
                 <div class="card-body">
-                    <img src="/images/placeholder.png" alt="{{ $product->name }}" class="img-fluid mb-3">
-                    <p><strong>Description:</strong> {{ $product->description }}</p>
+                    <img src="{{ $product->imageUrl }}" alt="{{ $product->name }}" class="img-fluid mb-3">
+                    <h4>Description:</h4>
+                    <p>{{ $product->long_description }}</p>
+
+                    <br>
                     <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
-                    <p><strong>Category:</strong> {{ $product->category }}</p>
+                    <p><strong>Category:</strong> {{ $product->category->name ?? "" }}</p>
                     <p><strong>Inventory Count:</strong> {{ $product->inventory_count }}</p>
                     @if($product->inventory_count > 0)
                         <p class="text-success"><strong>In Stock</strong></p>

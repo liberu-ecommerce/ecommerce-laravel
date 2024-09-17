@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources;
 use App\Filament\App\Resources\CollectionResource\Pages;
 use App\Filament\App\Resources\CollectionResource\RelationManagers;
 use App\Models\Collection;
+use App\Models\ProductCollection;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -15,7 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CollectionResource extends Resource
 {
-    protected static ?string $model = Collection::class;
+    protected static ?string $model = ProductCollection::class;
+
+    protected static ?string $modelLabel = 'Collection';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

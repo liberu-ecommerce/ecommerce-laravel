@@ -19,6 +19,8 @@ public_html/hot
 storage/*.key
 .env
 .env.local
+.env.testing.local
+
 Homestead.yaml
 Homestead.json
 /.vagrant

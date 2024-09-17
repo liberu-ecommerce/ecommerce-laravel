@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use Database\Seeders\DummyData\DummyDataSeeder;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -25,6 +27,7 @@ class DatabaseSeeder extends Seeder
             DefaultTeamSeeder::class,
             UserSeeder::class,
             MenuSeeder::class,
+            DummyDataSeeder::class,
         ]);
     }
 }
