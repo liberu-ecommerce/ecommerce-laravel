@@ -39,7 +39,7 @@ class Product extends Model implements Orderable
 
     public function collections()
     {
-        return $this->belongsToMany(Collection::class);
+        return $this->belongsToMany(ProductCollection::class, 'collection_items');
     }
 
     public function tags()

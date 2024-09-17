@@ -5,6 +5,7 @@ use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\ProductCategoryController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\Frontend\ProductCollectionController;
 use App\Http\Controllers\Frontend\ProductTagController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ShippingController;
@@ -39,6 +40,12 @@ Route::get('/products/{product}', [ProductController::class, 'show'])->name('pro
 Route::get('/categories', [ProductCategoryController::class, 'index'])->name('categories.index');
 Route::get('/categories/{category}', [ProductCategoryController::class, 'show'])->name('categories.show');
 Route::get('/categories/{category}/products', [ProductCategoryController::class, 'products'])->name('categories.products');
+
+// Collection routes
+Route::get('/collections', [ProductCollectionController::class, 'index'])->name('collections.index');
+Route::get('/collections/{collection}', [ProductCollectionController::class, 'show'])->name('collections.show');
+Route::get('/collections/{collection}/products', [ProductCollectionController::class, 'products'])->name('collections.products');
+
 
 // Tag routes
 Route::get('/tags', [ProductTagController::class, 'index'])->name('tags.index');
