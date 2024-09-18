@@ -1,7 +1,7 @@
 <div>
     <section class="products-section">
         <h2>Our Products</h2>
-        <p>Discover our range of genealogy tools designed to help you explore your ancestry.</p>
+        <p></p>
         <div class="products-grid grid grid-cols-1 md:grid-cols-3 gap-4">
             @foreach($products as $product)
                 <div class="product-card col-span-1 max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
