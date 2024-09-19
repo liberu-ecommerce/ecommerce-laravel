@@ -10,6 +10,10 @@ class ProductImage extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'image'
+    ];
+
     public function getUrlAttribute(): string
     {
         return asset(Storage::url($this->attributes['image']));
