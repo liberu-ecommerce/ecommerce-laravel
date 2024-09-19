@@ -18,6 +18,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\App\Resources\ProductResource\Pages;
 use App\Filament\App\Resources\ProductResource\RelationManagers;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
 
 class ProductResource extends Resource
 {
@@ -32,25 +35,30 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-
-                Forms\Components\TextInput::make('short_description')
-                    ->maxLength(255),
-
-                Forms\Components\Textarea::make('long_description')
-                    ->maxLength(65535),
-
                 Forms\Components\Select::make('category_id')
                     ->label('Category')
                     ->required()
-                    ->options(ProductCategory::pluck('name', 'id'))
+                    ->relationship('category', 'name')
                     ->reactive(),
 
-                Forms\Components\Toggle::make('is_variable')
-                    ->label('Variable'),
-                Forms\Components\Toggle::make('is_grouped')
-                    ->label('Grouped'),
-                Forms\Components\Toggle::make('is_simple')
-                    ->label('Simple'),
+                Forms\Components\TextInput::make('short_description')
+                    ->maxLength(255)
+                    ->columnSpanFull(),
+
+                Forms\Components\Textarea::make('long_description')
+                    ->maxLength(65535)
+                    ->columnSpanFull(),
+
+
+                Grid::make()
+                    ->schema([
+                        Forms\Components\Toggle::make('is_variable')
+                            ->label('Variable'),
+                        Forms\Components\Toggle::make('is_grouped')
+                            ->label('Grouped'),
+                        Forms\Components\Toggle::make('is_simple')
+                            ->label('Simple'),
+                    ]),
 
                 Forms\Components\FileUpload::make('featured_image')
                     ->image()
@@ -58,6 +66,25 @@ class ProductResource extends Resource
                     ->directory('products')
                     ->visibility('public')
                     ->label('Featured Image'),
+
+
+                Repeater::make('images')
+                    ->relationship('images')
+                    ->schema([
+                        Forms\Components\FileUpload::make('image')
+                            ->hiddenLabel()
+                            ->image()
+                            ->disk('public')
+                            ->directory('products')
+                            ->visibility('public')
+
+                    ]),
+
+
+
+
+
+
 
                 // Forms\Components\TextInput::make('meta_title')
                 //     ->label('Meta Title')
@@ -79,24 +106,24 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('featured_image')
+                    ->label('Featured Image'),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('short_description')
-                    ->label('Short Description'),
-                Tables\Columns\TextColumn::make('long_description')
-                    ->label('Long Description'),
+                // Tables\Columns\TextColumn::make('short_description')
+                //     ->label('Short Description'),
+                // Tables\Columns\TextColumn::make('long_description')
+                //     ->label('Long Description'),
                 Tables\Columns\TextColumn::make('category.name')
                     ->label('Category'),
-                Tables\Columns\TextColumn::make('is_variable')
-                    ->label('Variable'),
-                Tables\Columns\TextColumn::make('is_grouped')
-                    ->label('Grouped'),
-                Tables\Columns\TextColumn::make('is_simple')
-                    ->label('Simple'),
-                Tables\Columns\ImageColumn::make('featured_image')
-                    ->label('Featured Image'),
+                // Tables\Columns\TextColumn::make('is_variable')
+                //     ->label('Variable'),
+                // Tables\Columns\TextColumn::make('is_grouped')
+                //     ->label('Grouped'),
+                // Tables\Columns\TextColumn::make('is_simple')
+                //     ->label('Simple'),
             ])
             ->filters([
                 //

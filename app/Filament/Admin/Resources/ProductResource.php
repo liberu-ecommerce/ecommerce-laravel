@@ -73,7 +73,7 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('adjustInventory')
                     ->label('Adjust Inventory')
-                    ->icon('heroicon-o-adjustments')
+                    ->icon('heroicon-o-adjustments-horizontal')
                     ->action(function (Product $record, array $data): void {
                         $record->inventory_count += $data['adjustment'];
                         $record->save();
