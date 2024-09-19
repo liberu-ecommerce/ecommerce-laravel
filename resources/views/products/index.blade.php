@@ -2,17 +2,33 @@
 
 @section('content')
     <div class="container mx-auto px-4 my-4">
+        <div class="flex justify-between items-center mb-4">
+            <!-- Sorting dropdown -->
+            <form method="GET" action="{{ route('products.index') }}">
+                <select name="sort" class="border border-gray-300 rounded-md p-2" onchange="this.form.submit()">
+                    <option value="">Sort by</option>
+                    <option value="price" {{ request('sort') == 'price' ? 'selected' : '' }}>Price: Low to High
+                    </option>
+                    <option value="-price" {{ request('sort') == '-price' ? 'selected' : '' }}>Price: High to Low
+                    </option>
+                    <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Name: A to Z</option>
+                    <option value="-name" {{ request('sort') == '-name' ? 'selected' : '' }}>Name: Z to A</option>
+                    <option value="-created_at" {{ request('sort') == '-created_at' ? 'selected' : '' }}>Latest</option>
+                </select>
+            </form>
+        </div>
+
+        <!-- Products Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
             @if ($products->count() > 0)
                 @foreach ($products as $product)
                     <div
                         class="col-span-1 max-w-sm bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                        <a href="{{ route('products.show', ["product" => $product]) }}">
+                        <a href="{{ route('products.show', ['product' => $product]) }}">
                             <img class="rounded-t-lg" src="{{ $product->imageUrl }}" alt="product image" />
                         </a>
                         <div class="px-5 pb-5">
-                            <a href="{{ route('products.show', ["product" => $product]) }}">
+                            <a href="{{ route('products.show', ['product' => $product]) }}">
                                 <h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
                                     {{ $product->name }}</h5>
                             </a>
