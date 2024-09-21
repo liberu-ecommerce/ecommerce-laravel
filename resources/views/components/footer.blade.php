@@ -132,7 +132,7 @@
         <div class="flex flex-wrap justify-between items-center gap-3">
           <div class="mt-3 sm:hidden">
             <a class="flex-none font-semibold text-xl text-black focus:outline-none focus:opacity-80 dark:text-white" href="#" aria-label="Brand">Brand</a>
-            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2022 Preline.</p>
+            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-neutral-400">© 2024 {{ \App\Helpers\SiteSettingsHelper::get('name') }}.</p>
           </div>
   
           <div class="space-x-4">
