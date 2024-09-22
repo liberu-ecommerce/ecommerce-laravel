@@ -28,7 +28,7 @@ class ProductSeeder extends Seeder
              'name' => 'Smartphone', 
              'category_id' => $electronicsCategory->id, 
              'price' => 699.99, 
-             'short_description' => 'Latest model smartphone with 5G.'
+             'short_description' => 'Latest model smartphone with 5G.',
          ]);
          Product::factory()->create([
              'name' => 'Laptop', 
