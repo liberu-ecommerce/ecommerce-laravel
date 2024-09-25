@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\App\Pages;
+use App\Filament\App\Pages\EditProfile;
 use App\Http\Middleware\TeamsPermission;
 use App\Models\Team;
 use Filament\Facades\Filament;
@@ -41,6 +42,14 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Gray,
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Profile')
+                    ->icon('heroicon-o-user-circle')
+                    ->url(fn () => $this->shouldRegisterMenuItem()
+                        ? url(EditProfile::getUrl())
+                        : url($panel->getPath())),
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
