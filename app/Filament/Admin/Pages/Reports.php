@@ -10,5 +10,5 @@ class Reports extends Page
 
     protected static string $view = 'filament.admin.pages.reports';
 
-    protected static ?int $navigationSort = 5;
+    protected static ?int $navigationSort = 7;
 }

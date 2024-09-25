@@ -19,7 +19,7 @@ class MenuResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-bars-4';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 8;
 
     public static function form(Form $form): Form
     {
@@ -33,7 +33,10 @@ class MenuResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('url'),
+                Tables\Columns\TextColumn::make('parent.name'),
+                Tables\Columns\TextColumn::make('order'),
             ])
             ->filters([
                 //
