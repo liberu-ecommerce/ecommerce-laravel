@@ -124,8 +124,13 @@ Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->na
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
-Route::get('/contact', function() {
-    return view('contact');
-})->name('contact');
+
+// Pages
+// TODO: implement CMS features for page and form editing 
+Route::view('/contact', 'contact')->name('contact');
+Route::view('/about', 'about')->name('about');
+
+
+// Blog routes
 
 require __DIR__.'/socialstream.php';
