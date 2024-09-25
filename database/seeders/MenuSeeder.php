@@ -38,14 +38,9 @@ class MenuSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'Cart',
-                'url' => '/cart',
-                'order' => 4
-            ],
-            [
                 'name' => 'My Account',
                 'url' => '/account',
-                'order' => 5,
+                'order' => 4,
                 'children' => [
                     ['name' => 'Profile', 'url' => '/account/profile', 'order' => 1],
                     ['name' => 'Orders', 'url' => '/account/orders', 'order' => 2],
@@ -55,12 +50,12 @@ class MenuSeeder extends Seeder
             [
                 'name' => 'About',
                 'url' => '/about',
-                'order' => 6
+                'order' => 5
             ],
             [
                 'name' => 'Contact',
                 'url' => '/contact',
-                'order' => 7
+                'order' => 6
             ],
         ];
 
