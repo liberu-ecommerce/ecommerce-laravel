@@ -2,8 +2,8 @@
 
 namespace App\Filament\Admin\Resources;
 
-use App\Filament\Admin\Resources\MenusResource\Pages;
-use App\Filament\Admin\Resources\MenusResource\RelationManagers;
+use App\Filament\Admin\Resources\MenuResource\Pages;
+use App\Filament\Admin\Resources\MenuResource\RelationManagers;
 use App\Models\Menu;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -13,11 +13,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class MenusResource extends Resource
+class MenuResource extends Resource
 {
     protected static ?string $model = Menu::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-bars-4';
+
+    protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form
     {
@@ -56,9 +58,9 @@ class MenusResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMenuses::route('/'),
-            'create' => Pages\CreateMenus::route('/create'),
-            'edit' => Pages\EditMenus::route('/{record}/edit'),
+            'index' => Pages\ListMenus::route('/'),
+            'create' => Pages\CreateMenu::route('/create'),
+            'edit' => Pages\EditMenu::route('/{record}/edit'),
         ];
     }
 }

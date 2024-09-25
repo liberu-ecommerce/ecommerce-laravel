@@ -15,8 +15,7 @@ return new class extends Migration
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->boolean('is_child')->default(0);
-            $table->unsignedBigInteger('child_of')->nullable();
+            $table->foreignId('parent_category_id')->nullable()->constrained('product_categories')->cascadeOnDelete();
             $table->text('description')->nullable();
             $table->timestamps();
         });
