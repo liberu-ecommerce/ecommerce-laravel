@@ -130,6 +130,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.x
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/about', 'about')->name('about');
 
+Route::view('/account', 'about')->middleware('auth')->name('about');
 
 // Blog routes
 

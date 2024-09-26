@@ -11,7 +11,7 @@ class RegisterResponse implements RegisterResponseContract
 {
     protected $roleRedirects = [
         'admin' => '/admin',
-        'free' => '/app',
+        'staff' => '/app',
     ];
 
     protected function shouldRedirect(Request $request, $redirect)

@@ -17,8 +17,8 @@ class RolesSeeder extends Seeder
         $permissions = Permission::where('guard_name', 'web')->pluck('id')->toArray();
         $adminRole->syncPermissions($permissions);
 
-        $freeRole = Role::firstOrCreate(['name' => 'free']);
-        $freePermissions = Permission::where('guard_name', 'web')->pluck('id')->toArray();
-        $freeRole->syncPermissions($freePermissions);
+        $staffRole = Role::firstOrCreate(['name' => 'staff']);
+        $staffPermissions = Permission::where('guard_name', 'web')->pluck('id')->toArray();
+        $staffRole->syncPermissions($staffPermissions);
     }
 }
