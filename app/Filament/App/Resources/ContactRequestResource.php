@@ -2,9 +2,9 @@
 
 namespace App\Filament\App\Resources;
 
-use App\Filament\App\Resources\GroupResource\Pages;
-use App\Filament\App\Resources\GroupResource\RelationManagers;
-use App\Models\Group;
+use App\Filament\App\Resources\ContactRequestResource\Pages;
+use App\Filament\App\Resources\ContactRequestResource\RelationManagers;
+use App\Models\ContactRequest;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,13 +13,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class GroupResource extends Resource
+class ContactRequestResource extends Resource
 {
-    protected static ?string $model = Group::class;
+    protected static ?string $model = ContactRequest::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
 
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
@@ -58,9 +58,9 @@ class GroupResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListGroups::route('/'),
-            'create' => Pages\CreateGroup::route('/create'),
-            'edit' => Pages\EditGroup::route('/{record}/edit'),
+            'index' => Pages\ListContactRequests::route('/'),
+            'create' => Pages\CreateContactRequest::route('/create'),
+            'edit' => Pages\EditContactRequest::route('/{record}/edit'),
         ];
     }
 }

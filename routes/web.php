@@ -129,6 +129,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.x
 // TODO: implement CMS features for page and form editing 
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/about', 'about')->name('about');
+Route::view('/shop', 'shop')->name('shop');
 
 Route::view('/account', 'about')->middleware('auth')->name('about');
 

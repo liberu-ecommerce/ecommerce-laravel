@@ -10,5 +10,5 @@ class Settings extends Page
 
     protected static string $view = 'filament.admin.pages.settings';
 
-    protected static ?int $navigationSort = 9;
+    protected static ?int $navigationSort = 10;
 }

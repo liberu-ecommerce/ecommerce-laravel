@@ -6,9 +6,9 @@ use Filament\Pages\Page;
 
 class Reports extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
 
     protected static string $view = 'filament.admin.pages.reports';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 8;
 }
