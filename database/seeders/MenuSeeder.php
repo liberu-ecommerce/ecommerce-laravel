@@ -38,8 +38,8 @@ class MenuSeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'Cart',
-                'url' => '/cart',
+                'name' => 'Blog',
+                'url' => '/blog',
                 'order' => 4
             ],
             [

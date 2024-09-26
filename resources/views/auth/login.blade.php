@@ -41,6 +41,37 @@
 
                 <a href="/forgot-password" class="underline text-sm text-gray-600 hover:text-gray-900" >Forgot password?</a>
             </form>
+
+           {{-- Demo Credentials Section --}}
+<div class="mt-6 p-4 bg-gray-100 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-gray-700 mb-4">Demo Credentials</h3>
+
+    <div class="grid grid-cols-2 gap-4">
+        <div class="border p-4 rounded bg-white shadow-sm">
+            <h4 class="font-bold text-gray-800">Admin</h4>
+            <div class="mt-2">
+                <span class="block text-sm text-gray-600 font-mono">admin@example.com</span>
+            </div>
+            <div class="mt-2">
+                <span class="block text-sm text-gray-600 font-mono">password</span>
+            </div>
+        </div>
+
+        <div class="border p-4 rounded bg-white shadow-sm">
+            <h4 class="font-bold text-gray-800">Staff</h4>
+            <div class="mt-2">
+                <span class="block text-sm text-gray-600 font-mono">staff@example.com</span>
+            </div>
+            <div class="mt-2">
+                
+                <span class="block text-sm text-gray-600 font-mono">password</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+             
+        
         </div>
     </div>
 @endsection

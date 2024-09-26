@@ -49,7 +49,7 @@ class CreateNewUser implements CreatesNewUsers
                     $team = $this->assignOrCreateTeam($user);
                     $user->switchTeam($team);
                     setPermissionsTeamId($team->id);
-                    $user->assignRole("free");
+                    $user->assignRole("staff");
                 });
             });
             // $user = DB::transaction(function () use ($input) {

@@ -15,7 +15,10 @@ use App\Filament\App\Resources\InvoiceResource\Pages;
 class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+
+    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {

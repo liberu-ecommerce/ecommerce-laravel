@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Laravel\Jetstream\Features;
 
 class StoreResource extends Resource
 {
@@ -22,6 +23,11 @@ class StoreResource extends Resource
     protected static bool $isScopedToTenant = false;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Features::hasTeamFeatures();
+    }
 
     public static function form(Form $form): Form
     {

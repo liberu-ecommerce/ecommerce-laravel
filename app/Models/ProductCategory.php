@@ -16,6 +16,8 @@ class ProductCategory extends Model
 
     protected $fillable = [
         'name',
+        'description',
+        'parent_category_id',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -24,6 +26,11 @@ class ProductCategory extends Model
     public function products()
     {
         return $this->hasMany(Product::class, 'category_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(static::class, 'parent_category_id');
     }
 
     public function getSlugAttribute()
