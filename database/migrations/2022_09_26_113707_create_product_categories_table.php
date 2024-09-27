@@ -15,8 +15,10 @@ return new class extends Migration
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('slug')->unique(); 
             $table->foreignId('parent_category_id')->nullable()->constrained('product_categories')->cascadeOnDelete();
             $table->text('description')->nullable();
+            $table->string('image')->nullable(); 
             $table->timestamps();
         });
     }
