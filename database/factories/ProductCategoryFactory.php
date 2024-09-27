@@ -21,6 +21,9 @@ class ProductCategoryFactory extends Factory
     {
         return [
             "name" => $this->faker->name,
+            "slug" => $this->faker->slug,
+            "description" => $this->faker->paragraph,
+            'image' => $this->faker->imageUrl(640, 480, 'No image', false, null, true),
         ];
     }
 }
