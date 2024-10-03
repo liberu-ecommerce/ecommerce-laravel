@@ -6301,16 +6301,16 @@
         },
         {
             "name": "spatie/laravel-query-builder",
-            "version": "6.2.0",
+            "version": "6.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-query-builder.git",
-                "reference": "b8bf3fd6c1f5ca99f5be62db89ffb7caeccd1eeb"
+                "reference": "64f0453f4dea6a6fabf1ce4ddbb553e14da67bb6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/b8bf3fd6c1f5ca99f5be62db89ffb7caeccd1eeb",
-                "reference": "b8bf3fd6c1f5ca99f5be62db89ffb7caeccd1eeb",
+                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/64f0453f4dea6a6fabf1ce4ddbb553e14da67bb6",
+                "reference": "64f0453f4dea6a6fabf1ce4ddbb553e14da67bb6",
                 "shasum": ""
             },
             "require": {
@@ -6371,7 +6371,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2024-09-27T07:59:18+00:00"
+            "time": "2024-10-03T11:10:10+00:00"
         },
         {
             "name": "spatie/macroable",
