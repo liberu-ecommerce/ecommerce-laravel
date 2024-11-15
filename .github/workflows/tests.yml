@@ -45,7 +45,7 @@ jobs:
       run: XDEBUG_MODE=coverage vendor/bin/phpunit --dont-report-useless-tests --coverage-clover=coverage.xml
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
          token: ${{ secrets.CODECOV_TOKEN }}
          files: ./coverage.xml
