@@ -18,6 +18,8 @@ use League\Csv\Writer;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 
 class ProductResource extends Resource
 {
@@ -57,6 +59,34 @@ class ProductResource extends Resource
                     ->multiple()
                     ->relationship('tags', 'name')
                     ->preload(),
+                Section::make('Pricing')
+                    ->schema([
+                        Select::make('pricing_type')
+                            ->options([
+                                'fixed' => 'Fixed Price',
+                                'free' => 'Free',
+                                'donation' => 'Pay What You Want',
+                            ])
+                            ->default('fixed')
+                            ->reactive(),
+                            
+                        TextInput::make('price')
+                            ->required()
+                            ->numeric()
+                            ->prefix('$')
+                            ->visible(fn (callable $get) => $get('pricing_type') === 'fixed'),
+                            
+                        TextInput::make('suggested_price')
+                            ->numeric()
+                            ->prefix('$')
+                            ->visible(fn (callable $get) => $get('pricing_type') === 'donation'),
+                            
+                        TextInput::make('minimum_price')
+                            ->numeric()
+                            ->prefix('$')
+                            ->default(0)
+                            ->visible(fn (callable $get) => $get('pricing_type') === 'donation'),
+                    ]),
                 Section::make('Downloadable Product')
                     ->schema([
                         Toggle::make('is_downloadable')

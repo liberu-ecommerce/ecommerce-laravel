@@ -35,11 +35,16 @@ class Product extends Model implements Orderable
         'downloadable_file',
         'download_limit',
         'expiration_time',
+        'pricing_type',
+        'suggested_price',
+        'minimum_price',
     ];
 
     protected $casts = [
         'is_downloadable' => 'boolean',
         'price' => 'decimal:2',
+        'suggested_price' => 'decimal:2',
+        'minimum_price' => 'decimal:2',
     ];
 
     public function category()
@@ -173,11 +178,24 @@ class Product extends Model implements Orderable
 
     public function getPrice(): float
     {
+        if ($this->isFree()) {
+            return 0.00;
+        }
         return $this->price;
     }
 
     public function getName(): string
     {
         return $this->name;
+    }
+
+    public function isFree(): bool
+    {
+        return $this->pricing_type === 'free';
+    }
+
+    public function isDonationBased(): bool
+    {
+        return $this->pricing_type === 'donation';
     }
 }
