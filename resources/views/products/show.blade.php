@@ -104,6 +104,7 @@
 </div>
 
 @if($product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
+@if(isset($product->downloadable) && $product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
     <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-3">Download</a>
 @endif
 
