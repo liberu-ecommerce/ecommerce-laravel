@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Collection;
 use League\Csv\Writer;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DateTimePicker;
 
 class ProductResource extends Resource
 {
@@ -54,6 +57,32 @@ class ProductResource extends Resource
                     ->multiple()
                     ->relationship('tags', 'name')
                     ->preload(),
+                Section::make('Downloadable Product')
+                    ->schema([
+                        Toggle::make('is_downloadable')
+                            ->label('Is Downloadable Product')
+                            ->reactive(),
+
+                        Forms\Components\FileUpload::make('downloadable_file')
+                            ->label('Product File')
+                            ->disk('local')
+                            ->directory('downloadable_products')
+                            ->visibility('private')
+                            ->acceptedFileTypes(['application/pdf', 'application/zip'])
+                            ->maxSize(50 * 1024) // 50MB
+                            ->visible(fn (callable $get) => $get('is_downloadable')),
+
+                        Forms\Components\TextInput::make('download_limit')
+                            ->label('Download Limit')
+                            ->numeric()
+                            ->minValue(1)
+                            ->visible(fn (callable $get) => $get('is_downloadable')),
+
+                        DateTimePicker::make('expiration_time')
+                            ->label('Download Expiration')
+                            ->visible(fn (callable $get) => $get('is_downloadable')),
+                    ])
+                    ->collapsible(),
             ]);
     }
 

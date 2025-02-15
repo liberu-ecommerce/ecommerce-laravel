@@ -31,6 +31,15 @@ class Product extends Model implements Orderable
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'is_downloadable',
+        'downloadable_file',
+        'download_limit',
+        'expiration_time',
+    ];
+
+    protected $casts = [
+        'is_downloadable' => 'boolean',
+        'price' => 'decimal:2',
     ];
 
     public function category()
@@ -81,7 +90,28 @@ class Product extends Model implements Orderable
 
     public function downloadable()
     {
-        return $this->hasMany(DownloadableProduct::class);
+        return $this->hasOne(DownloadableProduct::class);
+    }
+
+    public function isDownloadable(): bool
+    {
+        return $this->is_downloadable && $this->downloadable()->exists();
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($product) {
+            if ($product->is_downloadable && $product->downloadable_file) {
+                $product->downloadable()->updateOrCreate(
+                    ['product_id' => $product->id],
+                    [
+                        'file_url' => $product->downloadable_file,
+                        'download_limit' => $product->download_limit ?? PHP_INT_MAX,
+                        'expiration_time' => $product->expiration_time,
+                    ]
+                );
+            }
+        });
     }
 
     public function scopeWithTag($query, Tag $tag)
