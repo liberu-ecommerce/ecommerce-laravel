@@ -14,6 +14,7 @@ class Menu extends Model
         'url',
         'parent_id',
         'order',
+        'icon'
     ];
 
     public function parent()
