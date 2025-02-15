@@ -50,6 +50,11 @@ class DownloadController extends Controller
 
     private function authorizeDownload($user, DownloadableProduct $downloadableProduct)
     {
+        // Allow download for free products without authentication
+        if ($downloadableProduct->product->isFree()) {
+            return true;
+        }
+
         if (!$user) {
             return false;
         }

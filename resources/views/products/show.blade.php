@@ -16,7 +16,36 @@
                     <p>{{ $product->long_description }}</p>
 
                     <br>
-                    <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
+                    @if($product->isFree())
+                        <p><strong>Price:</strong> Free</p>
+                        <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-2">Download Now</a>
+                    @elseif($product->isDonationBased())
+                        <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
+                            @csrf
+                            <div class="form-group">
+                                <label for="donation_amount">Support this product (Suggested: ${{ number_format($product->suggested_price, 2) }})</label>
+                                <input type="number" 
+                                       name="price" 
+                                       id="donation_amount" 
+                                       class="form-control" 
+                                       value="{{ $product->suggested_price }}"
+                                       min="{{ $product->minimum_price }}"
+                                       step="0.01">
+                            </div>
+                            <button type="submit" class="btn btn-success mt-2">Support & Download</button>
+                        </form>
+                        @if($product->minimum_price <= 0)
+                            <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-link">Download without donating</a>
+                        @endif
+                    @else
+                        <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
+                        @if($product->inventory_count > 0)
+                            <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
+                            </form>
+                        @endif
+                    @endif
                     <p><strong>Category:</strong> {{ $product->category->name ?? "" }}</p>
                     <p><strong>Inventory Count:</strong> {{ $product->inventory_count }}</p>
                     @if($product->inventory_count > 0)
@@ -38,12 +67,6 @@
                             </form>
                         @endif
                     @endauth
-                    @if($product->inventory_count > 0)
-                        <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
-                        </form>
-                    @endif
                     {{-- <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-primary mt-2">Add to Compare</button>
@@ -147,4 +170,3 @@
     <meta property="og:url" content="{{ route('products.show', $product->id) }}">
     <meta name="twitter:card" content="summary_large_image">
 @endsection
-
