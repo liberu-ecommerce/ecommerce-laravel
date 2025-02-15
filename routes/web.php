@@ -46,11 +46,9 @@ Route::get('/collections', [ProductCollectionController::class, 'index'])->name(
 Route::get('/collections/{collection}', [ProductCollectionController::class, 'show'])->name('collections.show');
 Route::get('/collections/{collection}/products', [ProductCollectionController::class, 'products'])->name('collections.products');
 
-
 // Tag routes
 Route::get('/tags', [ProductTagController::class, 'index'])->name('tags.index');
 Route::get('/tags/{tag}', [ProductTagController::class, 'show'])->name('tags.show');
-
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('checkout.initiate');
@@ -88,13 +86,10 @@ Route::post('/paypal/subscription', [PayPalPaymentController::class, 'createSubs
 Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
 Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
-
-// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-// Route::get('/product/{category}/{product}', [ProductController::class, 'show'])->name('products.show');
-// Route::put('/product/{category}/{product}', [ProductController::class, 'update'])->name('products.update');
-// Route::patch('/product/{category}/{product}', [ProductController::class, 'update']);
-// Route::delete('/product/{category}/{product}', [ProductController::class, 'delete'])->name('products.delete');
-
+// Cart route
+Route::get('/cart', function() {
+    return view('cart.index');
+})->name('cart.index');
 
 // Ratings and reviews
 Route::get('/product/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
@@ -104,7 +99,6 @@ Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('revi
 
 Route::get('/product/{product}/ratings/average', [RatingController::class, 'calculateAverageRating'])->name('ratings.average');
 Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
-
 
 // New comparison routes
 Route::post('/product/{category}/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');
@@ -117,13 +111,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/download/file/{category}/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
 });
 
-
 Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
 Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->name('site_settings.edit');
 Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->name('site_settings.update');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
-
 
 // Pages
 // TODO: implement CMS features for page and form editing 
