@@ -18,6 +18,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\CartController; // New controller for cart
 
 /*
 |--------------------------------------------------------------------------
@@ -87,9 +88,8 @@ Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'up
 Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
 // Cart route
-Route::get('/cart', function() {
-    return view('cart.index');
-})->name('cart.index');
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add'); // New route
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index'); // New route
 
 // Ratings and reviews
 Route::get('/product/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
