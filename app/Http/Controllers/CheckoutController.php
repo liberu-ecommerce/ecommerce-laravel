@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\LowStockNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
+use App\Models\Product; // Add this line to import the Product model
 
 class CheckoutController extends Controller
 {
@@ -66,6 +67,14 @@ class CheckoutController extends Controller
                 ->with('error', 'Your cart is empty');
         }
 
+        // Verify inventory before processing
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            if (!$product || $product->inventory_count < $item['quantity']) {
+                return redirect()->back()->with('error', 'Some items in your cart are no longer available in the requested quantity.');
+            }
+        }
+
         // Calculate total amount
         $subtotal = collect($cart)->sum(function($item) {
             return $item['price'] * $item['quantity'];
@@ -110,6 +119,12 @@ class CheckoutController extends Controller
             }
         }
         
+        // Update inventory after successful payment
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            $product->decrement('inventory_count', $item['quantity']);
+        }
+
         // Clear cart
         Session::forget('cart');
         

@@ -29,8 +29,19 @@ class ShoppingCart extends Component
     {
         $product = Product::findOrFail($productId);
         
+        // Verify inventory
+        if ($product->inventory_count < $quantity) {
+            session()->flash('error', 'Not enough inventory available.');
+            return;
+        }
+        
         if (isset($this->items[$productId])) {
-            $this->items[$productId]['quantity'] += $quantity;
+            $newQuantity = $this->items[$productId]['quantity'] + $quantity;
+            if ($newQuantity > $product->inventory_count) {
+                session()->flash('error', 'Cannot add more items than available in stock.');
+                return;
+            }
+            $this->items[$productId]['quantity'] = $newQuantity;
         } else {
             $this->items[$productId] = [
                 'name' => $name,
@@ -42,6 +53,7 @@ class ShoppingCart extends Component
 
         Session::put('cart', $this->items);
         $this->emit('cartUpdated');
+        session()->flash('success', 'Product added to cart successfully!');
     }
 
     public function hasPhysicalProducts()

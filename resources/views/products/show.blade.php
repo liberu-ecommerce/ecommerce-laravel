@@ -42,6 +42,16 @@
                         @if($product->inventory_count > 0)
                             <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                                 @csrf
+                                <div class="flex items-center gap-2 mb-4">
+                                    <label for="quantity" class="text-sm font-medium">Quantity:</label>
+                                    <input type="number" 
+                                           name="quantity" 
+                                           id="quantity" 
+                                           class="w-20 rounded border-gray-300" 
+                                           value="1" 
+                                           min="1" 
+                                           max="{{ $product->inventory_count }}">
+                                </div>
                                 <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
                             </form>
                         @endif
