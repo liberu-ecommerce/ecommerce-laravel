@@ -3,24 +3,18 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
+use Livewire\Livewire;
+use App\Http\Livewire\CartCount;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
-    public function register(): void
+    public function register()
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
+    public function boot()
     {
-        //
-        Schema::defaultStringLength(191);
+        Livewire::component('cart-count', CartCount::class);
     }
 }
