@@ -4,10 +4,12 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
+use App\Models\Product;
 
 class ShoppingCart extends Component
 {
     public $items = [];
+    protected $listeners = ['addToCart'];
 
     public function mount()
     {
@@ -16,21 +18,17 @@ class ShoppingCart extends Component
 
     public function render()
     {
-        return view('livewire.shopping-cart', ['items' => $this->items]);
+        return view('livewire.shopping-cart', [
+            'items' => $this->items,
+            'total' => $this->calculateTotal(),
+            'hasPhysicalProducts' => $this->hasPhysicalProducts()
+        ]);
     }
 
     public function addToCart($productId, $name, $price, $quantity = 1)
     {
-        if (!is_numeric($price) || $price < 0) {
-            $this->addError('price', 'Invalid price');
-            return;
-        }
-
-        if (!is_int($quantity) || $quantity < 1) {
-            $this->addError('quantity', 'Quantity must be a positive integer');
-            return;
-        }
-
+        $product = Product::findOrFail($productId);
+        
         if (isset($this->items[$productId])) {
             $this->items[$productId]['quantity'] += $quantity;
         } else {
@@ -38,11 +36,22 @@ class ShoppingCart extends Component
                 'name' => $name,
                 'price' => $price,
                 'quantity' => $quantity,
+                'is_downloadable' => $product->is_downloadable,
             ];
         }
 
         Session::put('cart', $this->items);
         $this->emit('cartUpdated');
+    }
+
+    public function hasPhysicalProducts()
+    {
+        foreach ($this->items as $item) {
+            if (!$item['is_downloadable']) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function updateQuantity($productId, $quantity)

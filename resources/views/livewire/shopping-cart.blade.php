@@ -40,8 +40,18 @@
         <div class="cart-summary">
             <strong>Total: ${{ number_format($this->calculateTotal(), 2) }}</strong>
         </div>
-        <div class="cart-actions">
-            <button wire:click="clearCart">Clear Cart</button>
+        <div class="cart-actions mt-4">
+            @if($hasPhysicalProducts)
+                <a href="{{ route('checkout.initiate') }}" class="btn btn-primary">Proceed to Checkout</a>
+            @else
+                @foreach($items as $id => $item)
+                    @if($item['price'] <= 0)
+                        <a href="{{ route('download.generate-link', $id) }}" class="btn btn-success">Download Now</a>
+                    @else
+                        <a href="{{ route('checkout.initiate') }}" class="btn btn-primary">Purchase & Download</a>
+                    @endif
+                @endforeach
+            @endif
         </div>
     @else
         <p>Your cart is empty.</p>
@@ -99,5 +109,3 @@
         }
     </style>
 </div>
-
-
