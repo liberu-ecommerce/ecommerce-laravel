@@ -48,8 +48,8 @@ class CheckoutController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'shipping_address' => 'required|string',
-            'shipping_method_id' => 'required|exists:shipping_methods,id',
+            'shipping_address' => 'required_if:has_physical_products,true|string',
+            'shipping_method_id' => 'required_if:has_physical_products,true|exists:shipping_methods,id',
             'payment_method' => 'required|string'
         ]);
 
@@ -71,8 +71,13 @@ class CheckoutController extends Controller
             return $item['price'] * $item['quantity'];
         });
 
-        $shippingMethod = ShippingMethod::find($request->shipping_method_id);
-        $totalAmount = $subtotal + $shippingMethod->price;
+        $shippingCost = 0;
+        if ($this->hasPhysicalProducts($cart)) {
+            $shippingMethod = ShippingMethod::find($request->shipping_method_id);
+            $shippingCost = $shippingMethod->price;
+        }
+
+        $totalAmount = $subtotal + $shippingCost;
 
         // Create order
         $order = Order::create([
@@ -84,22 +89,32 @@ class CheckoutController extends Controller
             'status' => 'pending'
         ]);
 
-        // Process payment
-        $paymentResult = $this->processPayment($order, $request->payment_method);
+        // Process payment if total amount is greater than 0
+        if ($totalAmount > 0) {
+            $paymentResult = $this->processPayment($order, $request->payment_method);
 
-        if ($paymentResult['success']) {
-            $order->update(['status' => 'paid']);
-            
-            // Clear cart
-            Session::forget('cart');
-            
-            return redirect()->route('checkout.confirmation', ['order' => $order->id])
-                ->with('success', 'Order placed successfully!');
+            if (!$paymentResult['success']) {
+                $order->update(['status' => 'failed']);
+                return redirect()->back()
+                    ->with('error', 'Payment failed. Please try again.');
+            }
         }
 
-        $order->update(['status' => 'failed']);
-        return redirect()->back()
-            ->with('error', 'Payment failed. Please try again.');
+        $order->update(['status' => 'paid']);
+        
+        // Generate download links for downloadable products
+        foreach ($cart as $productId => $item) {
+            if ($item['is_downloadable']) {
+                $downloadLink = route('download.generate-link', $productId);
+                // Store download link in order items or send via email
+            }
+        }
+        
+        // Clear cart
+        Session::forget('cart');
+        
+        return redirect()->route('checkout.confirmation', ['order' => $order->id])
+            ->with('success', 'Order placed successfully!');
     }
 
     public function showConfirmation(Order $order)
@@ -127,5 +142,15 @@ class CheckoutController extends Controller
             'order_id' => $order->id,
             'customer_email' => $order->customer_email
         ]);
+    }
+
+    private function hasPhysicalProducts($cart)
+    {
+        foreach ($cart as $item) {
+            if (!$item['is_downloadable']) {
+                return true;
+            }
+        }
+        return false;
     }
 }
