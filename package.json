@@ -17,7 +17,7 @@
     },
     "dependencies": {
         "flowbite": "^2.5.1",
-        "preline": "^2.4.1",
+        "preline": "^3.0.1",
         "vite-plugin-static-copy": "^2.2.0"
     }
 }
