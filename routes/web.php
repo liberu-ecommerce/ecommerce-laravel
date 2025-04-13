@@ -63,7 +63,7 @@ Route::put('/shipping/{shippingMethod}', [ShippingController::class, 'update'])-
 Route::delete('/shipping/{shippingMethod}', [ShippingController::class, 'destroy'])->name('shipping.destroy');
 
 // Order history routes
-Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.history');
+Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
 Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
 
 Route::prefix('payment_methods')->group(function () {
