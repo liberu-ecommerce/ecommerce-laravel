@@ -51,7 +51,9 @@ class CheckoutController extends Controller
             'email' => 'required|email',
             'shipping_address' => 'required_if:has_physical_products,true|string',
             'shipping_method_id' => 'required_if:has_physical_products,true|exists:shipping_methods,id',
-            'payment_method' => 'required|string'
+            'payment_method' => 'required|string',
+            'recipient_name' => 'required_if:dropship,on|string',
+            'recipient_email' => 'required_if:dropship,on|email',
         ]);
 
         if ($validator->fails()) {
@@ -83,7 +85,9 @@ class CheckoutController extends Controller
         $shippingCost = 0;
         if ($this->hasPhysicalProducts($cart)) {
             $shippingMethod = ShippingMethod::find($request->shipping_method_id);
-            $shippingCost = $shippingMethod->price;
+            $shippingCost = $request->has('dropship') ?
+                $this->shippingService->calculateDropShippingCost($shippingMethod, $cart, $request->shipping_address) :
+                $shippingMethod->base_rate;
         }
 
         $totalAmount = $subtotal + $shippingCost;
@@ -95,22 +99,34 @@ class CheckoutController extends Controller
             'shipping_method_id' => $request->shipping_method_id,
             'payment_method' => $request->payment_method,
             'total_amount' => $totalAmount,
-            'status' => 'pending'
+            'status' => 'pending',
+            'is_dropshipping' => $request->has('dropship'),
+            'recipient_name' => $request->recipient_name,
+            'recipient_email' => $request->recipient_email,
+            'gift_message' => $request->gift_message,
         ]);
 
-        // Process payment if total amount is greater than 0
+        // Process payment based on selected method
         if ($totalAmount > 0) {
-            $paymentResult = $this->processPayment($order, $request->payment_method);
+            if ($request->payment_method === 'stripe' && $request->has('stripeToken')) {
+                $paymentResult = $this->processStripePayment($order, $request->stripeToken);
+            } else if ($request->payment_method === 'paypal' && $request->has('paypal_payment_id')) {
+                $paymentResult = $this->processPayPalPayment($order, $request->paypal_payment_id);
+            } else {
+                $order->update(['status' => 'failed']);
+                return redirect()->back()
+                    ->with('error', 'Invalid payment information. Please try again.');
+            }
 
             if (!$paymentResult['success']) {
                 $order->update(['status' => 'failed']);
                 return redirect()->back()
-                    ->with('error', 'Payment failed. Please try again.');
+                    ->with('error', 'Payment failed: ' . ($paymentResult['error'] ?? 'Please try again.'));
             }
         }
 
         $order->update(['status' => 'paid']);
-        
+
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
             if ($item['is_downloadable']) {
@@ -167,5 +183,25 @@ class CheckoutController extends Controller
             }
         }
         return false;
+    }
+
+    protected function processStripePayment($order, $stripeToken)
+    {
+        $paymentGateway = PaymentGatewayFactory::create('stripe');
+        return $paymentGateway->processPayment($order->total_amount, [
+            'order_id' => $order->id,
+            'customer_email' => $order->customer_email,
+            'token' => $stripeToken
+        ]);
+    }
+
+    protected function processPayPalPayment($order, $paypalPaymentId)
+    {
+        $paymentGateway = PaymentGatewayFactory::create('paypal');
+        return $paymentGateway->processPayment($order->total_amount, [
+            'order_id' => $order->id,
+            'customer_email' => $order->customer_email,
+            'payment_id' => $paypalPaymentId
+        ]);
     }
 }

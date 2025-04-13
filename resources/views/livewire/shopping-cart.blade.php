@@ -1,8 +1,13 @@
 <div class="shopping-cart">
-    <h2>Shopping Cart</h2>
+    <h2 class="mb-4">Shopping Cart</h2>
     @if (session()->has('error'))
         <div class="alert alert-danger">
             {{ session('error') }}
+        </div>
+    @endif
+    @if (session()->has('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
         </div>
     @endif
     @if($errors->any())
@@ -14,98 +19,100 @@
             </ul>
         </div>
     @endif
+
     @if(count($items) > 0)
-        <div class="cart-table">
-            <div class="cart-header">
-                <span>Product</span>
-                <span>Price</span>
-                <span>Quantity</span>
-                <span>Total</span>
-                <span>Action</span>
-            </div>
-            @foreach($items as $id => $item)
-                <div class="cart-item">
-                    <span>{{ $item['name'] }}</span>
-                    <span>${{ number_format($item['price'], 2) }}</span>
-                    <span>
-                        <input type="number" wire:model.lazy="items.{{ $id }}.quantity" wire:change="updateQuantity('{{ $id }}', $event.target.value)" min="1">
-                    </span>
-                    <span>${{ number_format($item['price'] * $item['quantity'], 2) }}</span>
-                    <span>
-                        <button wire:click="removeItem('{{ $id }}')">Remove</button>
-                    </span>
+        <div class="card mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($items as $id => $item)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if(isset($item['image']))
+                                                <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="img-thumbnail mr-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            @endif
+                                            <div>
+                                                <h6 class="mb-0">{{ $item['name'] }}</h6>
+                                                @if($item['is_downloadable'])
+                                                    <span class="badge bg-info text-white">Digital</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>${{ number_format($item['price'], 2) }}</td>
+                                    <td>
+                                        <div class="input-group" style="width: 120px;">
+                                            <button class="btn btn-outline-secondary btn-sm" wire:click="updateQuantity('{{ $id }}', {{ max(1, $item['quantity'] - 1) }})">-</button>
+                                            <input type="number" class="form-control form-control-sm text-center" wire:model.lazy="items.{{ $id }}.quantity" wire:change="updateQuantity('{{ $id }}', $event.target.value)" min="1">
+                                            <button class="btn btn-outline-secondary btn-sm" wire:click="updateQuantity('{{ $id }}', {{ $item['quantity'] + 1 }})">+</button>
+                                        </div>
+                                    </td>
+                                    <td>${{ number_format($item['price'] * $item['quantity'], 2) }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" wire:click="removeItem('{{ $id }}')">
+                                            <i class="fa fa-trash"></i> Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
-            @endforeach
+            </div>
         </div>
-        <div class="cart-summary">
-            <strong>Total: ${{ number_format($this->calculateTotal(), 2) }}</strong>
-        </div>
-        <div class="cart-actions mt-4">
-            @if($hasPhysicalProducts)
-                <a href="{{ route('checkout.initiate') }}" class="btn btn-primary">Proceed to Checkout</a>
-            @else
-                @foreach($items as $id => $item)
-                    @if($item['price'] <= 0)
-                        <a href="{{ route('download.generate-link', $id) }}" class="btn btn-success">Download Now</a>
-                    @else
-                        <a href="{{ route('checkout.initiate') }}" class="btn btn-primary">Purchase & Download</a>
-                    @endif
-                @endforeach
-            @endif
+
+        <div class="row">
+            <div class="col-md-6">
+                <button class="btn btn-outline-secondary" wire:click="clearCart">
+                    <i class="fa fa-trash"></i> Clear Cart
+                </button>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Order Summary</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <strong>${{ number_format($this->calculateTotal(), 2) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Shipping:</span>
+                            <span>Calculated at checkout</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Total:</span>
+                            <strong>${{ number_format($this->calculateTotal(), 2) }}</strong>
+                        </div>
+                        <div class="d-grid">
+                            <a href="{{ route('checkout.initiate') }}" class="btn btn-primary">
+                                Proceed to Checkout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     @else
-        <p>Your cart is empty.</p>
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h4>Your cart is empty</h4>
+                <p class="mb-4">Looks like you haven't added any products to your cart yet.</p>
+                <a href="{{ route('products.index') }}" class="btn btn-primary">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
     @endif
-
-
-    <style>
-        .shopping-cart {
-            font-family: Arial, sans-serif;
-        }
-        .cart-table {
-            display: flex;
-            flex-direction: column;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .cart-header, .cart-item {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            padding: 10px;
-            background: #f8f8f8;
-        }
-        .cart-item {
-            background: #fff;
-            border-top: 1px solid #ddd;
-            transition: transform 0.3s;
-        }
-        .cart-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-        .cart-header {
-            font-weight: bold;
-        }
-        .cart-summary {
-            padding: 10px;
-            text-align: right;
-        }
-        .cart-actions {
-            padding: 10px;
-            text-align: right;
-        }
-        .cart-actions button {
-            background: #f44336;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .cart-actions button:hover {
-            background: #d32f2f;
-        }
-    </style>
 </div>
