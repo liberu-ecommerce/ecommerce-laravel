@@ -8,7 +8,7 @@
         <div class="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-8">
             <div class="max-w-3xl text-center mx-auto">
                 <h1 class="text-black block font-medium text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
-                    Welcome to Liberu Ecommerce
+                    Welcome to {{config('app.name')}}
                 </h1>
             </div>
 
