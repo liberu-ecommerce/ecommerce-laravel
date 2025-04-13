@@ -7,11 +7,15 @@ use Illuminate\Support\Facades\Http;
 
 class ShippingService
 {
-    public function getAvailableShippingMethods($cart, $address)
+    public function getAvailableShippingMethods($cart = null, $address = null)
     {
-        // Implement logic to determine available shipping methods based on the cart contents and address
+        // Get all shipping methods
         $availableMethods = ShippingMethod::all();
-        
+
+        if (!$cart || !$address) {
+            return $availableMethods;
+        }
+
         // Filter methods based on package weight, dimensions, and destination
         return $availableMethods->filter(function ($method) use ($cart, $address) {
             return $this->isMethodAvailable($method, $cart, $address);
@@ -72,5 +76,14 @@ class ShippingService
         return array_sum(array_map(function ($item) {
             return $item['weight'] * $item['quantity'];
         }, $cart));
+    }
+
+    public function calculateDropShippingCost(ShippingMethod $method, $cart, $address)
+    {
+        // Add a small premium for drop shipping
+        $standardCost = $this->calculateShippingCost($method, $cart, $address);
+        $dropShippingPremium = config('shipping.drop_shipping_premium', 2.00);
+
+        return $standardCost + $dropShippingPremium;
     }
 }

@@ -18,26 +18,30 @@ class ShoppingCart extends Component
 
     public function render()
     {
+        $hasPhysicalProducts = $this->hasPhysicalProducts();
+        $total = $this->calculateTotal();
+
         return view('livewire.shopping-cart', [
             'items' => $this->items,
-            'total' => $this->calculateTotal(),
-            'hasPhysicalProducts' => $this->hasPhysicalProducts()
+            'total' => $total,
+            'hasPhysicalProducts' => $hasPhysicalProducts,
+            'canCheckout' => count($this->items) > 0
         ]);
     }
 
-    public function addToCart($productId, $name, $price, $quantity = 1)
+    public function addToCart($productId, $name, $price, $quantity = 1, $isDownloadable = false, $weight = 0)
     {
         $product = Product::findOrFail($productId);
-        
-        // Verify inventory
-        if ($product->inventory_count < $quantity) {
+
+        // Verify inventory for physical products
+        if (!$isDownloadable && $product->inventory_count < $quantity) {
             session()->flash('error', 'Not enough inventory available.');
             return;
         }
-        
+
         if (isset($this->items[$productId])) {
             $newQuantity = $this->items[$productId]['quantity'] + $quantity;
-            if ($newQuantity > $product->inventory_count) {
+            if (!$isDownloadable && $newQuantity > $product->inventory_count) {
                 session()->flash('error', 'Cannot add more items than available in stock.');
                 return;
             }
@@ -47,7 +51,8 @@ class ShoppingCart extends Component
                 'name' => $name,
                 'price' => $price,
                 'quantity' => $quantity,
-                'is_downloadable' => $product->is_downloadable,
+                'is_downloadable' => $isDownloadable,
+                'weight' => $weight,
             ];
         }
 
