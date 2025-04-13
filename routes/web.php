@@ -18,6 +18,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController; // New controller for cart
 
 /*
@@ -34,6 +35,7 @@ use App\Http\Controllers\CartController; // New controller for cart
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Product routes
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
