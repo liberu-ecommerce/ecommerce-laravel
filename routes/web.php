@@ -31,7 +31,7 @@ use App\Http\Controllers\CartController; // New controller for cart
 |
 */
 
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Product routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
