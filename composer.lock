@@ -1610,16 +1610,16 @@
         },
         {
             "name": "firebase/php-jwt",
-            "version": "v6.11.0",
+            "version": "v6.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712"
+                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/8f718f4dfc9c5d5f0c994cdfd103921b43592712",
-                "reference": "8f718f4dfc9c5d5f0c994cdfd103921b43592712",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
+                "reference": "d1e91ecf8c598d073d0995afa8cd5c75c6e19e66",
                 "shasum": ""
             },
             "require": {
@@ -1667,9 +1667,9 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v6.11.0"
+                "source": "https://github.com/firebase/php-jwt/tree/v6.11.1"
             },
-            "time": "2025-01-23T05:11:06+00:00"
+            "time": "2025-04-09T20:32:01+00:00"
         },
         {
             "name": "fruitcake/php-cors",
@@ -2217,22 +2217,21 @@
         },
         {
             "name": "joelbutcher/socialstream",
-            "version": "v6.2.4",
+            "version": "v6.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/joelbutcher/socialstream.git",
-                "reference": "ddfbf0a320360d5d4adff21f33020b37ab1e6469"
+                "reference": "fbded0c3a055aca198cf78ea4175edfcde128c8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joelbutcher/socialstream/zipball/ddfbf0a320360d5d4adff21f33020b37ab1e6469",
-                "reference": "ddfbf0a320360d5d4adff21f33020b37ab1e6469",
+                "url": "https://api.github.com/repos/joelbutcher/socialstream/zipball/fbded0c3a055aca198cf78ea4175edfcde128c8d",
+                "reference": "fbded0c3a055aca198cf78ea4175edfcde128c8d",
                 "shasum": ""
             },
             "require": {
-                "illuminate/contracts": "^11.0",
-                "laravel/prompts": "^0.1|^0.2|^0.3",
-                "laravel/socialite": "^5.12",
+                "illuminate/contracts": "^11.0|^12.0",
+                "laravel/socialite": "^5.18",
                 "php": "^8.2"
             },
             "require-dev": {
@@ -2240,13 +2239,13 @@
                 "laravel/breeze": "^2.3",
                 "laravel/jetstream": "^5.0",
                 "laravel/sanctum": "^4.0",
-                "livewire/livewire": "^3.3.5",
+                "livewire/livewire": "^3.5.0",
                 "mockery/mockery": "^1.6",
-                "orchestra/testbench": "^9.0",
-                "orchestra/testbench-core": "^9.9.1",
-                "pestphp/pest": "^2.0",
-                "pestphp/pest-plugin-laravel": "^2.2",
-                "phpunit/phpunit": "^10.5"
+                "orchestra/testbench": "^9.0|^10.0",
+                "orchestra/testbench-core": "^9.9.1|^10.0",
+                "pestphp/pest": "^2.0|^3.0",
+                "pestphp/pest-plugin-laravel": "^2.2|^3.0",
+                "phpunit/phpunit": "^10.5.35|^11.5.3|^12.0.1"
             },
             "type": "library",
             "extra": {
@@ -2295,7 +2294,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-19T12:19:57+00:00"
+            "time": "2025-04-14T21:32:13+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",
@@ -3071,16 +3070,16 @@
         },
         {
             "name": "laravel/socialite",
-            "version": "v5.18.0",
+            "version": "v5.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/socialite.git",
-                "reference": "7809dc71250e074cd42970f0f803f2cddc04c5de"
+                "reference": "30972c12a41f71abeb418bc9ff157da8d9231519"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/socialite/zipball/7809dc71250e074cd42970f0f803f2cddc04c5de",
-                "reference": "7809dc71250e074cd42970f0f803f2cddc04c5de",
+                "url": "https://api.github.com/repos/laravel/socialite/zipball/30972c12a41f71abeb418bc9ff157da8d9231519",
+                "reference": "30972c12a41f71abeb418bc9ff157da8d9231519",
                 "shasum": ""
             },
             "require": {
@@ -3097,7 +3096,7 @@
             "require-dev": {
                 "mockery/mockery": "^1.0",
                 "orchestra/testbench": "^4.0|^5.0|^6.0|^7.0|^8.0|^9.0|^10.0",
-                "phpstan/phpstan": "^1.10",
+                "phpstan/phpstan": "^1.12.23",
                 "phpunit/phpunit": "^8.0|^9.3|^10.4|^11.5"
             },
             "type": "library",
@@ -3139,7 +3138,7 @@
                 "issues": "https://github.com/laravel/socialite/issues",
                 "source": "https://github.com/laravel/socialite"
             },
-            "time": "2025-02-11T13:38:19+00:00"
+            "time": "2025-04-21T14:21:34+00:00"
         },
         {
             "name": "laravel/tinker",
