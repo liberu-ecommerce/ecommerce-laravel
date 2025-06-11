@@ -2,21 +2,31 @@
 
 namespace App\Providers;
 
+use App\Modules\ModuleManager;
+use App\Modules\ModuleServiceProvider;
 use Illuminate\Support\ServiceProvider;
-use Livewire\Livewire;
-use App\Http\Livewire\CartCount;
-use App\Http\Livewire\ShoppingCart;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register()
+    /**
+     * Register any application services.
+     */
+    public function register(): void
     {
-        //
+        // Register the module manager as a singleton
+        $this->app->singleton(ModuleManager::class, function ($app) {
+            return new ModuleManager();
+        });
+
+        // Register the module service provider
+        $this->app->register(ModuleServiceProvider::class);
     }
 
-    public function boot()
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
     {
-        Livewire::component('cart-count', CartCount::class);
-        Livewire::component('shopping-cart', ShoppingCart::class);
+        //
     }
 }
