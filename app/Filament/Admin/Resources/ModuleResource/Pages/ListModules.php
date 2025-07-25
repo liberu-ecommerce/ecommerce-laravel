@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\ModuleResource\Pages;
+namespace App\Filament\Resources\Admin\ModuleResource\Pages;
 
-use App\Filament\Resources\ModuleResource;
+use App\Filament\Resources\Admin\ModuleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
