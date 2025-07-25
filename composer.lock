@@ -6764,16 +6764,16 @@
         },
         {
             "name": "spatie/laravel-query-builder",
-            "version": "6.3.1",
+            "version": "6.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-query-builder.git",
-                "reference": "465d9b7364590c9ae3ee3738ff8a293e685dd588"
+                "reference": "d6c137391f1b5e7365cfaf0633a2ba1a97e79e53"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/465d9b7364590c9ae3ee3738ff8a293e685dd588",
-                "reference": "465d9b7364590c9ae3ee3738ff8a293e685dd588",
+                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/d6c137391f1b5e7365cfaf0633a2ba1a97e79e53",
+                "reference": "d6c137391f1b5e7365cfaf0633a2ba1a97e79e53",
                 "shasum": ""
             },
             "require": {
@@ -6785,6 +6785,7 @@
             },
             "require-dev": {
                 "ext-json": "*",
+                "larastan/larastan": "^2.7 || ^3.3",
                 "mockery/mockery": "^1.4",
                 "orchestra/testbench": "^7.0|^8.0|^10.0",
                 "pestphp/pest": "^2.0|^3.7",
@@ -6833,7 +6834,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2025-02-19T07:14:53+00:00"
+            "time": "2025-07-25T07:01:51+00:00"
         },
         {
             "name": "spatie/macroable",
@@ -12468,12 +12469,12 @@
     ],
     "aliases": [],
     "minimum-stability": "beta",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
