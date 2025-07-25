@@ -16,8 +16,8 @@
         "vite": "^6.3.5"
     },
     "dependencies": {
-        "flowbite": "^2.5.1",
-        "preline": "^2.4.1",
+        "flowbite": "^2.5.2",
+        "preline": "3.1",
         "vite-plugin-static-copy": "^3.0.0"
     }
 }
