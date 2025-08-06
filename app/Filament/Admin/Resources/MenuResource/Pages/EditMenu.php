@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\MenuResource\Pages;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Admin\Resources\MenuResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -13,7 +14,7 @@ class EditMenu extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\DeleteAction::make(),
+            DeleteAction::make(),
         ];
     }
 }

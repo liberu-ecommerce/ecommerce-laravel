@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Exception;
 use PayPal\Api\Agreement;
 use PayPal\Api\Payer;
 use PayPal\Api\PayerInfo;
@@ -29,7 +30,7 @@ class SubscriptionService
             $agreement = $this->setupSubscriptionDetails($planId, $userDetails);
         // return $this->createSubscriptionOnPaypal($agreement);
             return ['success' => true, 'agreementID' => $agreement->getId()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -83,7 +84,7 @@ class SubscriptionService
         try {
             $agreement->create($this->paypalContext);
             return ['success' => true, 'agreementID' => $agreement->getId()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
    

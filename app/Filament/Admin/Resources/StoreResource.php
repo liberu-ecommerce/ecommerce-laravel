@@ -2,11 +2,19 @@
 
 namespace App\Filament\Admin\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Admin\Resources\StoreResource\Pages\ListStores;
+use App\Filament\Admin\Resources\StoreResource\Pages\CreateStore;
+use App\Filament\Admin\Resources\StoreResource\Pages\EditStore;
 use App\Filament\Admin\Resources\StoreResource\Pages;
 use App\Filament\Admin\Resources\StoreResource\RelationManagers;
 use App\Models\Team;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -22,18 +30,18 @@ class StoreResource extends Resource
 
     protected static bool $isScopedToTenant = false;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function shouldRegisterNavigation(): bool
     {
         return Features::hasTeamFeatures();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
+        return $schema
+            ->components([
+                TextInput::make('name')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -43,17 +51,17 @@ class StoreResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')->searchable()->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -68,9 +76,9 @@ class StoreResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListStores::route('/'),
-            'create' => Pages\CreateStore::route('/create'),
-            'edit' => Pages\EditStore::route('/{record}/edit'),
+            'index' => ListStores::route('/'),
+            'create' => CreateStore::route('/create'),
+            'edit' => EditStore::route('/{record}/edit'),
         ];
     }
 }

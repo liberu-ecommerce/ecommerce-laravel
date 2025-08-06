@@ -2,10 +2,21 @@
 
 namespace App\Filament\Admin\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Admin\Resources\CouponResource\Pages\ListCoupons;
+use App\Filament\Admin\Resources\CouponResource\Pages\CreateCoupon;
+use App\Filament\Admin\Resources\CouponResource\Pages\EditCoupon;
 use App\Filament\Admin\Resources\CouponResource\Pages;
 use App\Models\Coupon;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,36 +27,36 @@ class CouponResource extends Resource
 {
     protected static ?string $model = Coupon::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-ticket';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-ticket';
 
     protected static ?int $navigationSort = 6;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('code')
+        return $schema
+            ->components([
+                TextInput::make('code')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
-                Forms\Components\Select::make('type')
+                Select::make('type')
                     ->required()
                     ->options([
                         'percentage' => 'Percentage',
                         'fixed' => 'Fixed Amount',
                     ]),
-                Forms\Components\TextInput::make('value')
+                TextInput::make('value')
                     ->required()
                     ->numeric()
                     ->label(fn ($get) => $get('type') === 'percentage' ? 'Discount Percentage' : 'Discount Amount'),
-                Forms\Components\DateTimePicker::make('valid_from')
+                DateTimePicker::make('valid_from')
                     ->required(),
-                Forms\Components\DateTimePicker::make('valid_until')
+                DateTimePicker::make('valid_until')
                     ->required(),
-                Forms\Components\TextInput::make('max_uses')
+                TextInput::make('max_uses')
                     ->numeric()
                     ->nullable(),
-                Forms\Components\TextInput::make('min_purchase_amount')
+                TextInput::make('min_purchase_amount')
                     ->numeric()
                     ->nullable(),
             ]);
@@ -55,24 +66,24 @@ class CouponResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('code')->searchable(),
-                Tables\Columns\TextColumn::make('type'),
-                Tables\Columns\TextColumn::make('value'),
-                Tables\Columns\TextColumn::make('valid_from')->date(),
-                Tables\Columns\TextColumn::make('valid_until')->date(),
-                Tables\Columns\TextColumn::make('uses_count')->counts('orders'),
-                Tables\Columns\TextColumn::make('max_uses'),
+                TextColumn::make('code')->searchable(),
+                TextColumn::make('type'),
+                TextColumn::make('value'),
+                TextColumn::make('valid_from')->date(),
+                TextColumn::make('valid_until')->date(),
+                TextColumn::make('uses_count')->counts('orders'),
+                TextColumn::make('max_uses'),
             ])
             ->filters([
-                Tables\Filters\Filter::make('active')
+                Filter::make('active')
                     ->query(fn (Builder $query): Builder => $query->where('valid_until', '>=', now())),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                DeleteBulkAction::make(),
             ]);
     }
 
@@ -86,9 +97,9 @@ class CouponResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCoupons::route('/'),
-            'create' => Pages\CreateCoupon::route('/create'),
-            'edit' => Pages\EditCoupon::route('/{record}/edit'),
+            'index' => ListCoupons::route('/'),
+            'create' => CreateCoupon::route('/create'),
+            'edit' => EditCoupon::route('/{record}/edit'),
         ];
     }
 }

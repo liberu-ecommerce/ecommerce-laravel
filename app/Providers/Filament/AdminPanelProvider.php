@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Widgets\AccountWidget;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Filament\App\Pages;
 use App\Filament\App\Pages\EditProfile;
 use App\Http\Middleware\TeamsPermission;
@@ -56,10 +58,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets/Home'), for: 'App\\Filament\\Admin\\Widgets\\Home')
             ->pages([
                 FilamentPage\Dashboard::class,
-                Pages\EditProfile::class,
+                EditProfile::class,
                 // Pages\ApiTokenManagerPage::class,
             ])->widgets([
-                Widgets\AccountWidget::class,
+                AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
@@ -78,7 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 TeamsPermission::class,
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                FilamentShieldPlugin::make()
             ]);
 
         // if (Features::hasApiFeatures()) {

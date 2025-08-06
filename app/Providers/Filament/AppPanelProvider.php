@@ -2,6 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Widgets\AccountWidget;
+use App\Filament\App\Pages\CreateTeam;
+use App\Filament\App\Pages\EditTeam;
 use App\Filament\App\Pages;
 use App\Filament\App\Pages\EditProfile;
 use App\Http\Middleware\TeamsPermission;
@@ -61,11 +64,11 @@ class AppPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/App/Pages'), for: 'App\\Filament\\App\\Pages')
             ->pages([
                 Dashboard::class,
-                Pages\EditProfile::class,
+                EditProfile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/App/Widgets/Home'), for: 'App\\Filament\\App\\Widgets\\Home')
             ->widgets([
-                Widgets\AccountWidget::class,
+                AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
@@ -101,8 +104,8 @@ class AppPanelProvider extends PanelProvider
         if (Features::hasTeamFeatures()) {
             $panel
                 ->tenant(Team::class, ownershipRelationship: 'team')
-                ->tenantRegistration(Pages\CreateTeam::class)
-                ->tenantProfile(Pages\EditTeam::class);
+                ->tenantRegistration(CreateTeam::class)
+                ->tenantProfile(EditTeam::class);
                 // ->userMenuItems([
                 //     MenuItem::make()
                 //         ->label('Team Settings')

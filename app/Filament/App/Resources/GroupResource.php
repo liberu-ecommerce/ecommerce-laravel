@@ -2,11 +2,17 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\GroupResource\Pages\ListGroups;
+use App\Filament\App\Resources\GroupResource\Pages\CreateGroup;
+use App\Filament\App\Resources\GroupResource\Pages\EditGroup;
 use App\Filament\App\Resources\GroupResource\Pages;
 use App\Filament\App\Resources\GroupResource\RelationManagers;
 use App\Models\Group;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,14 +23,14 @@ class GroupResource extends Resource
 {
     protected static ?string $model = Group::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
             ]);
     }
@@ -38,12 +44,12 @@ class GroupResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -58,9 +64,9 @@ class GroupResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListGroups::route('/'),
-            'create' => Pages\CreateGroup::route('/create'),
-            'edit' => Pages\EditGroup::route('/{record}/edit'),
+            'index' => ListGroups::route('/'),
+            'create' => CreateGroup::route('/create'),
+            'edit' => EditGroup::route('/{record}/edit'),
         ];
     }
 }

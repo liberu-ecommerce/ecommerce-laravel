@@ -2,11 +2,21 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
+use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
+use App\Filament\App\Resources\InvoiceResource\Pages\EditInvoice;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
@@ -16,31 +26,31 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-credit-card';
 
     protected static ?int $navigationSort = 10;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Select::make('customer_id')
+        return $schema->components([
+            Select::make('customer_id')
                 ->label('Customer')
                 ->required()
                 ->options(Customer::pluck('name', 'id'))
                 ->reactive(),
-            Forms\Components\Select::make('order_id')
+            Select::make('order_id')
                 ->label('Order')
                 ->required()
                 ->options(Order::pluck('id', 'id'))
                 ->reactive(),
-            Forms\Components\DatePicker::make('invoice_date')
+            DatePicker::make('invoice_date')
                 ->label('Invoice Date')
                 ->required(),
-            Forms\Components\TextInput::make('total_amount')
+            TextInput::make('total_amount')
                 ->label('Total Amount')
                 ->required()
                 ->numeric(),
-            Forms\Components\Select::make('payment_status')
+            Select::make('payment_status')
                 ->label('Payment Status')
                 ->required()
                 ->options([
@@ -54,26 +64,26 @@ class InvoiceResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-                Tables\Columns\TextColumn::make('customer.name')
+                TextColumn::make('customer.name')
                     ->label('Customer'),
-                Tables\Columns\TextColumn::make('order.id')
+                TextColumn::make('order.id')
                     ->label('Order'),
-                Tables\Columns\TextColumn::make('invoice_date')
+                TextColumn::make('invoice_date')
                     ->label('Invoice Date'),
-                Tables\Columns\TextColumn::make('total_amount')
+                TextColumn::make('total_amount')
                     ->label('Total Amount'),
-                Tables\Columns\TextColumn::make('payment_status')
+                TextColumn::make('payment_status')
                     ->label('Payment Status'),
             ])
             ->filters([
                 // Define filters here if needed
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -88,9 +98,9 @@ class InvoiceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListInvoices::route('/'),
-            'create' => Pages\CreateInvoice::route('/create'),
-            'edit' => Pages\EditInvoice::route('/{record}/edit'),
+            'index' => ListInvoices::route('/'),
+            'create' => CreateInvoice::route('/create'),
+            'edit' => EditInvoice::route('/{record}/edit'),
         ];
     }
 }

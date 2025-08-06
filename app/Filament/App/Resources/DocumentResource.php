@@ -2,11 +2,17 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\DocumentResource\Pages\ListDocuments;
+use App\Filament\App\Resources\DocumentResource\Pages\CreateDocument;
+use App\Filament\App\Resources\DocumentResource\Pages\EditDocument;
 use App\Filament\App\Resources\DocumentResource\Pages;
 use App\Filament\App\Resources\DocumentResource\RelationManagers;
 use App\Models\Document;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,14 +23,14 @@ class DocumentResource extends Resource
 {
     protected static ?string $model = Document::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-inbox-stack';
 
     protected static ?int $navigationSort = 7;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
             ]);
     }
@@ -38,12 +44,12 @@ class DocumentResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -58,9 +64,9 @@ class DocumentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListDocuments::route('/'),
-            'create' => Pages\CreateDocument::route('/create'),
-            'edit' => Pages\EditDocument::route('/{record}/edit'),
+            'index' => ListDocuments::route('/'),
+            'create' => CreateDocument::route('/create'),
+            'edit' => EditDocument::route('/{record}/edit'),
         ];
     }
 }

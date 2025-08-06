@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use DB;
 use Illuminate\Console\Command;
 use App\Models\Product;
 use App\Models\User;
@@ -16,7 +17,7 @@ class CheckLowStockItems extends Command
 
     public function handle()
     {
-        $lowStockProducts = Product::where('inventory_count', '<=', \DB::raw('low_stock_threshold'))->get();
+        $lowStockProducts = Product::where('inventory_count', '<=', DB::raw('low_stock_threshold'))->get();
 
         if ($lowStockProducts->isNotEmpty()) {
             $admins = User::where('is_admin', true)->get();

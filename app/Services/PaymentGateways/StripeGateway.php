@@ -2,6 +2,7 @@
 
 namespace App\Services\PaymentGateways;
 
+use Exception;
 use App\Interfaces\PaymentGatewayInterface;
 use Stripe\StripeClient;
 use Illuminate\Support\Facades\Config;
@@ -30,7 +31,7 @@ class StripeGateway implements PaymentGatewayInterface
             }
 
             return ['success' => false, 'error' => 'Payment failed'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -55,7 +56,7 @@ class StripeGateway implements PaymentGatewayInterface
             }
 
             return ['success' => false, 'error' => 'Refund failed'];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Fortify;
-use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -47,7 +46,7 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
+        $this->app->bind(\Filament\Auth\Http\Responses\Contracts\LogoutResponse::class, LogoutResponse::class);
         $this->app->singleton(\Laravel\Fortify\Contracts\LoginResponse::class, LoginResponse::class);
         $this->app->singleton(\Laravel\Fortify\Contracts\RegisterResponse::class, RegisterResponse::class);
     }

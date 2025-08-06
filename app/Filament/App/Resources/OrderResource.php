@@ -2,11 +2,20 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\OrderResource\Pages\ListOrders;
+use App\Filament\App\Resources\OrderResource\Pages\CreateOrder;
+use App\Filament\App\Resources\OrderResource\Pages\EditOrder;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Order;
 use App\Models\Customer;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use App\Filament\App\Resources\OrderResource\Pages;
@@ -15,29 +24,29 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
 
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
-            Forms\Components\Select::make('customer_id')
+        return $schema->components([
+            Select::make('customer_id')
                 ->label('Customer')
                 ->required()
                 ->options(fn() => Customer::pluck('first_name', 'id')->toArray())
                 ->reactive(),
 
-            Forms\Components\DatePicker::make('order_date')
+            DatePicker::make('order_date')
                 ->label('Order Date')
                 ->required(),
 
-            Forms\Components\TextInput::make('total_amount')
+            TextInput::make('total_amount')
                 ->label('Total Amount')
                 ->required()
                 ->numeric(),
 
-            Forms\Components\Select::make('payment_status')
+            Select::make('payment_status')
                 ->label('Payment Status')
                 ->required()
                 ->options([
@@ -46,7 +55,7 @@ class OrderResource extends Resource
                     'cancelled' => 'Cancelled',
                 ]),
 
-            Forms\Components\Select::make('shipping_status')
+            Select::make('shipping_status')
                 ->label('Shipping Status')
                 ->required()
                 ->options([
@@ -61,23 +70,23 @@ class OrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('customer.first_name')
+            TextColumn::make('customer.first_name')
                 ->label('Customer'),
-            Tables\Columns\TextColumn::make('order_date')
+            TextColumn::make('order_date')
                 ->label('Order Date'),
-            Tables\Columns\TextColumn::make('total_amount')
+            TextColumn::make('total_amount')
                 ->label('Total Amount'),
-            Tables\Columns\TextColumn::make('payment_status')
+            TextColumn::make('payment_status')
                 ->label('Payment Status'),
-            Tables\Columns\TextColumn::make('shipping_status')
+            TextColumn::make('shipping_status')
                 ->label('Shipping Status'),
         ])
         ->filters([])
-        ->actions([
-            Tables\Actions\EditAction::make(),
+        ->recordActions([
+            EditAction::make(),
         ])
-        ->bulkActions([
-            Tables\Actions\DeleteBulkAction::make(),
+        ->toolbarActions([
+            DeleteBulkAction::make(),
         ]);
     }
 
@@ -89,9 +98,9 @@ class OrderResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListOrders::route('/'),
-            'create' => Pages\CreateOrder::route('/create'),
-            'edit' => Pages\EditOrder::route('/{record}/edit'),
+            'index' => ListOrders::route('/'),
+            'create' => CreateOrder::route('/create'),
+            'edit' => EditOrder::route('/{record}/edit'),
         ];
     }
 }

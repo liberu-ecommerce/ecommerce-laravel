@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use App\Services\DropshippingService;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class DropshippingController extends Controller
     /**
      * Get all available suppliers
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function suppliers()
     {
@@ -41,7 +42,7 @@ class DropshippingController extends Controller
      * Check product availability
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function checkAvailability(Request $request)
     {
@@ -68,7 +69,7 @@ class DropshippingController extends Controller
      * Place an order with a supplier
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function placeOrder(Request $request)
     {
@@ -95,7 +96,7 @@ class DropshippingController extends Controller
      * Track an order
      *
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function trackOrder(Request $request)
     {

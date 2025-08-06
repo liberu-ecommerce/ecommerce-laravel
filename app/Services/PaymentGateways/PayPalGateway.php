@@ -2,6 +2,7 @@
 
 namespace App\Services\PaymentGateways;
 
+use Exception;
 use App\Interfaces\PaymentGatewayInterface;
 use PayPal\Rest\ApiContext;
 use PayPal\Auth\OAuthTokenCredential;
@@ -53,7 +54,7 @@ class PayPalGateway implements PaymentGatewayInterface
         try {
             $payment->create($this->apiContext);
             return ['success' => true, 'payment_id' => $payment->getId(), 'approval_url' => $payment->getApprovalLink()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }

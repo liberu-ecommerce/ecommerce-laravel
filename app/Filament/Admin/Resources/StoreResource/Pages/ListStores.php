@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\StoreResource\Pages;
 
+use Filament\Actions\CreateAction;
 use App\Filament\Admin\Resources\StoreResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
@@ -13,7 +14,7 @@ class ListStores extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

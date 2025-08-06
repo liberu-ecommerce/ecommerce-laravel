@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Cashier\Exceptions\IncompletePayment;
@@ -58,7 +59,7 @@ class StripePaymentController extends Controller
         try {
             $subscription = $user->subscription($subscriptionId)->swap($plan);
             return response()->json(['success' => true, 'new_plan' => $subscription->stripe_plan]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return response()->json(['success' => false, 'error' => $exception->getMessage()], 400);
         }
     }
@@ -75,7 +76,7 @@ class StripePaymentController extends Controller
         try {
             $user->subscription($subscriptionId)->cancel();
             return response()->json(['success' => true, 'message' => 'Subscription cancelled successfully.']);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return response()->json(['success' => false, 'error' => $exception->getMessage()], 400);
         }
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,7 +56,7 @@ class SubscriptionController extends Controller
         try {
             $user->subscription('default')->swap($request->plan);
             return response()->json(['success' => true]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return response()->json(['success' => false, 'error' => $exception->getMessage()], 400);
         }
     }
@@ -67,7 +68,7 @@ class SubscriptionController extends Controller
         try {
             $user->subscription('default')->cancel();
             return response()->json(['success' => true]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return response()->json(['success' => false, 'error' => $exception->getMessage()], 400);
         }
     }

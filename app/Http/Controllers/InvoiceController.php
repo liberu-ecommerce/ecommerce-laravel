@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Livewire\Livewire;
 use App\Models\Invoice;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -75,7 +76,7 @@ class InvoiceController extends Controller
     public function sendInvoiceToCustomer($id)
     {
         $invoice = Invoice::with('customer')->findOrFail($id);
-        $pdf = \Livewire\Livewire::mount('invoice-pdf', ['invoiceId' => $id])->httpResponse->getContent();
+        $pdf = Livewire::mount('invoice-pdf', ['invoiceId' => $id])->httpResponse->getContent();
         Mail::to($invoice->customer->email)->send(new InvoiceMail($invoice, $pdf));
         return response()->json(['message' => 'Invoice sent to customer successfully.']);
     }

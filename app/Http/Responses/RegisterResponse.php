@@ -2,6 +2,7 @@
 
 namespace App\Http\Responses;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
@@ -22,7 +23,7 @@ class RegisterResponse implements RegisterResponseContract
 
     /**
      * @param  Request  $request
-     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+     * @return RedirectResponse|JsonResponse
      */
     public function toResponse($request)
     {

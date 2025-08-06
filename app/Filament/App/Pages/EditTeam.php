@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class EditTeam extends EditTenantProfile
 {
-    protected static string $view = 'filament.pages.edit-team';
+    protected string $view = 'filament.pages.edit-team';
 
     public $name = '';
 

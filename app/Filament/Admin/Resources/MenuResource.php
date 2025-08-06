@@ -2,11 +2,18 @@
 
 namespace App\Filament\Admin\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Admin\Resources\MenuResource\Pages\ListMenus;
+use App\Filament\Admin\Resources\MenuResource\Pages\CreateMenu;
+use App\Filament\Admin\Resources\MenuResource\Pages\EditMenu;
 use App\Filament\Admin\Resources\MenuResource\Pages;
 use App\Filament\Admin\Resources\MenuResource\RelationManagers;
 use App\Models\Menu;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,14 +24,14 @@ class MenuResource extends Resource
 {
     protected static ?string $model = Menu::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-bars-4';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-bars-4';
 
     protected static ?int $navigationSort = 9;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
             ]);
     }
@@ -33,20 +40,20 @@ class MenuResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
-                Tables\Columns\TextColumn::make('url'),
-                Tables\Columns\TextColumn::make('parent.name'),
-                Tables\Columns\TextColumn::make('order'),
+                TextColumn::make('name'),
+                TextColumn::make('url'),
+                TextColumn::make('parent.name'),
+                TextColumn::make('order'),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -61,9 +68,9 @@ class MenuResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMenus::route('/'),
-            'create' => Pages\CreateMenu::route('/create'),
-            'edit' => Pages\EditMenu::route('/{record}/edit'),
+            'index' => ListMenus::route('/'),
+            'create' => CreateMenu::route('/create'),
+            'edit' => EditMenu::route('/{record}/edit'),
         ];
     }
 }

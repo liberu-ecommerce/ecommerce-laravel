@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ReviewRequest;
@@ -14,7 +15,7 @@ class ReviewController extends Controller
      * Handles the request to store a new review.
      *
      * @param ReviewRequest $request The request object containing review details.
-     * @return \Illuminate\Http\JsonResponse A JSON response indicating success and the saved review.
+     * @return JsonResponse A JSON response indicating success and the saved review.
      */
     public function store(ReviewRequest $request)
     {

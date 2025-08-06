@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Pages;
 
+use Filament\Support\Enums\Width;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
@@ -11,13 +12,13 @@ use Illuminate\Support\Facades\Auth;
 
 class CreateTeam extends RegisterTenant
 {
-    protected static string $view = 'filament.pages.create-team';
+    protected string $view = 'filament.pages.create-team';
 
     public $name = '';
 
 
 
-    protected ?string $maxWidth = '2xl';
+    protected Width|string|null $maxWidth = '2xl';
 
     protected function getFormSchema(): array
     {

@@ -6,6 +6,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\View\View;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -14,7 +15,7 @@ class HomeController extends Controller
     /**
      * Displays the home page with featured products, latest products, and special offers.
      *
-     * @return \Illuminate\View\View The home view populated with products and offers.
+     * @return View The home view populated with products and offers.
      */
     public function index()
     {

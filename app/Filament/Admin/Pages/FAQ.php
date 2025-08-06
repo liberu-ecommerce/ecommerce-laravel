@@ -6,9 +6,9 @@ use Filament\Pages\Page;
 
 class FAQ extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-question-mark-circle';
 
-    protected static string $view = 'filament.admin.pages.f-a-q';
+    protected string $view = 'filament.admin.pages.f-a-q';
 
     protected static ?int $navigationSort = 5;
 }

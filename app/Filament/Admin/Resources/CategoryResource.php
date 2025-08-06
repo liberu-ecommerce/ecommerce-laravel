@@ -2,11 +2,23 @@
 
 namespace App\Filament\Admin\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\Admin\Resources\CategoryResource\Pages\ListCategories;
+use App\Filament\Admin\Resources\CategoryResource\Pages\CreateCategory;
+use App\Filament\Admin\Resources\CategoryResource\Pages\EditCategory;
 use App\Filament\Admin\Resources\CategoryResource\Pages;
 use App\Filament\Admin\Resources\CategoryResource\RelationManagers;
 use App\Models\ProductCategory;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,23 +29,23 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = ProductCategory::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $modelLabel = "Category";
 
     protected static ?int $navigationSort = 3;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
+        return $schema
+            ->components([
+                Section::make()
                     ->schema([
-                        Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\RichEditor::make('description'),
-                        Forms\Components\Select::make('parent_category_id')
+                        RichEditor::make('description'),
+                        Select::make('parent_category_id')
                             ->relationship('parent', 'name'),
                     ])
             ]);
@@ -43,23 +55,23 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label(__('Name')),
-                    Tables\Columns\TextColumn::make('parent.name'),
-                Tables\Columns\TextColumn::make('products_count')
+                    TextColumn::make('parent.name'),
+                TextColumn::make('products_count')
                     ->counts('products')
                     ->label(__('Total Products'))
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -74,9 +86,9 @@ class CategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCategories::route('/'),
-            'create' => Pages\CreateCategory::route('/create'),
-            'edit' => Pages\EditCategory::route('/{record}/edit'),
+            'index' => ListCategories::route('/'),
+            'create' => CreateCategory::route('/create'),
+            'edit' => EditCategory::route('/{record}/edit'),
         ];
     }
 }

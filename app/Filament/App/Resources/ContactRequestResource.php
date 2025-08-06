@@ -2,11 +2,17 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\ContactRequestResource\Pages\ListContactRequests;
+use App\Filament\App\Resources\ContactRequestResource\Pages\CreateContactRequest;
+use App\Filament\App\Resources\ContactRequestResource\Pages\EditContactRequest;
 use App\Filament\App\Resources\ContactRequestResource\Pages;
 use App\Filament\App\Resources\ContactRequestResource\RelationManagers;
 use App\Models\ContactRequest;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,14 +23,14 @@ class ContactRequestResource extends Resource
 {
     protected static ?string $model = ContactRequest::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-chat-bubble-left-ellipsis';
 
     protected static ?int $navigationSort = 4;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 //
             ]);
     }
@@ -38,12 +44,12 @@ class ContactRequestResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -58,9 +64,9 @@ class ContactRequestResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListContactRequests::route('/'),
-            'create' => Pages\CreateContactRequest::route('/create'),
-            'edit' => Pages\EditContactRequest::route('/{record}/edit'),
+            'index' => ListContactRequests::route('/'),
+            'create' => CreateContactRequest::route('/create'),
+            'edit' => EditContactRequest::route('/{record}/edit'),
         ];
     }
 }

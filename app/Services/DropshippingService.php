@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -52,7 +53,7 @@ class DropshippingService
             }
             
             return ['success' => false, 'message' => 'Failed to check availability', 'error' => $response->body()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Dropshipping availability check failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Error checking availability', 'error' => $e->getMessage()];
         }
@@ -82,7 +83,7 @@ class DropshippingService
             }
             
             return ['success' => false, 'message' => 'Failed to place order', 'error' => $response->body()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Dropshipping order placement failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Error placing order', 'error' => $e->getMessage()];
         }
@@ -114,7 +115,7 @@ class DropshippingService
             }
             
             return ['success' => false, 'message' => 'Failed to track order', 'error' => $response->body()];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Dropshipping order tracking failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Error tracking order', 'error' => $e->getMessage()];
         }

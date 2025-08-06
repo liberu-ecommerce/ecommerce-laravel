@@ -2,11 +2,20 @@
 
 namespace App\Filament\App\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Actions\EditAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use App\Filament\App\Resources\ProductReviewResource\Pages\ListProductReviews;
+use App\Filament\App\Resources\ProductReviewResource\Pages\CreateProductReview;
+use App\Filament\App\Resources\ProductReviewResource\Pages\EditProductReview;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;
 use App\Models\Customer;
-use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\ProductReview;
 use Filament\Resources\Resource;
@@ -19,29 +28,29 @@ class ProductReviewResource extends Resource
 {
     protected static ?string $model = ProductReview::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-chat-bubble-left-right';
 
     protected static ?string $modelLabel = "Review";
 
     protected static ?int $navigationSort = 8;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('product_id')
+        return $schema
+            ->components([
+                Select::make('product_id')
                     ->label('Product')
                     ->required()
                     ->options(Product::pluck('name', 'id'))
                     ->reactive(),
 
-                Forms\Components\Select::make('customer_id')
+                Select::make('customer_id')
                     ->label('Customer')
                     ->required()
                     ->options(Customer::pluck('first_name', 'id'))
                     ->reactive(),
 
-                Forms\Components\Textarea::make('comments')
+                Textarea::make('comments')
                     ->label('Comments')
                     ->required()
                     ->maxLength(65535),
@@ -52,24 +61,24 @@ class ProductReviewResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product.name')
+                TextColumn::make('product.name')
                     ->label('Product')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('customer.first_name')
+                TextColumn::make('customer.first_name')
                     ->label('Customer'),
-                Tables\Columns\TextColumn::make('comments')
+                TextColumn::make('comments')
                     ->label('Comments'),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
+            ->recordActions([
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -84,9 +93,9 @@ class ProductReviewResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProductReviews::route('/'),
-            'create' => Pages\CreateProductReview::route('/create'),
-            'edit' => Pages\EditProductReview::route('/{record}/edit'),
+            'index' => ListProductReviews::route('/'),
+            'create' => CreateProductReview::route('/create'),
+            'edit' => EditProductReview::route('/{record}/edit'),
         ];
     }
 }
