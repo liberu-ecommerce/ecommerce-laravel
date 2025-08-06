@@ -1,5 +1,5 @@
 <section class="bg-gray-50 py-8 antialiased dark:bg-gray-900 md:py-12">
-    <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
+    <div class="mx-auto max-w-(--breakpoint-xl) px-4 2xl:px-0">
       <div class="mb-4 items-end justify-between space-y-4 sm:flex sm:space-y-0 md:mb-8">
         <div>
           <h2 class="mt-3 text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">Our Products</h2>

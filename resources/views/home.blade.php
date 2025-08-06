@@ -4,8 +4,8 @@
 
 @section('content')
     <!-- Hero Section -->
-    <div class="bg-gradient-to-b from-violet-600/10 via-transparent">
-        <div class="max-w-[85rem] mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-8">
+    <div class="bg-linear-to-b from-violet-600/10 via-transparent">
+        <div class="max-w-340 mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-8">
             <div class="max-w-3xl text-center mx-auto">
                 <h1 class="text-black block font-medium text-4xl sm:text-5xl md:text-6xl lg:text-7xl">
                     Welcome to {{config('app.name')}}
@@ -19,7 +19,7 @@
             </div>
 
             <div class="text-center">
-                <a class="inline-flex justify-center items-center gap-x-3 text-center bg-gradient-to-tl from-blue-600 to-violet-600 shadow-lg shadow-transparent hover:shadow-blue-700/50 border border-transparent text-white text-sm font-medium rounded-full focus:outline-none focus:shadow-blue-700/50 py-3 px-6"
+                <a class="inline-flex justify-center items-center gap-x-3 text-center bg-linear-to-tl from-blue-600 to-violet-600 shadow-lg shadow-transparent hover:shadow-blue-700/50 border border-transparent text-white text-sm font-medium rounded-full focus:outline-none focus:shadow-blue-700/50 py-3 px-6"
                     href="{{ route('products.index') }}">
                     Shop Now
                     <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -118,7 +118,7 @@
     <!-- Special Offers -->
     <div class="container mx-auto px-4 py-12">
         <h2 class="text-2xl font-bold mb-8">Special Offers</h2>
-        <div class="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg shadow-xl overflow-hidden">
+        <div class="bg-linear-to-r from-purple-500 to-blue-500 rounded-lg shadow-xl overflow-hidden">
             <div class="md:flex">
                 <div class="md:w-1/2 p-8 md:p-12 text-white">
                     <h3 class="text-3xl font-bold mb-4">Summer Sale</h3>

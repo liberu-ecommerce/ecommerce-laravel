@@ -49,12 +49,12 @@
     <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="flex-shrink-0">
+            <a href="{{ route('home') }}" class="shrink-0">
                 <h1 class="text-2xl font-bold text-blue-600">{{ config('app.name') }}</h1>
             </a>
 
             <!-- Search Bar -->
-            <div class="hidden md:block flex-grow mx-8">
+            <div class="hidden md:block grow mx-8">
                 <form action="{{ route('products.index') }}" method="GET" class="flex">
                     <input type="text" name="search" placeholder="Search for products..." class="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-r-md hover:bg-blue-700 transition">
