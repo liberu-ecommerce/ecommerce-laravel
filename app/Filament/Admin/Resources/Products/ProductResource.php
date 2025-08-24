@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Products;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Textarea;
@@ -11,9 +11,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\BulkAction;
-use App\Filament\Admin\Resources\ProductResource\Pages\ListProducts;
-use App\Filament\Admin\Resources\ProductResource\Pages\CreateProduct;
-use App\Filament\Admin\Resources\ProductResource\Pages\EditProduct;
+use App\Filament\Admin\Resources\Products\Pages\ListProducts;
+use App\Filament\Admin\Resources\Products\Pages\CreateProduct;
+use App\Filament\Admin\Resources\Products\Pages\EditProduct;
 use App\Filament\Admin\Resources\ProductResource\Pages;
 use App\Models\Product;
 use App\Models\ProductCategory;

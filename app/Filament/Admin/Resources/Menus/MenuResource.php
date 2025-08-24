@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Menus;
 
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\MenuResource\Pages\ListMenus;
-use App\Filament\Admin\Resources\MenuResource\Pages\CreateMenu;
-use App\Filament\Admin\Resources\MenuResource\Pages\EditMenu;
+use App\Filament\Admin\Resources\Menus\Pages\ListMenus;
+use App\Filament\Admin\Resources\Menus\Pages\CreateMenu;
+use App\Filament\Admin\Resources\Menus\Pages\EditMenu;
 use App\Filament\Admin\Resources\MenuResource\Pages;
 use App\Filament\Admin\Resources\MenuResource\RelationManagers;
 use App\Models\Menu;

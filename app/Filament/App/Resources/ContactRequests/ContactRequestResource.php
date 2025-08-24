@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\ContactRequests;
 
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\ContactRequestResource\Pages\ListContactRequests;
-use App\Filament\App\Resources\ContactRequestResource\Pages\CreateContactRequest;
-use App\Filament\App\Resources\ContactRequestResource\Pages\EditContactRequest;
+use App\Filament\App\Resources\ContactRequests\Pages\ListContactRequests;
+use App\Filament\App\Resources\ContactRequests\Pages\CreateContactRequest;
+use App\Filament\App\Resources\ContactRequests\Pages\EditContactRequest;
 use App\Filament\App\Resources\ContactRequestResource\Pages;
 use App\Filament\App\Resources\ContactRequestResource\RelationManagers;
 use App\Models\ContactRequest;

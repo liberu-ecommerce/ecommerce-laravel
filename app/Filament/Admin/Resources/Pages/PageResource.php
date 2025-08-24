@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Pages;
 
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -12,9 +12,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\PageResource\Pages\ListPages;
-use App\Filament\Admin\Resources\PageResource\Pages\CreatePage;
-use App\Filament\Admin\Resources\PageResource\Pages\EditPage;
+use App\Filament\Admin\Resources\Pages\Pages\ListPages;
+use App\Filament\Admin\Resources\Pages\Pages\CreatePage;
+use App\Filament\Admin\Resources\Pages\Pages\EditPage;
 use App\Filament\Admin\Resources\PageResource\Pages;
 use App\Filament\Admin\Resources\PageResource\RelationManagers;
 use App\Models\Page;

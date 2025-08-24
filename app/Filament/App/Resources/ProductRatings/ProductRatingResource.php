@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\ProductRatings;
 
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\ProductRatingResource\Pages\ListProductRatings;
-use App\Filament\App\Resources\ProductRatingResource\Pages\CreateProductRating;
-use App\Filament\App\Resources\ProductRatingResource\Pages\EditProductRating;
+use App\Filament\App\Resources\ProductRatings\Pages\ListProductRatings;
+use App\Filament\App\Resources\ProductRatings\Pages\CreateProductRating;
+use App\Filament\App\Resources\ProductRatings\Pages\EditProductRating;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;

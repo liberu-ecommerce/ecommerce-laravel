@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Products;
 
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Grid;
@@ -9,9 +9,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\ProductResource\Pages\ListProducts;
-use App\Filament\App\Resources\ProductResource\Pages\CreateProduct;
-use App\Filament\App\Resources\ProductResource\Pages\EditProduct;
+use App\Filament\App\Resources\Products\Pages\ListProducts;
+use App\Filament\App\Resources\Products\Pages\CreateProduct;
+use App\Filament\App\Resources\Products\Pages\EditProduct;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;

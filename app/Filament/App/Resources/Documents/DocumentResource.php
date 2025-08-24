@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Documents;
 
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\DocumentResource\Pages\ListDocuments;
-use App\Filament\App\Resources\DocumentResource\Pages\CreateDocument;
-use App\Filament\App\Resources\DocumentResource\Pages\EditDocument;
+use App\Filament\App\Resources\Documents\Pages\ListDocuments;
+use App\Filament\App\Resources\Documents\Pages\CreateDocument;
+use App\Filament\App\Resources\Documents\Pages\EditDocument;
 use App\Filament\App\Resources\DocumentResource\Pages;
 use App\Filament\App\Resources\DocumentResource\RelationManagers;
 use App\Models\Document;

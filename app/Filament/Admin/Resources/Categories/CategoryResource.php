@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Categories;
 
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
@@ -12,9 +12,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\CategoryResource\Pages\ListCategories;
-use App\Filament\Admin\Resources\CategoryResource\Pages\CreateCategory;
-use App\Filament\Admin\Resources\CategoryResource\Pages\EditCategory;
+use App\Filament\Admin\Resources\Categories\Pages\ListCategories;
+use App\Filament\Admin\Resources\Categories\Pages\CreateCategory;
+use App\Filament\Admin\Resources\Categories\Pages\EditCategory;
 use App\Filament\Admin\Resources\CategoryResource\Pages;
 use App\Filament\Admin\Resources\CategoryResource\RelationManagers;
 use App\Models\ProductCategory;

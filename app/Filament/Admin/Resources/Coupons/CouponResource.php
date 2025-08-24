@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Coupons;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -11,9 +11,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\CouponResource\Pages\ListCoupons;
-use App\Filament\Admin\Resources\CouponResource\Pages\CreateCoupon;
-use App\Filament\Admin\Resources\CouponResource\Pages\EditCoupon;
+use App\Filament\Admin\Resources\Coupons\Pages\ListCoupons;
+use App\Filament\Admin\Resources\Coupons\Pages\CreateCoupon;
+use App\Filament\Admin\Resources\Coupons\Pages\EditCoupon;
 use App\Filament\Admin\Resources\CouponResource\Pages;
 use App\Models\Coupon;
 use Filament\Forms;

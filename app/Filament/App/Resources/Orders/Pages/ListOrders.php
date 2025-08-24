@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\App\Resources\OrderResource\Pages;
+namespace App\Filament\App\Resources\Orders\Pages;
 
 use Filament\Actions\CreateAction;
-use App\Filament\App\Resources\OrderResource;
+use App\Filament\App\Resources\Orders\OrderResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

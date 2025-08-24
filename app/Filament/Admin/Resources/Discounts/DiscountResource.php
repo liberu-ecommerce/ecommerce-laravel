@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Discounts;
 
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\DiscountResource\Pages\ListDiscounts;
-use App\Filament\Admin\Resources\DiscountResource\Pages\CreateDiscount;
-use App\Filament\Admin\Resources\DiscountResource\Pages\EditDiscount;
+use App\Filament\Admin\Resources\Discounts\Pages\ListDiscounts;
+use App\Filament\Admin\Resources\Discounts\Pages\CreateDiscount;
+use App\Filament\Admin\Resources\Discounts\Pages\EditDiscount;
 use App\Filament\Admin\Resources\DiscountResource\Pages;
 use App\Filament\Admin\Resources\DiscountResource\RelationManagers;
 use App\Models\Discount;

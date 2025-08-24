@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Groups;
 
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\GroupResource\Pages\ListGroups;
-use App\Filament\App\Resources\GroupResource\Pages\CreateGroup;
-use App\Filament\App\Resources\GroupResource\Pages\EditGroup;
+use App\Filament\App\Resources\Groups\Pages\ListGroups;
+use App\Filament\App\Resources\Groups\Pages\CreateGroup;
+use App\Filament\App\Resources\Groups\Pages\EditGroup;
 use App\Filament\App\Resources\GroupResource\Pages;
 use App\Filament\App\Resources\GroupResource\RelationManagers;
 use App\Models\Group;

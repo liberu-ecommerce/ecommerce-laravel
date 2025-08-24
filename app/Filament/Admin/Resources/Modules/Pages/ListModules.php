@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Admin\Resources\ModuleResource\Pages;
+namespace App\Filament\Admin\Resources\Modules\Pages;
 
 use Filament\Actions\Action;
-use App\Filament\Admin\Resources\ModuleResource;
+use App\Filament\Admin\Resources\Modules\ModuleResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

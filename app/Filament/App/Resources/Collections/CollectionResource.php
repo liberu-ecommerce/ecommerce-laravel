@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Collections;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -9,9 +9,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\CollectionResource\Pages\ListCollections;
-use App\Filament\App\Resources\CollectionResource\Pages\CreateCollection;
-use App\Filament\App\Resources\CollectionResource\Pages\EditCollection;
+use App\Filament\App\Resources\Collections\Pages\ListCollections;
+use App\Filament\App\Resources\Collections\Pages\CreateCollection;
+use App\Filament\App\Resources\Collections\Pages\EditCollection;
 use App\Filament\App\Resources\CollectionResource\Pages;
 use App\Filament\App\Resources\CollectionResource\RelationManagers;
 use App\Models\Collection;

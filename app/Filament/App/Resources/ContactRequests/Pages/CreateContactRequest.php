@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\App\Resources\ContactRequestResource\Pages;
+namespace App\Filament\App\Resources\ContactRequests\Pages;
 
-use App\Filament\App\Resources\ContactRequestResource;
+use App\Filament\App\Resources\ContactRequests\ContactRequestResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 

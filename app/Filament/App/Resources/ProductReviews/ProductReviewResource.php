@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\ProductReviews;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -9,9 +9,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\ProductReviewResource\Pages\ListProductReviews;
-use App\Filament\App\Resources\ProductReviewResource\Pages\CreateProductReview;
-use App\Filament\App\Resources\ProductReviewResource\Pages\EditProductReview;
+use App\Filament\App\Resources\ProductReviews\Pages\ListProductReviews;
+use App\Filament\App\Resources\ProductReviews\Pages\CreateProductReview;
+use App\Filament\App\Resources\ProductReviews\Pages\EditProductReview;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Product;

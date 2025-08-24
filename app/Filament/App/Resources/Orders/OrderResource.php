@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Orders;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -9,9 +9,9 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\OrderResource\Pages\ListOrders;
-use App\Filament\App\Resources\OrderResource\Pages\CreateOrder;
-use App\Filament\App\Resources\OrderResource\Pages\EditOrder;
+use App\Filament\App\Resources\Orders\Pages\ListOrders;
+use App\Filament\App\Resources\Orders\Pages\CreateOrder;
+use App\Filament\App\Resources\Orders\Pages\EditOrder;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Order;

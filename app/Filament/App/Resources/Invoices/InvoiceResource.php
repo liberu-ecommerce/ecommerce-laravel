@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\App\Resources;
+namespace App\Filament\App\Resources\Invoices;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -10,9 +10,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\App\Resources\InvoiceResource\Pages\ListInvoices;
-use App\Filament\App\Resources\InvoiceResource\Pages\CreateInvoice;
-use App\Filament\App\Resources\InvoiceResource\Pages\EditInvoice;
+use App\Filament\App\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\App\Resources\Invoices\Pages\CreateInvoice;
+use App\Filament\App\Resources\Invoices\Pages\EditInvoice;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Customer;

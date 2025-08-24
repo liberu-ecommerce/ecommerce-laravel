@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Admin\Resources\DiscountResource\Pages;
+namespace App\Filament\Admin\Resources\Discounts\Pages;
 
 use Filament\Actions\DeleteAction;
-use App\Filament\Admin\Resources\DiscountResource;
+use App\Filament\Admin\Resources\Discounts\DiscountResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

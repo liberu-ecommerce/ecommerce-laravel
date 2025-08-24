@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Admin\Resources\CouponResource\Pages;
+namespace App\Filament\Admin\Resources\Coupons\Pages;
 
-use App\Filament\Admin\Resources\CouponResource;
+use App\Filament\Admin\Resources\Coupons\CouponResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 

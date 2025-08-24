@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Stores;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -8,9 +8,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Actions\EditAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use App\Filament\Admin\Resources\StoreResource\Pages\ListStores;
-use App\Filament\Admin\Resources\StoreResource\Pages\CreateStore;
-use App\Filament\Admin\Resources\StoreResource\Pages\EditStore;
+use App\Filament\Admin\Resources\Stores\Pages\ListStores;
+use App\Filament\Admin\Resources\Stores\Pages\CreateStore;
+use App\Filament\Admin\Resources\Stores\Pages\EditStore;
 use App\Filament\Admin\Resources\StoreResource\Pages;
 use App\Filament\Admin\Resources\StoreResource\RelationManagers;
 use App\Models\Team;

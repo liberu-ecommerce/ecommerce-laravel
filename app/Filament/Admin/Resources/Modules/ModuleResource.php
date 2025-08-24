@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Admin\Resources;
+namespace App\Filament\Admin\Resources\Modules;
 
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
@@ -13,8 +13,8 @@ use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\BulkAction;
-use App\Filament\Admin\Resources\ModuleResource\Pages\ListModules;
-use App\Filament\Admin\Resources\ModuleResource\Pages\ViewModule;
+use App\Filament\Admin\Resources\Modules\Pages\ListModules;
+use App\Filament\Admin\Resources\Modules\Pages\ViewModule;
 use App\Modules\ModuleManager;
 use Filament\Forms;
 use Filament\Resources\Resource;
