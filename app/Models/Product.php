@@ -98,6 +98,31 @@ class Product extends Model implements Orderable
         return $this->hasOne(DownloadableProduct::class);
     }
 
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
+
+    public function options()
+    {
+        return $this->hasMany(ProductOption::class)->orderBy('position');
+    }
+
+    public function inventoryItems()
+    {
+        return $this->hasMany(InventoryItem::class);
+    }
+
+    public function seoSettings()
+    {
+        return $this->morphOne(SeoSetting::class, 'seoable');
+    }
+
+    public function analyticsEvents()
+    {
+        return $this->hasMany(AnalyticsEvent::class);
+    }
+
     public function isDownloadable(): bool
     {
         return $this->is_downloadable && $this->downloadable()->exists();
@@ -197,5 +222,49 @@ class Product extends Model implements Orderable
     public function isDonationBased(): bool
     {
         return $this->pricing_type === 'donation';
+    }
+
+    public function hasVariants(): bool
+    {
+        return $this->variants()->exists();
+    }
+
+    public function getDefaultVariant()
+    {
+        return $this->variants()->orderBy('position')->first();
+    }
+
+    public function getTotalInventory(): int
+    {
+        if ($this->hasVariants()) {
+            return $this->variants()->sum('inventory_quantity');
+        }
+        return $this->inventory_count;
+    }
+
+    public function getLowestPrice(): float
+    {
+        if ($this->hasVariants()) {
+            return $this->variants()->min('price') ?? $this->price;
+        }
+        return $this->price;
+    }
+
+    public function getHighestPrice(): float
+    {
+        if ($this->hasVariants()) {
+            return $this->variants()->max('price') ?? $this->price;
+        }
+        return $this->price;
+    }
+
+    public function getAverageRating(): float
+    {
+        return $this->rating()->avg('rating') ?? 0;
+    }
+
+    public function getTotalReviews(): int
+    {
+        return $this->review()->count();
     }
 }
