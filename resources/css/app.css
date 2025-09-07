@@ -1,1 +1,352 @@
 @import 'tailwindcss';
+
+/* Custom CSS Variables for Design System */
+:root {
+    --primary-50: #eff6ff;
+    --primary-100: #dbeafe;
+    --primary-500: #3b82f6;
+    --primary-600: #2563eb;
+    --primary-700: #1d4ed8;
+    --primary-900: #1e3a8a;
+
+    --secondary-50: #f8fafc;
+    --secondary-100: #f1f5f9;
+    --secondary-500: #64748b;
+    --secondary-600: #475569;
+    --secondary-900: #0f172a;
+
+    --success-500: #10b981;
+    --warning-500: #f59e0b;
+    --error-500: #ef4444;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/* Smooth Animations */
+* {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--secondary-100);
+    border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-500);
+    border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-600);
+}
+
+/* Enhanced Button Styles */
+.btn {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 border border-gray-300;
+}
+
+.btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-md hover:shadow-lg;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-md hover:shadow-lg;
+}
+
+.btn-lg {
+    @apply px-6 py-3 text-base;
+}
+
+.btn-sm {
+    @apply px-3 py-1.5 text-xs;
+}
+
+/* Enhanced Card Styles */
+.card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100;
+}
+
+.card-hover {
+    @apply transform hover:-translate-y-1 hover:scale-105;
+}
+
+.card-body {
+    @apply p-6;
+}
+
+.card-header {
+    @apply px-6 py-4 border-b border-gray-100;
+}
+
+/* Enhanced Form Styles */
+.form-input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white;
+}
+
+.form-input:focus {
+    @apply shadow-md;
+}
+
+.form-label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.form-error {
+    @apply text-red-500 text-sm mt-1;
+}
+
+/* Loading States */
+.loading {
+    @apply opacity-50 pointer-events-none;
+}
+
+.spinner {
+    @apply animate-spin rounded-full h-4 w-4 border-b-2 border-current;
+}
+
+/* Enhanced Navigation */
+.nav-link {
+    @apply text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
+}
+
+.nav-link.active {
+    @apply text-blue-600 bg-blue-50;
+}
+
+/* Product Grid Enhancements */
+.product-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+}
+
+.product-card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group border border-gray-100;
+}
+
+.product-card:hover {
+    @apply transform -translate-y-1;
+}
+
+.product-image {
+    @apply w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105;
+}
+
+.product-badge {
+    @apply absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full;
+}
+
+/* Enhanced Typography */
+.heading-1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight;
+}
+
+.heading-2 {
+    @apply text-3xl md:text-4xl font-bold text-gray-900 leading-tight;
+}
+
+.heading-3 {
+    @apply text-2xl md:text-3xl font-bold text-gray-900 leading-tight;
+}
+
+.text-muted {
+    @apply text-gray-600;
+}
+
+/* Enhanced Alerts */
+.alert {
+    @apply px-4 py-3 rounded-lg border-l-4 mb-4;
+}
+
+.alert-success {
+    @apply bg-green-50 border-green-400 text-green-700;
+}
+
+.alert-error {
+    @apply bg-red-50 border-red-400 text-red-700;
+}
+
+.alert-warning {
+    @apply bg-yellow-50 border-yellow-400 text-yellow-700;
+}
+
+.alert-info {
+    @apply bg-blue-50 border-blue-400 text-blue-700;
+}
+
+/* Enhanced Badges */
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-danger {
+    @apply bg-red-100 text-red-800;
+}
+
+/* Enhanced Modals */
+.modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
+}
+
+.modal-content {
+    @apply bg-white rounded-xl shadow-2xl max-w-md w-full max-h-screen overflow-y-auto;
+}
+
+/* Enhanced Dropdowns */
+.dropdown {
+    @apply relative inline-block text-left;
+}
+
+.dropdown-menu {
+    @apply absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50;
+}
+
+.dropdown-item {
+    @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150;
+}
+
+/* Enhanced Tables */
+.table {
+    @apply min-w-full divide-y divide-gray-200;
+}
+
+.table-header {
+    @apply bg-gray-50;
+}
+
+.table-header th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+}
+
+.table-body {
+    @apply bg-white divide-y divide-gray-200;
+}
+
+.table-body td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+}
+
+/* Enhanced Pagination */
+.pagination {
+    @apply flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6;
+}
+
+.pagination-link {
+    @apply relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md transition-colors duration-150;
+}
+
+.pagination-link.active {
+    @apply bg-blue-600 text-white border-blue-600;
+}
+
+/* Enhanced Search */
+.search-container {
+    @apply relative;
+}
+
+.search-input {
+    @apply w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.search-icon {
+    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+}
+
+/* Enhanced Breadcrumbs */
+.breadcrumb {
+    @apply flex items-center space-x-2 text-sm text-gray-500;
+}
+
+.breadcrumb-item {
+    @apply hover:text-gray-700;
+}
+
+.breadcrumb-separator {
+    @apply text-gray-300;
+}
+
+/* Enhanced Progress Bars */
+.progress {
+    @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.progress-bar {
+    @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
+}
+
+/* Enhanced Tooltips */
+.tooltip {
+    @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg;
+}
+
+/* Enhanced Skeleton Loading */
+.skeleton {
+    @apply animate-pulse bg-gray-200 rounded;
+}
+
+.skeleton-text {
+    @apply h-4 bg-gray-200 rounded;
+}
+
+.skeleton-avatar {
+    @apply h-10 w-10 bg-gray-200 rounded-full;
+}
+
+/* Enhanced Responsive Utilities */
+@media (max-width: 640px) {
+    .mobile-hidden {
+        @apply hidden;
+    }
+
+    .mobile-full {
+        @apply w-full;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .dark-mode {
+        @apply bg-gray-900 text-white;
+    }
+
+    .dark-mode .card {
+        @apply bg-gray-800 border-gray-700;
+    }
+
+    .dark-mode .form-input {
+        @apply bg-gray-800 border-gray-600 text-white;
+    }
+}
