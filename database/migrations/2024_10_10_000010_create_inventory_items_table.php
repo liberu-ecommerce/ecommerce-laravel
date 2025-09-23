@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('inventory_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_variant_id')->nullable()->constrained()->onDelete('cascade');
+            //$table->foreignId('product_variant_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('sku')->nullable();
             $table->decimal('cost', 10, 2)->nullable();
             $table->string('country_code_of_origin', 2)->nullable();
