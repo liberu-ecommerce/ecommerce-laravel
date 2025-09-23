@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['product_id']);
-            $table->index(['product_variant_id']);
+            //$table->index(['product_variant_id']);
             $table->index(['sku']);
             $table->index(['tracked']);
         });
