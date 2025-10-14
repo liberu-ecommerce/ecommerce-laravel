@@ -142,7 +142,7 @@
 }
 
 .product-card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group border border-gray-100;
+    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100;
 }
 
 .product-card:hover {
@@ -218,7 +218,7 @@
 
 /* Enhanced Modals */
 .modal-overlay {
-    @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
+    @apply fixed inset-0 bg-black z-50 flex items-center justify-center p-4;
 }
 
 .modal-content {
@@ -231,7 +231,7 @@
 }
 
 .dropdown-menu {
-    @apply absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50;
+    @apply absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black z-50;
 }
 
 .dropdown-item {
