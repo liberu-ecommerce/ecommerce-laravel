@@ -13,13 +13,13 @@ class ProductCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        ProductCategory::create(['name' => 'Electronics', 'description' => 'Gadgets, devices, and home appliances.']);
-        ProductCategory::create(['name' => 'Clothing', 'description' => 'Men’s, women’s, and kids’ fashion.']);
-        ProductCategory::create(['name' => 'Books', 'description' => 'Fiction, non-fiction, and educational books.']);
-        ProductCategory::create(['name' => 'Home & Kitchen', 'description' => 'Furniture, kitchen appliances, and decor.']);
-        ProductCategory::create(['name' => 'Sports & Outdoors', 'description' => 'Sporting goods and outdoor equipment.']);
-        ProductCategory::create(['name' => 'Health & Beauty', 'description' => 'Skincare, fitness equipment, and more.']);
-        ProductCategory::create(['name' => 'Toys & Games', 'description' => 'Kids toys, video games, and board games.']);
+        ProductCategory::factory()->create(['name' => 'Electronics', 'description' => 'Gadgets, devices, and home appliances.']);
+        ProductCategory::factory()->create(['name' => 'Clothing', 'description' => 'Men’s, women’s, and kids’ fashion.']);
+        ProductCategory::factory()->create(['name' => 'Books', 'description' => 'Fiction, non-fiction, and educational books.']);
+        ProductCategory::factory()->create(['name' => 'Home & Kitchen', 'description' => 'Furniture, kitchen appliances, and decor.']);
+        ProductCategory::factory()->create(['name' => 'Sports & Outdoors', 'description' => 'Sporting goods and outdoor equipment.']);
+        ProductCategory::factory()->create(['name' => 'Health & Beauty', 'description' => 'Skincare, fitness equipment, and more.']);
+        ProductCategory::factory()->create(['name' => 'Toys & Games', 'description' => 'Kids toys, video games, and board games.']);
     
     }
 }
