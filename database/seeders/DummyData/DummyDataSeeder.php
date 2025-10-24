@@ -2,6 +2,7 @@
 
 namespace Database\Seeders\DummyData;
 
+use App\Models\ProductCategory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,9 +14,11 @@ class DummyDataSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            CarProductCategorySeeder::class,
-            CarProductSeeder::class,
+            // CarProductCategorySeeder::class,
+            // CarProductSeeder::class,
             ProductCollectionSeeder::class,
+            ProductCategorySeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
