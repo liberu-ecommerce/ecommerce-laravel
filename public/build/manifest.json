@@ -1,6 +1,14 @@
 {
+  "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
+    "file": "assets/fa-brands-400-BfBXV7Mm.woff2",
+    "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
+  },
+  "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
+    "file": "assets/fa-solid-900-8GirhLYJ.woff2",
+    "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-jOz8CJ2s.css",
+    "file": "assets/app-D50J1gOp.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "names": [

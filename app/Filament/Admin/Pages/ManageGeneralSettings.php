@@ -25,6 +25,7 @@ class ManageGeneralSettings extends SettingsPage
     public function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
                 Section::make('Site Information')
                     ->schema([

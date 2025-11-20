@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+@import '@fortawesome/fontawesome-free/css/fontawesome';
+@import '@fortawesome/fontawesome-free/css/solid';
+@import '@fortawesome/fontawesome-free/css/brands';
+
+
+
 /* Custom CSS Variables for Design System */
 :root {
     --primary-50: #eff6ff;

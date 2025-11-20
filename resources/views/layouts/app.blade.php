@@ -104,14 +104,14 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Connect With Us</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        <a href="{{ app(\App\Settings\GeneralSettings::class)->facebook_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="{{ app(\App\Settings\GeneralSettings::class)->twitter_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
+                        <a href="{{ app(\App\Settings\GeneralSettings::class)->youtube_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400">
-                <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p>{{ app(\App\Settings\GeneralSettings::class)->footer_copyright }}</p>
             </div>
         </div>
     </footer>
