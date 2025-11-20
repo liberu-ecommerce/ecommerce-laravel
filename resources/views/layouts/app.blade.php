@@ -104,7 +104,7 @@
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Connect With Us</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-facebook"></i></a>
+                        <a href="{{ app(\App\Settings\GeneralSettings::class)->facebook_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-facebook"></i></a>
                         <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
                         <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-instagram"></i></a>
                     </div>
