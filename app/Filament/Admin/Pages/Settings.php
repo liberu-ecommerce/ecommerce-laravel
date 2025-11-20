@@ -11,4 +11,6 @@ class Settings extends Page
     protected string $view = 'filament.admin.pages.settings';
 
     protected static ?int $navigationSort = 10;
+
+    protected static bool $shouldRegisterNavigation = false;
 }
