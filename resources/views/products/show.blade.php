@@ -113,10 +113,10 @@
     </div>
 </div>
 
-@if($product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
 @if(isset($product->downloadable) && $product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
     <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-3">Download</a>
 @endif
+
 
 @isset($product->inventoryLogs)
 <div class="card mt-4">
@@ -145,31 +145,34 @@
 @endisset
 
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    "name": "{{ $product->name }}",
-    "description": "{{ $product->description }}",
-    "image": "{{ asset('/images/placeholder.png') }}",
-    "sku": "{{ $product->id }}",
-    "mpn": "{{ $product->id }}",
-    "brand": {
-        "@type": "Brand",
-        "name": "{{ config('app.name') }}"
-    },
-    "offers": {
-        "@type": "Offer",
-        "url": "{{ route('products.show', $product->id) }}",
-        "priceCurrency": "USD",
-        "price": "{{ $product->price }}",
-        "availability": "{{ $product->inventory_count > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' }}",
-        "seller": {
-            "@type": "Organization",
-            "name": "{{ config('app.name') }}"
-        }
-    }
-}
+{!! json_encode([
+    '@context' => 'https://schema.org/',
+    '@type' => 'Product',
+    'name' => $product->name,
+    'description' => $product->description,
+    'image' => asset('/images/placeholder.png'),
+    'sku' => $product->id,
+    'mpn' => $product->id,
+    'brand' => [
+        '@type' => 'Brand',
+        'name' => config('app.name'),
+    ],
+    'offers' => [
+        '@type' => 'Offer',
+        'url' => route('products.show', $product->id),
+        'priceCurrency' => 'USD',
+        'price' => $product->price,
+        'availability' => $product->inventory_count > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+        'seller' => [
+            '@type' => 'Organization',
+            'name' => config('app.name'),
+        ],
+    ],
+], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}
 </script>
+    
 @endsection
 
 @section('meta')
