@@ -125,7 +125,7 @@ Route::view('/contact', 'contact')->name('contact');
 Route::view('/about', 'about')->name('about');
 Route::view('/shop', 'shop')->name('shop');
 
-Route::view('/account', 'account')->middleware('auth')->name('about');
+Route::view('/account', 'account')->middleware('auth')->name('account');
 
 // Blog routes
 
