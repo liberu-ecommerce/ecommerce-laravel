@@ -55,6 +55,15 @@
                                 </label>
                             </div>
 
+                            <div id="dropship-supplier" class="d-none mb-3">
+                                <label for="supplier_id">Select Supplier</label>
+                                <select class="form-control" id="supplier_id" name="supplier_id">
+                                    @foreach(config('dropshipping.suppliers') as $supplierId => $supplier)
+                                        <option value="{{ $supplierId }}">{{ $supplier['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             <div id="recipient-info" class="d-none mb-3">
                                 <div class="form-group mb-3">
                                     <label for="recipient_name">Recipient Name</label>
@@ -140,10 +149,13 @@
         // Toggle drop shipping recipient info
         const dropshipCheckbox = document.getElementById('dropship');
         const recipientInfo = document.getElementById('recipient-info');
+        const dropshipSupplier = document.getElementById('dropship-supplier');
 
         if (dropshipCheckbox) {
             dropshipCheckbox.addEventListener('change', function() {
-                recipientInfo.classList.toggle('d-none', !this.checked);
+                const isChecked = this.checked;
+                recipientInfo.classList.toggle('d-none', !isChecked);
+                dropshipSupplier.classList.toggle('d-none', !isChecked);
             });
         }
 
@@ -249,3 +261,4 @@
 @endif
 @endpush
 @endsection
+

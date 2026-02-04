@@ -1,4 +1,4 @@
-<?php
+s<?php
 
 namespace App\Services;
 
@@ -75,9 +75,12 @@ class DropshippingService
         }
         
         try {
+            // Transform payload for specific suppliers (DropXL requires specific shape)
+            $payload = $this->transformOrderPayloadForSupplier($supplierId, $orderData);
+
             $response = Http::withHeaders($this->getHeaders($supplier))
-                ->post($supplier['endpoints']['orders'], $orderData);
-                
+                ->post($supplier['endpoints']['orders'], $payload);
+
             if ($response->successful()) {
                 return ['success' => true, 'data' => $response->json()];
             }
@@ -150,5 +153,45 @@ class DropshippingService
         }
         
         return $headers;
+    }
+
+    /**
+     * Transform order payload for supplier-specific APIs
+     *
+     * @param string $supplierId
+     * @param array $orderData
+     * @return array
+     */
+    protected function transformOrderPayloadForSupplier($supplierId, array $orderData)
+    {
+        if ($supplierId === 'dropxl') {
+            // DropXL expects a top-level "customer" object and "items" array with sku & qty
+            $payload = [
+                'customer' => [
+                    'name' => $orderData['recipient_name'] ?? ($orderData['customer_name'] ?? null),
+                    'email' => $orderData['recipient_email'] ?? ($orderData['customer_email'] ?? null),
+                    'address' => $orderData['shipping_address'] ?? null,
+                ],
+                'shipping' => [
+                    'method' => $orderData['shipping_method'] ?? null,
+                    'cost' => $orderData['shipping_cost'] ?? 0,
+                ],
+                'items' => [],
+                'reference' => $orderData['reference'] ?? null,
+            ];
+
+            foreach ($orderData['items'] as $item) {
+                $payload['items'][] = [
+                    'sku' => $item['sku'] ?? $item['product_sku'] ?? $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                ];
+            }
+
+            return $payload;
+        }
+
+        // Default: pass through
+        return $orderData;
     }
 }

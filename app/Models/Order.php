@@ -18,12 +18,19 @@ class Order extends Model
         'customer_email',
         'order_date',
         'total_amount',
+        'shipping_cost',
         'payment_status',
         'shipping_status',
         'shipping_address',
         'shipping_method_id',
         'payment_method',
         'status',
+        'is_dropshipping',
+        'recipient_name',
+        'recipient_email',
+        'gift_message',
+        'supplier_id',
+        'supplier_reference',
     ];
 
     public function customer()

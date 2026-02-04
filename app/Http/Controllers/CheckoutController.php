@@ -12,7 +12,6 @@ use App\Models\Order;
 use App\Models\Coupon;
 use App\Models\InventoryLog;
 use App\Models\User;
-use App\Notifications\LowStockNotification;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
 use App\Models\Product; // Add this line to import the Product model
@@ -109,6 +108,7 @@ class CheckoutController extends Controller
             'shipping_method_id' => $request->shipping_method_id,
             'payment_method' => $request->payment_method,
             'total_amount' => $totalAmount,
+            'shipping_cost' => $shippingCost,
             'status' => 'pending',
             'is_dropshipping' => $request->has('dropship'),
             'recipient_name' => $request->recipient_name,
@@ -145,6 +145,63 @@ class CheckoutController extends Controller
         }
 
         $order->update(['status' => 'paid']);
+
+        // If dropshipping, place supplier order
+        if ($order->is_dropshipping) {
+            try {
+                $dropshippingService = app(\App\Services\DropshippingService::class);
+
+                $orderData = [
+                    'reference' => 'order-' . $order->id,
+                    'customer_name' => $request->email,
+                    'customer_email' => $request->email,
+                    'recipient_name' => $request->recipient_name,
+                    'recipient_email' => $request->recipient_email,
+                    'shipping_address' => $request->shipping_address,
+                    'shipping_method' => $request->shipping_method_id,
+                    'shipping_cost' => $shippingCost,
+                    'items' => [],
+                ];
+
+                foreach ($cart as $productId => $item) {
+                    // include SKU if present on Product
+                    $product = Product::find($productId);
+                    $orderData['items'][] = [
+                        'product_id' => $productId,
+                        'sku' => $product->sku ?? null,
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                    ];
+                }
+
+                // Use a configured supplier, default to 'dropxl' when dropship is checked
+                $supplierId = $request->input('supplier_id', 'dropxl');
+
+                $supplierResult = $dropshippingService->placeOrder($supplierId, $orderData);
+
+                if ($supplierResult['success']) {
+                    $supplierRef = $supplierResult['data']['reference'] ?? ($supplierResult['data']['id'] ?? null);
+                    $order->update(['supplier_id' => $supplierId, 'supplier_reference' => $supplierRef]);
+                } else {
+                    // mark order and notify admin
+                    $order->update(['status' => 'supplier_failed']);
+                    Notification::route('mail', config('mail.from.address'))
+                        ->notify(new \App\Notifications\SupplierFailureNotification("Dropshipping order placement failed for order {$order->id}: " . ($supplierResult['message'] ?? 'Unknown')));
+
+                    return redirect()->route('checkout.confirmation', ['order' => $order->id])
+                        ->with('warning', 'Order placed but failed to place dropshipping order with supplier. Our team will follow up.');
+                }
+            } catch (Exception $e) {
+                \Log::error('Dropshipping placement error: ' . $e->getMessage());
+                $order->update(['status' => 'supplier_failed']);
+
+                Notification::route('mail', config('mail.from.address'))
+                    ->notify(new \App\Notifications\SupplierFailureNotification("Error placing dropshipping order for order {$order->id}: " . $e->getMessage()));
+
+                return redirect()->route('checkout.confirmation', ['order' => $order->id])
+                    ->with('warning', 'Order placed but an error occurred while contacting the supplier. Our team will follow up.');
+            }
+        }
 
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
@@ -224,4 +281,3 @@ class CheckoutController extends Controller
         ]);
     }
 }
-
