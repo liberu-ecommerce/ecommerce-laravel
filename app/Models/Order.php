@@ -31,6 +31,14 @@ class Order extends Model
         'gift_message',
         'supplier_id',
         'supplier_reference',
+        'supplier_response',
+    ];
+
+    protected $casts = [
+        'supplier_response' => 'array',
+        'is_dropshipping' => 'boolean',
+        'shipping_cost' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     public function customer()

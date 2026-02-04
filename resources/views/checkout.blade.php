@@ -75,7 +75,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var stripe = Stripe('{{ env("STRIPE_KEY") }}');
+            var stripe = Stripe('{{ config('services.stripe.key') }}');
             var elements = stripe.elements();
             var style = {
                 base: {
@@ -107,20 +107,25 @@
                         var errorElement = document.getElementById('card-errors');
                         errorElement.textContent = result.error.message;
                     } else {
-                        fetch('/api/payment', {
+                        // For quick tests we post to /payment (StripePaymentController)
+                        fetch('/payment', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
                             },
-                            body: JSON.stringify({ payment_method_id: result.paymentMethod.id })
+                            body: JSON.stringify({ payment_method: result.paymentMethod.id, amount: 1.00 })
                         }).then(function(response) {
                             return response.json();
-                        }).then(function(paymentIntent) {
-                            console.log(paymentIntent);
-                            // Handle success or display error message
+                        }).then(function(json) {
+                            if (json.success) {
+                                alert('Payment succeeded: ' + (json.payment_id || json.payment_id));
+                            } else {
+                                alert('Payment failed: ' + (json.error || 'Unknown'));
+                            }
                         }).catch(function(error) {
                             console.error('Error:', error);
+                            alert('Payment error, check console');
                         });
                     }
                 });
