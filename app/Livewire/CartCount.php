@@ -1,25 +1,6 @@
 <?php
+// Deprecated placeholder.
+// The CartCount Livewire component has been moved to App\Http\Livewire\CartCount.php
+// This file is intentionally left empty to avoid duplicate class declarations.
+// If you removed the old file accidentally, you can safely delete this file.
 
-namespace App\Livewire;
-
-use Livewire\Component;
-use Illuminate\Support\Facades\Session;
-
-class CartCount extends Component
-{
-    protected $listeners = ['cartUpdated' => 'render'];
-
-    public function render()
-    {
-        $count = 0;
-        $cart = Session::get('cart', []);
-        
-        foreach ($cart as $item) {
-            $count += $item['quantity'];
-        }
-        
-        return view('livewire.cart-count', [
-            'count' => $count
-        ]);
-    }
-}
