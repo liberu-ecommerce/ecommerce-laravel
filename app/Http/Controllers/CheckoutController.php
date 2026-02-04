@@ -38,10 +38,19 @@ class CheckoutController extends Controller
 
         $shippingMethods = $this->shippingService->getAvailableShippingMethods();
 
+        // Calculate subtotal and whether physical products exist
+        $subtotal = collect($cart)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        $hasPhysicalProducts = $this->hasPhysicalProducts($cart);
+
         return view('checkout.checkout', [
             'cart' => $cart,
             'shippingMethods' => $shippingMethods,
-            'isGuest' => $isGuest
+            'isGuest' => $isGuest,
+            'total' => $subtotal,
+            'hasPhysicalProducts' => $hasPhysicalProducts,
         ]);
     }
 
@@ -49,8 +58,9 @@ class CheckoutController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'shipping_address' => 'required_if:has_physical_products,true|string',
-            'shipping_method_id' => 'required_if:has_physical_products,true|exists:shipping_methods,id',
+            'has_physical_products' => 'sometimes|in:0,1',
+            'shipping_address' => 'required_if:has_physical_products,1|string',
+            'shipping_method_id' => 'required_if:has_physical_products,1|exists:shipping_methods,id',
             'payment_method' => 'required|string',
             'recipient_name' => 'required_if:dropship,on|string',
             'recipient_email' => 'required_if:dropship,on|email',
@@ -87,7 +97,7 @@ class CheckoutController extends Controller
             $shippingMethod = ShippingMethod::find($request->shipping_method_id);
             $shippingCost = $request->has('dropship') ?
                 $this->shippingService->calculateDropShippingCost($shippingMethod, $cart, $request->shipping_address) :
-                $shippingMethod->base_rate;
+                $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
         }
 
         $totalAmount = $subtotal + $shippingCost;
@@ -105,6 +115,15 @@ class CheckoutController extends Controller
             'recipient_email' => $request->recipient_email,
             'gift_message' => $request->gift_message,
         ]);
+
+        // Create order items
+        foreach ($cart as $productId => $item) {
+            $order->items()->create([
+                'product_id' => $productId,
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+            ]);
+        }
 
         // Process payment based on selected method
         if ($totalAmount > 0) {
@@ -205,3 +224,4 @@ class CheckoutController extends Controller
         ]);
     }
 }
+

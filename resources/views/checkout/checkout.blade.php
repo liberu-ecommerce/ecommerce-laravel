@@ -23,15 +23,18 @@
                 <div class="card-body">
                     <form action="{{ route('checkout.process') }}" method="POST" id="checkout-form">
                         @csrf
+                        <input type="hidden" name="has_physical_products" value="{{ $hasPhysicalProducts ? 1 : 0 }}">
+                        <input type="hidden" name="shipping_cost" id="shipping_cost_input" value="0.00">
+
                         <div class="form-group mb-3">
                             <label for="email">Email Address</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
                         </div>
 
                         @if($hasPhysicalProducts)
                             <div class="form-group mb-3">
                                 <label for="shipping_address">Shipping Address</label>
-                                <textarea class="form-control" id="shipping_address" name="shipping_address" required rows="3"></textarea>
+                                <textarea class="form-control" id="shipping_address" name="shipping_address" required rows="3">{{ old('shipping_address') }}</textarea>
                             </div>
 
                             <div class="form-group mb-3">
@@ -55,15 +58,15 @@
                             <div id="recipient-info" class="d-none mb-3">
                                 <div class="form-group mb-3">
                                     <label for="recipient_name">Recipient Name</label>
-                                    <input type="text" class="form-control" id="recipient_name" name="recipient_name">
+                                    <input type="text" class="form-control" id="recipient_name" name="recipient_name" value="{{ old('recipient_name') }}">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="recipient_email">Recipient Email</label>
-                                    <input type="email" class="form-control" id="recipient_email" name="recipient_email">
+                                    <input type="email" class="form-control" id="recipient_email" name="recipient_email" value="{{ old('recipient_email') }}">
                                 </div>
                                 <div class="form-group mb-3">
                                     <label for="gift_message">Gift Message (Optional)</label>
-                                    <textarea class="form-control" id="gift_message" name="gift_message" rows="2"></textarea>
+                                    <textarea class="form-control" id="gift_message" name="gift_message" rows="2">{{ old('gift_message') }}</textarea>
                                 </div>
                             </div>
                         @endif
@@ -148,16 +151,22 @@
         const shippingMethodSelect = document.getElementById('shipping_method');
         const shippingCostElement = document.querySelector('#shipping-cost span');
         const totalAmountElement = document.getElementById('total-amount');
+        const shippingCostInput = document.getElementById('shipping_cost_input');
         let subtotal = {{ $total }};
+
+        function updateShippingDisplay(rate) {
+            shippingCostElement.textContent = '$' + rate.toFixed(2);
+            shippingCostInput.value = rate.toFixed(2);
+            const total = subtotal + rate;
+            totalAmountElement.textContent = '$' + total.toFixed(2);
+        }
 
         if (shippingMethodSelect) {
             shippingMethodSelect.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
-                const shippingRate = parseFloat(selectedOption.dataset.baseRate);
+                const shippingRate = parseFloat(selectedOption.dataset.baseRate) || 0;
 
-                shippingCostElement.textContent = '$' + shippingRate.toFixed(2);
-                const total = subtotal + shippingRate;
-                totalAmountElement.textContent = '$' + total.toFixed(2);
+                updateShippingDisplay(shippingRate);
             });
 
             // Trigger change to set initial shipping cost
