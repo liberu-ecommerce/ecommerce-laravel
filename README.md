@@ -4,65 +4,59 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A modular, production-ready e-commerce platform built with Laravel, Livewire and Filament. Designed for extensibility and developer productivity.
+A modular, production-ready e-commerce platform built with Laravel, Livewire and Filament. Focused on extensibility, developer productivity, and practical features for online stores.
 
 Key technologies: PHP · Laravel · Livewire · Filament
 
 ---
 
-## Quick start
+## Quick start (local)
 
-Prerequisites: PHP 8.3+, Composer, (optional) Docker.
+Requirements: PHP 8.3+, Composer, a database (MySQL / MariaDB / Postgres). Docker is optional.
 
-1. Clone the repo
+1. Clone repository
 
    git clone https://github.com/liberu-ecommerce/ecommerce-laravel.git
 
-2. Install dependencies and prepare environment
+2. Install and prepare
 
    composer install
    cp .env.example .env
    php artisan key:generate
 
-3. Database (local)
+3. Configure DB
 
-   Configure `.env` with your DB connection, then run migrations and optionally seed:
+   Update `.env` with database credentials, then run migrations:
 
    php artisan migrate --seed
 
-4. Run (local)
+4. Run locally
 
    php -S 127.0.0.1:8000 -t public
 
-Or with Sail (Docker-based):
+Optional (Docker / Sail):
 
    ./vendor/bin/sail up -d
 
-Or build the included Docker image:
-
-   docker build -t ecommerce-laravel .
-   docker run -p 8000:8000 ecommerce-laravel
-
 Notes:
-- The provided `setup.sh` can automate setup on Unix-like systems; review it before running. On Windows use the equivalent commands above.
-- Seeding is optional; the setup script may run seeders.
+- Review `setup.sh` before running; it automates setup on Unix-like systems.
+- Seeders are optional but useful for local development.
 
 ---
 
-## Features (high level)
+## What you'll find
 
-- Modular architecture for reusable components
-- Livewire-driven interactive UI
-- Filament-powered admin panels
-- Inventory, orders, coupons, and payments (pluggable gateways)
-- Multi-currency and localization-ready structure
+- Modular architecture and Filament admin panels
+- Livewire-driven storefront components (cart, checkout, product pages)
+- Inventory, orders, coupons, and pluggable payment gateways
+- Dropshipping support, abandoned cart tracking, and multi-currency foundations
 
 ---
 
 ## Related projects
 
 | Project | Repository |
-|---|---:|
+|---|---|
 | Accounting | https://github.com/liberu-accounting/accounting-laravel |
 | Automation | https://github.com/liberu-automation/automation-laravel |
 | Billing | https://github.com/liberu-billing/billing-laravel |
@@ -81,12 +75,12 @@ Notes:
 
 ## Contributing
 
-Contributions are welcome. Please open issues for bugs or feature requests and submit pull requests from feature branches. Keep changes focused and include tests where appropriate.
+We welcome contributions. A suggested workflow:
+- Fork → create a focused feature branch → open a pull request targeting `main`.
+- Include tests for new behavior and keep commits small and descriptive.
+- CI runs on push — ensure the `tests` and `install` workflows pass.
 
-Suggested workflow:
-- Fork → feature branch → PR targeting `main`
-- Write tests for new functionality
-- Keep commits small and descriptive
+Please open issues to discuss larger changes before implementing.
 
 ---
 
@@ -96,4 +90,4 @@ MIT — see the `LICENSE` file for details.
 
 ---
 
-If you'd like the README to include usage examples, architecture diagrams, or API docs, tell me which sections you'd like expanded and I will add them.
+If you'd like this README to include usage examples, architecture diagrams, API documentation, or a developer setup checklist for specific environments (WSL, Sail, Docker Desktop), tell me which sections you'd like expanded and I will add them.

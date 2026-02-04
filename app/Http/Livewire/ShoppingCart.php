@@ -73,19 +73,38 @@ class ShoppingCart extends Component
 
     public function updateQuantity($productId, $quantity)
     {
+        // Accept numeric strings from the frontend (wire:model / $event.target.value)
+        $quantity = (int) $quantity;
+
+        if ($quantity < 1) {
+            $this->addError('quantity', 'Quantity must be at least 1');
+            return;
+        }
+
         if (!isset($this->items[$productId])) {
             $this->addError('product', 'Product not found in cart');
             return;
         }
 
-        if (!is_int($quantity) || $quantity < 1) {
-            $this->addError('quantity', 'Quantity must be a positive integer');
-            return;
+        // If product is physical, verify inventory
+        $isDownloadable = $this->items[$productId]['is_downloadable'] ?? false;
+        if (!$isDownloadable) {
+            $product = Product::find($productId);
+            if (!$product) {
+                $this->addError('product', 'Product not found');
+                return;
+            }
+
+            if ($quantity > $product->inventory_count) {
+                session()->flash('error', 'Requested quantity exceeds available stock.');
+                return;
+            }
         }
 
         $this->items[$productId]['quantity'] = $quantity;
         Session::put('cart', $this->items);
         $this->emit('cartUpdated');
+        session()->flash('success', 'Cart updated');
     }
 
     public function removeItem($productId)
@@ -93,6 +112,8 @@ class ShoppingCart extends Component
         if (isset($this->items[$productId])) {
             unset($this->items[$productId]);
             Session::put('cart', $this->items);
+            $this->emit('cartUpdated');
+            session()->flash('success', 'Item removed from cart');
         }
     }
 
@@ -100,6 +121,8 @@ class ShoppingCart extends Component
     {
         $this->items = [];
         Session::forget('cart');
+        $this->emit('cartUpdated');
+        session()->flash('success', 'Cart cleared');
     }
 
     public function calculateTotal()
@@ -111,3 +134,4 @@ class ShoppingCart extends Component
         return round($total, 2);
     }
 }
+
