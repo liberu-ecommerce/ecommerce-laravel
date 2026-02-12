@@ -14,7 +14,7 @@
         "postcss": "^8.5.6",
         "postcss-nesting": "^13.0.2",
         "tailwindcss": "^4.1.14",
-        "vite": "^7.1.9"
+        "vite": "^7.2.4"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.1.0",
