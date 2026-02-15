@@ -123,6 +123,41 @@ class Product extends Model implements Orderable
         return $this->hasMany(AnalyticsEvent::class);
     }
 
+    public function crossSells()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_cross_sells',
+            'product_id',
+            'cross_sell_product_id'
+        )->withTimestamps()->orderBy('sort_order');
+    }
+
+    public function upsells()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_upsells',
+            'product_id',
+            'upsell_product_id'
+        )->withTimestamps()->orderBy('sort_order');
+    }
+
+    public function relatedProducts()
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_related',
+            'product_id',
+            'related_product_id'
+        )->withTimestamps()->orderBy('sort_order');
+    }
+
+    public function taxClass()
+    {
+        return $this->belongsTo(TaxClass::class);
+    }
+
     public function isDownloadable(): bool
     {
         return $this->is_downloadable && $this->downloadable()->exists();
