@@ -460,7 +460,7 @@ $quote = QuoteRequest::create([
 
 ## Database Migrations
 
-All migrations are located in `database/migrations/` with the prefix `2024_02_15_*`:
+All migrations are located in `database/migrations/` with the prefix `2024_02_15_*` (representing the original implementation date). When running migrations, Laravel will execute them in order based on their timestamps:
 
 1. `000001_create_tax_tables.php` - Tax system
 2. `000002_create_product_relations_tables.php` - Cross-sells/upsells
@@ -485,16 +485,33 @@ php artisan migrate
 
 ## Configuration
 
-Add to your `.env` file:
+Add to your `config/ecommerce.php` file (create if it doesn't exist):
+
+```php
+<?php
+
+return [
+    // Tax settings
+    'display_prices_with_tax' => env('TAX_DISPLAY_PRICES_WITH_TAX', false),
+    
+    // Currency settings
+    'default_currency' => env('DEFAULT_CURRENCY', 'USD'),
+    
+    // Loyalty program
+    'loyalty_enabled' => env('LOYALTY_ENABLED', true),
+];
+```
+
+Then add to your `.env` file:
 
 ```env
-# Tax settings
+# Tax settings - Display prices including tax
 TAX_DISPLAY_PRICES_WITH_TAX=false
 
-# Currency settings
+# Currency settings - Default store currency
 DEFAULT_CURRENCY=USD
 
-# Loyalty program
+# Loyalty program - Enable/disable loyalty rewards
 LOYALTY_ENABLED=true
 ```
 

@@ -69,7 +69,7 @@ class Currency extends Model
      */
     public function convertToBase(float $amount): float
     {
-        if ($this->exchange_rate == 0) {
+        if ($this->exchange_rate === 0.0 || $this->exchange_rate < 0.000001) {
             return 0;
         }
         return round($amount / $this->exchange_rate, 2);
