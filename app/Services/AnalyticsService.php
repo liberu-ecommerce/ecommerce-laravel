@@ -6,7 +6,6 @@ use App\Models\AnalyticsEvent;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
-use App\Models\InventoryItem;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 

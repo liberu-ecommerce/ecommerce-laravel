@@ -2,11 +2,9 @@
 
 namespace App\Filament\Admin\Widgets;
 
-use App\Services\AnalyticsService;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class TopProductsWidget extends BaseWidget
