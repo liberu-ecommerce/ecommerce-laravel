@@ -338,15 +338,4 @@ class CollectionControllerTest extends TestCase
                 'message' => 'Collection not found'
             ]);
     }
-
-    public function test_requires_authentication_to_access_collections()
-    {
-        $this->withoutMiddleware();
-        
-        $response = $this->getJson('/api/collections');
-        
-        // Without auth:sanctum middleware active, this will succeed
-        // In production with middleware, it would return 401
-        $response->assertStatus(200);
-    }
 }

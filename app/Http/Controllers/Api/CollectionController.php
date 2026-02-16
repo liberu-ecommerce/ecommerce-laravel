@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -124,7 +125,7 @@ class CollectionController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
-            'slug' => 'sometimes|string|max:255|unique:collections,slug,' . $id,
+            'slug' => ['sometimes', 'string', 'max:255', Rule::unique('collections', 'slug')->ignore($id)],
             'description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
         ]);
