@@ -14,7 +14,8 @@ use App\Models\InventoryLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
-use App\Models\Product; // Add this line to import the Product model
+use App\Models\Product;
+use App\Notifications\OrderConfirmationNotification;
 
 class CheckoutController extends Controller
 {
@@ -146,6 +147,10 @@ class CheckoutController extends Controller
 
         $order->update(['status' => 'paid']);
 
+        // Send order confirmation email
+        Notification::route('mail', $order->customer_email)
+            ->notify(new OrderConfirmationNotification($order));
+
         // If dropshipping, queue supplier order placement
         if ($order->is_dropshipping) {
             try {
@@ -182,7 +187,19 @@ class CheckoutController extends Controller
         // Update inventory after successful payment
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
+            $oldInventory = $product->inventory_count;
             $product->decrement('inventory_count', $item['quantity']);
+            
+            // Log inventory change
+            InventoryLog::create([
+                'product_id' => $productId,
+                'quantity_change' => -$item['quantity'],
+                'old_quantity' => $oldInventory,
+                'new_quantity' => $oldInventory - $item['quantity'],
+                'reason' => 'order',
+                'reference_id' => $order->id,
+                'reference_type' => 'App\Models\Order',
+            ]);
         }
 
         // Clear cart

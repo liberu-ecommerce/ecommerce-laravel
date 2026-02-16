@@ -17,9 +17,15 @@ class ShippingController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'base_rate' => 'required|numeric|min:0',
+            'weight_rate' => 'nullable|numeric|min:0',
+            'max_weight' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'required|string|max:255',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        $validatedData['is_active'] = $request->has('is_active');
 
         ShippingMethod::create($validatedData);
 
@@ -30,9 +36,15 @@ class ShippingController extends Controller
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
+            'description' => 'nullable|string',
+            'base_rate' => 'required|numeric|min:0',
+            'weight_rate' => 'nullable|numeric|min:0',
+            'max_weight' => 'nullable|numeric|min:0',
             'estimated_delivery_time' => 'required|string|max:255',
+            'is_active' => 'nullable|boolean',
         ]);
+
+        $validatedData['is_active'] = $request->has('is_active');
 
         $shippingMethod->update($validatedData);
 
