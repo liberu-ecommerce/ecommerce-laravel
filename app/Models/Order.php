@@ -19,6 +19,7 @@ class Order extends Model
         'order_date',
         'total_amount',
         'shipping_cost',
+        'tax_amount',
         'payment_status',
         'shipping_status',
         'shipping_address',
@@ -38,6 +39,7 @@ class Order extends Model
         'supplier_response' => 'array',
         'is_dropshipping' => 'boolean',
         'shipping_cost' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
     ];
 

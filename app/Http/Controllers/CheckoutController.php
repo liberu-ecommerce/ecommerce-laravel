@@ -15,15 +15,17 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
 use App\Models\Product;
-use App\Notifications\OrderConfirmationNotification;
+use App\Services\TaxService;
 
 class CheckoutController extends Controller
 {
     protected $shippingService;
+    protected $taxService;
 
-    public function __construct(ShippingService $shippingService)
+    public function __construct(ShippingService $shippingService, TaxService $taxService)
     {
         $this->shippingService = $shippingService;
+        $this->taxService = $taxService;
     }
 
     public function initiateCheckout(Request $request)
@@ -49,7 +51,7 @@ class CheckoutController extends Controller
             'cart' => $cart,
             'shippingMethods' => $shippingMethods,
             'isGuest' => $isGuest,
-            'total' => $subtotal,
+            'subtotal' => $subtotal,
             'hasPhysicalProducts' => $hasPhysicalProducts,
         ]);
     }
@@ -100,7 +102,10 @@ class CheckoutController extends Controller
                 $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
         }
 
-        $totalAmount = $subtotal + $shippingCost;
+        // Calculate tax based on shipping address
+        $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address);
+
+        $totalAmount = $subtotal + $shippingCost + $taxAmount;
 
         // Create order
         $order = Order::create([
@@ -110,6 +115,7 @@ class CheckoutController extends Controller
             'payment_method' => $request->payment_method,
             'total_amount' => $totalAmount,
             'shipping_cost' => $shippingCost,
+            'tax_amount' => $taxAmount,
             'status' => 'pending',
             'is_dropshipping' => $request->has('dropship'),
             'recipient_name' => $request->recipient_name,
@@ -179,8 +185,24 @@ class CheckoutController extends Controller
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
             if ($item['is_downloadable']) {
-                $downloadLink = route('download.generate-link', $productId);
-                // Store download link in order items or send via email
+                $product = Product::find($productId);
+                $orderItem = $order->items()->where('product_id', $productId)->first();
+                
+                if ($orderItem && $product) {
+                    // Generate secure download link with expiration (30 days)
+                    $token = \Illuminate\Support\Str::random(64);
+                    $downloadLink = route('download.serve-file', [
+                        'category' => $product->productCategory->id ?? 'general',
+                        'product' => $product->id,
+                        'token' => $token
+                    ]);
+                    
+                    $orderItem->update([
+                        'download_link' => $token, // Store token, not full URL
+                        'download_expires_at' => now()->addDays(30),
+                        'download_count' => 0,
+                    ]);
+                }
             }
         }
         
