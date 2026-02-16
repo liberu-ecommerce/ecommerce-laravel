@@ -11,6 +11,7 @@ use PayPal\Api\Payer;
 use PayPal\Api\Payment;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\Transaction;
+use PayPal\Api\RefundRequest;
 use Illuminate\Support\Facades\Config;
 
 class PayPalGateway implements PaymentGatewayInterface
@@ -68,8 +69,38 @@ class PayPalGateway implements PaymentGatewayInterface
 
     public function refundPayment(string $transactionId, float $amount): array
     {
-        // Implement PayPal refund logic here
-        // This is a placeholder implementation
-        return ['success' => true, 'refund_id' => 'paypal_refund_' . uniqid()];
+        try {
+            // Retrieve the sale transaction
+            $sale = \PayPal\Api\Sale::get($transactionId, $this->apiContext);
+            
+            // Create refund object
+            $refund = new \PayPal\Api\RefundRequest();
+            $refundAmount = new Amount();
+            $refundAmount->setCurrency('USD')
+                        ->setTotal($amount);
+            $refund->setAmount($refundAmount);
+            
+            // Execute the refund
+            $refundedSale = $sale->refundSale($refund, $this->apiContext);
+            
+            if ($refundedSale->getState() === 'completed') {
+                return [
+                    'success' => true,
+                    'refund_id' => $refundedSale->getId(),
+                    'status' => $refundedSale->getState()
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'error' => 'Refund not completed',
+                'status' => $refundedSale->getState()
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 }

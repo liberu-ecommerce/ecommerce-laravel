@@ -11,7 +11,11 @@ class InventoryLog extends Model
     protected $fillable = [
         'product_id',
         'quantity_change',
+        'old_quantity',
+        'new_quantity',
         'reason',
+        'reference_id',
+        'reference_type',
     ];
 
     public function product()

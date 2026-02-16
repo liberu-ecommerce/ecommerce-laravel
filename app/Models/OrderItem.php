@@ -16,10 +16,34 @@ class OrderItem extends Model
         'product_id',
         'quantity',
         'price',
+        'download_link',
+        'download_expires_at',
+        'download_count',
     ];
 
-    public function products()
+    protected $casts = [
+        'download_expires_at' => 'datetime',
+    ];
+
+    public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    /**
+     * Check if the download link is still valid
+     */
+    public function isDownloadValid(): bool
+    {
+        if (!$this->download_link || !$this->download_expires_at) {
+            return false;
+        }
+        
+        return $this->download_expires_at->isFuture();
     }
 }

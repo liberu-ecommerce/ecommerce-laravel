@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use App\Models\ShippingMethod;
 use App\Services\ShippingService;
 use App\Services\PaymentGatewayService;
@@ -14,15 +15,21 @@ use App\Models\InventoryLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
-use App\Models\Product; // Add this line to import the Product model
+use App\Models\Product;
+use App\Services\TaxService;
+use App\Services\CouponService;
 
 class CheckoutController extends Controller
 {
     protected $shippingService;
+    protected $taxService;
+    protected $couponService;
 
-    public function __construct(ShippingService $shippingService)
+    public function __construct(ShippingService $shippingService, TaxService $taxService, CouponService $couponService)
     {
         $this->shippingService = $shippingService;
+        $this->taxService = $taxService;
+        $this->couponService = $couponService;
     }
 
     public function initiateCheckout(Request $request)
@@ -48,7 +55,7 @@ class CheckoutController extends Controller
             'cart' => $cart,
             'shippingMethods' => $shippingMethods,
             'isGuest' => $isGuest,
-            'total' => $subtotal,
+            'subtotal' => $subtotal,
             'hasPhysicalProducts' => $hasPhysicalProducts,
         ]);
     }
@@ -99,7 +106,22 @@ class CheckoutController extends Controller
                 $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
         }
 
-        $totalAmount = $subtotal + $shippingCost;
+        // Apply coupon discount if available
+        $discountAmount = 0;
+        $couponId = null;
+        $couponCode = null;
+        $couponData = Session::get('coupon');
+        if ($couponData) {
+            $discountAmount = $couponData['discount'] ?? 0;
+            $couponId = $couponData['coupon_id'] ?? null;
+            $couponCode = $couponData['code'] ?? null;
+        }
+
+        // Calculate tax based on shipping address (after discount)
+        $taxableAmount = max(0, $subtotal - $discountAmount);
+        $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address);
+
+        $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
 
         // Create order
         $order = Order::create([
@@ -109,6 +131,9 @@ class CheckoutController extends Controller
             'payment_method' => $request->payment_method,
             'total_amount' => $totalAmount,
             'shipping_cost' => $shippingCost,
+            'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'coupon_code' => $couponCode,
             'status' => 'pending',
             'is_dropshipping' => $request->has('dropship'),
             'recipient_name' => $request->recipient_name,
@@ -146,6 +171,10 @@ class CheckoutController extends Controller
 
         $order->update(['status' => 'paid']);
 
+        // Send order confirmation email
+        Notification::route('mail', $order->customer_email)
+            ->notify(new OrderConfirmationNotification($order));
+
         // If dropshipping, queue supplier order placement
         if ($order->is_dropshipping) {
             try {
@@ -174,19 +203,63 @@ class CheckoutController extends Controller
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
             if ($item['is_downloadable']) {
-                $downloadLink = route('download.generate-link', $productId);
-                // Store download link in order items or send via email
+                $product = Product::with('productCategory')->find($productId);
+                $orderItem = $order->items()->where('product_id', $productId)->first();
+                
+                if ($orderItem && $product) {
+                    // Generate secure download link with expiration (30 days)
+                    $token = Str::random(64);
+                    $categoryId = $product->productCategory ? $product->productCategory->id : 'general';
+                    $downloadLink = route('download.serve-file', [
+                        'category' => $categoryId,
+                        'product' => $product->id,
+                        'token' => $token
+                    ]);
+                    
+                    $orderItem->update([
+                        'download_link' => $token, // Store token, not full URL
+                        'download_expires_at' => now()->addDays(30),
+                        'download_count' => 0,
+                    ]);
+                }
             }
         }
         
-        // Update inventory after successful payment
+        // Update inventory after successful payment (with atomic operations)
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
-            $product->decrement('inventory_count', $item['quantity']);
+            $oldInventory = $product->inventory_count;
+            
+            // Atomic decrement with check to prevent negative inventory
+            $affected = Product::where('id', $productId)
+                ->where('inventory_count', '>=', $item['quantity'])
+                ->decrement('inventory_count', $item['quantity']);
+            
+            if ($affected === 0) {
+                // Inventory insufficient - this shouldn't happen as we checked earlier
+                // Log the issue but don't fail the order
+                \Log::warning("Inventory insufficient for product {$productId} during order {$order->id}");
+                continue;
+            }
+            
+            // Reload to get the new inventory count
+            $product->refresh();
+            
+            // Log inventory change
+            InventoryLog::create([
+                'product_id' => $productId,
+                'quantity_change' => -$item['quantity'],
+                'old_quantity' => $oldInventory,
+                'new_quantity' => $product->inventory_count,
+                'reason' => 'order',
+                'reference_id' => $order->id,
+                'reference_type' => 'App\Models\Order',
+            ]);
         }
 
-        // Clear cart
+        // Clear cart and coupon
         Session::forget('cart');
+        Session::forget('coupon');
         
         return redirect()->route('checkout.confirmation', ['order' => $order->id])
             ->with('success', 'Order placed successfully!');
