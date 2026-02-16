@@ -203,14 +203,15 @@ class CheckoutController extends Controller
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
             if ($item['is_downloadable']) {
-                $product = Product::find($productId);
+                $product = Product::with('productCategory')->find($productId);
                 $orderItem = $order->items()->where('product_id', $productId)->first();
                 
                 if ($orderItem && $product) {
                     // Generate secure download link with expiration (30 days)
                     $token = Str::random(64);
+                    $categoryId = $product->productCategory ? $product->productCategory->id : 'general';
                     $downloadLink = route('download.serve-file', [
-                        'category' => $product->productCategory->id ?? 'general',
+                        'category' => $categoryId,
                         'product' => $product->id,
                         'token' => $token
                     ]);
@@ -224,18 +225,32 @@ class CheckoutController extends Controller
             }
         }
         
-        // Update inventory after successful payment
+        // Update inventory after successful payment (with atomic operations)
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
             $oldInventory = $product->inventory_count;
-            $product->decrement('inventory_count', $item['quantity']);
+            
+            // Atomic decrement with check to prevent negative inventory
+            $affected = Product::where('id', $productId)
+                ->where('inventory_count', '>=', $item['quantity'])
+                ->decrement('inventory_count', $item['quantity']);
+            
+            if ($affected === 0) {
+                // Inventory insufficient - this shouldn't happen as we checked earlier
+                // Log the issue but don't fail the order
+                \Log::warning("Inventory insufficient for product {$productId} during order {$order->id}");
+                continue;
+            }
+            
+            // Reload to get the new inventory count
+            $product->refresh();
             
             // Log inventory change
             InventoryLog::create([
                 'product_id' => $productId,
                 'quantity_change' => -$item['quantity'],
                 'old_quantity' => $oldInventory,
-                'new_quantity' => $oldInventory - $item['quantity'],
+                'new_quantity' => $product->inventory_count,
                 'reason' => 'order',
                 'reference_id' => $order->id,
                 'reference_type' => 'App\Models\Order',

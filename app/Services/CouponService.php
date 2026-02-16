@@ -98,10 +98,11 @@ class CouponService
         $now = now();
         return Coupon::where('valid_from', '<=', $now)
             ->where('valid_until', '>=', $now)
-            ->where(function ($query) {
-                $query->whereNull('max_uses')
-                    ->orWhereRaw('(SELECT COUNT(*) FROM orders WHERE orders.coupon_code = coupons.code) < coupons.max_uses');
-            })
+            ->leftJoin('orders', 'coupons.code', '=', 'orders.coupon_code')
+            ->select('coupons.*')
+            ->selectRaw('COUNT(orders.id) as usage_count')
+            ->groupBy('coupons.id')
+            ->havingRaw('coupons.max_uses IS NULL OR COUNT(orders.id) < coupons.max_uses')
             ->get();
     }
 }
