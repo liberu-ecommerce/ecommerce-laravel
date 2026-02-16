@@ -187,3 +187,63 @@ Fork → create a focused branch → open a PR against `main`. Include tests for
 MIT — see the `LICENSE` file.
 
 If you'd like CLI commands, tests, or example API payloads added to the README, tell me which sections to expand.
+
+## Advanced Features (Latest from Shopify & Magento 2)
+
+This platform now includes enterprise-grade features inspired by the latest Shopify and Magento 2 (Adobe Commerce) releases:
+
+### Customer Intelligence
+- **Customer Segmentation** - Target customers based on behavior, LTV, and purchase history with rule-based conditions
+- **Customer Analytics & LTV** - Track lifetime value, retention scores, and predictive analytics
+- **Customer Metrics Dashboard** - Comprehensive customer behavior tracking and analysis
+
+### AI-Powered Personalization
+- **Product Recommendations** - Collaborative filtering, personalized, trending, and "also bought" suggestions
+- **Product Interaction Tracking** - Track views, cart adds, purchases for better insights
+- **Recommendation Engine** - Multiple recommendation types with scoring algorithms
+
+### Product Management
+- **Product Taxonomy** - Hierarchical categorization with custom attributes for better organization
+- **Product Performance Analytics** - Track views, conversions, and return rates per product
+- **Multi-location Inventory** - Advanced inventory management across multiple locations
+
+### Marketing & Conversion
+- **A/B Testing Framework** - Built-in testing with variant assignment and conversion tracking
+- **Abandoned Cart Recovery** - Automated campaigns with email/SMS triggers and discount codes
+- **Conversion Funnel Analytics** - Track customer journey and optimize conversion paths
+
+### Customer Experience
+- **Gift Registry** - Complete registry system for weddings, baby showers, and other events
+- **Loyalty & Rewards Program** - Points, tiers, and reward redemptions (from WooCommerce features)
+- **B2B Wholesale Pricing** - Tiered pricing, quote requests, and wholesale groups (from WooCommerce features)
+
+### Operations
+- **Product Bundles** - Create product kits with special pricing (from WooCommerce features)
+- **Refund & Return Management** - Full RMA system with inventory restocking (from WooCommerce features)
+- **Multi-currency Support** - Currency management with exchange rates (from WooCommerce features)
+- **Tax Management** - Location-based tax calculation (from WooCommerce features)
+
+📚 **Detailed Documentation**: See [SHOPIFY_MAGENTO_FEATURES.md](docs/SHOPIFY_MAGENTO_FEATURES.md) and [WOOCOMMERCE_FEATURES.md](docs/WOOCOMMERCE_FEATURES.md) for complete feature guides.
+
+### Console Commands
+
+```bash
+# Calculate customer segments
+php artisan segments:calculate
+
+# Generate product recommendations
+php artisan recommendations:generate
+
+# Update customer metrics (LTV, retention, etc.)
+php artisan metrics:update-customers
+```
+
+### Admin Panel
+
+Filament admin resources are available for managing:
+- Customer Segments (/admin/customer-segments)
+- Gift Registries
+- A/B Tests
+- Cart Recovery Campaigns
+- And all other features...
+
