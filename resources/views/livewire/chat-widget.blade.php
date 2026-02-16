@@ -1,4 +1,4 @@
-<div class="fixed bottom-4 right-4 z-50" x-data="chatWidget()" x-init="init()">
+<div class="fixed bottom-4 right-4 z-50">
     @if($isOpen)
         <!-- Chat Window -->
         <div class="bg-white rounded-lg shadow-2xl w-96 h-[500px] flex flex-col">
@@ -46,13 +46,13 @@
                 </div>
             @else
                 <!-- Chat Messages -->
-                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="chat-messages">
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="chat-messages-{{ $sessionId }}">
                     @if($isLoading)
                         <div class="flex justify-center items-center h-full">
                             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                     @else
-                        <div x-ref="messagesContainer">
+                        <div id="messages-container-{{ $sessionId }}">
                             <!-- Messages will be loaded here via JavaScript -->
                         </div>
                     @endif
@@ -92,159 +92,169 @@
 
 @push('scripts')
 <script>
-function chatWidget() {
-    return {
-        conversationId: null,
-        sessionId: @js($sessionId),
-        messages: [],
-        pollingInterval: null,
+(function() {
+    const sessionId = @js($sessionId);
+    let conversationId = null;
+    let messages = [];
+    let pollingInterval = null;
 
-        init() {
-            this.loadConversation();
-            this.startPolling();
+    async function loadConversation() {
+        try {
+            const response = await fetch(`/chat/session/${sessionId}`);
+            const data = await response.json();
             
-            // Listen for Livewire events
-            Livewire.on('chat-send-message', (data) => {
-                this.sendMessage(data[0].message);
+            if (data.conversation) {
+                conversationId = data.conversation.id;
+                messages = data.conversation.messages || [];
+                renderMessages();
+            }
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+        }
+    }
+
+    async function startChat() {
+        try {
+            const response = await fetch('/chat/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({})
             });
             
-            Livewire.on('chat-submit-rating', (data) => {
-                this.submitRating(data[0]);
+            const data = await response.json();
+            
+            if (data.success) {
+                conversationId = data.conversation.id;
+                messages = data.conversation.messages || [];
+                renderMessages();
+            }
+        } catch (error) {
+            console.error('Error starting chat:', error);
+        }
+    }
+
+    async function sendMessage(message) {
+        if (!conversationId) {
+            await startChat();
+        }
+
+        if (!message.trim()) return;
+
+        try {
+            const response = await fetch(`/chat/${conversationId}/message`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ message })
             });
-        },
-
-        async loadConversation() {
-            try {
-                const response = await fetch(`/chat/session/${this.sessionId}`);
-                const data = await response.json();
-                
-                if (data.conversation) {
-                    this.conversationId = data.conversation.id;
-                    this.messages = data.conversation.messages || [];
-                    this.renderMessages();
-                }
-            } catch (error) {
-                console.error('Error loading conversation:', error);
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                await loadMessages();
             }
-        },
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    }
 
-        async startChat() {
-            try {
-                const response = await fetch('/chat/start', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({})
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.conversationId = data.conversation.id;
-                    this.messages = data.conversation.messages || [];
-                    this.renderMessages();
-                }
-            } catch (error) {
-                console.error('Error starting chat:', error);
+    async function loadMessages() {
+        if (!conversationId) return;
+
+        try {
+            const response = await fetch(`/chat/${conversationId}/messages`);
+            const data = await response.json();
+            
+            if (data.success && data.conversation) {
+                messages = data.conversation.messages || [];
+                renderMessages();
             }
-        },
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
 
-        async sendMessage(message) {
-            if (!this.conversationId) {
-                await this.startChat();
-            }
+    function renderMessages() {
+        const container = document.getElementById(`messages-container-${sessionId}`);
+        if (!container) return;
 
-            if (!message.trim()) return;
-
-            try {
-                const response = await fetch(`/chat/${this.conversationId}/message`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({ message })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.loadMessages();
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-            }
-        },
-
-        async loadMessages() {
-            if (!this.conversationId) return;
-
-            try {
-                const response = await fetch(`/chat/${this.conversationId}/messages`);
-                const data = await response.json();
-                
-                if (data.success && data.conversation) {
-                    this.messages = data.conversation.messages || [];
-                    this.renderMessages();
-                }
-            } catch (error) {
-                console.error('Error loading messages:', error);
-            }
-        },
-
-        renderMessages() {
-            const container = this.$refs.messagesContainer;
-            if (!container) return;
-
-            container.innerHTML = this.messages.map(msg => {
-                const isAgent = msg.sender_type === 'agent' || msg.sender_type === 'system';
-                const bgColor = isAgent ? 'bg-blue-100' : 'bg-gray-200';
-                const alignment = isAgent ? 'items-start' : 'items-end';
-                
-                return `
-                    <div class="flex ${alignment}">
-                        <div class="${bgColor} rounded-lg p-3 max-w-[80%]">
-                            <p class="text-sm text-gray-800">${this.escapeHtml(msg.message)}</p>
-                            <span class="text-xs text-gray-500">${new Date(msg.created_at).toLocaleTimeString()}</span>
-                        </div>
+        container.innerHTML = messages.map(msg => {
+            const isAgent = msg.sender_type === 'agent' || msg.sender_type === 'system';
+            const bgColor = isAgent ? 'bg-blue-100' : 'bg-gray-200';
+            const alignment = isAgent ? 'items-start' : 'items-end';
+            
+            return `
+                <div class="flex ${alignment}">
+                    <div class="${bgColor} rounded-lg p-3 max-w-[80%]">
+                        <p class="text-sm text-gray-800">${escapeHtml(msg.message)}</p>
+                        <span class="text-xs text-gray-500">${new Date(msg.created_at).toLocaleTimeString()}</span>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
+        }).join('');
 
-            // Scroll to bottom
-            setTimeout(() => {
-                const messagesDiv = document.getElementById('chat-messages');
-                if (messagesDiv) {
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                }
-            }, 100);
-        },
+        // Scroll to bottom
+        setTimeout(() => {
+            const messagesDiv = document.getElementById(`chat-messages-${sessionId}`);
+            if (messagesDiv) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }, 100);
+    }
 
-        startPolling() {
-            this.pollingInterval = setInterval(() => {
-                if (this.conversationId && @js($isOpen)) {
-                    this.loadMessages();
-                }
-            }, 3000); // Poll every 3 seconds
-        },
+    function startPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+        
+        pollingInterval = setInterval(() => {
+            if (conversationId && {{ $isOpen ? 'true' : 'false' }}) {
+                loadMessages();
+            }
+        }, 3000); // Poll every 3 seconds
+    }
 
-        async submitRating(data) {
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Initialize
+    loadConversation();
+    startPolling();
+    
+    // Listen for Livewire events
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('chat-send-message', (data) => {
+            sendMessage(data[0].message);
+        });
+        
+        Livewire.on('chat-submit-rating', async (data) => {
             try {
-                await fetch(`/chat/${data.conversationId}/rating`, {
+                await fetch(`/chat/${data[0].conversationId}/rating`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
-                        rating: data.rating,
-                        feedback: data.feedback
+                        rating: data[0].rating,
+                        feedback: data[0].feedback
                     })
                 });
 
-                await fetch(`/chat/${data.conversationId}/close`, {
+                await fetch(`/chat/${data[0].conversationId}/close`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
@@ -253,19 +263,8 @@ function chatWidget() {
             } catch (error) {
                 console.error('Error submitting rating:', error);
             }
-        },
-
-        escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
-    };
-}
+        });
+    });
+})();
 </script>
 @endpush
