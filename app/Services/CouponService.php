@@ -98,9 +98,10 @@ class CouponService
         $now = now();
         return Coupon::where('valid_from', '<=', $now)
             ->where('valid_until', '>=', $now)
-            ->get()
-            ->filter(function ($coupon) {
-                return $coupon->isValid();
-            });
+            ->where(function ($query) {
+                $query->whereNull('max_uses')
+                    ->orWhereRaw('(SELECT COUNT(*) FROM orders WHERE orders.coupon_code = coupons.code) < coupons.max_uses');
+            })
+            ->get();
     }
 }

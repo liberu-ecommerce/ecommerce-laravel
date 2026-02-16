@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use App\Models\ShippingMethod;
 use App\Services\ShippingService;
 use App\Services\PaymentGatewayService;
@@ -207,7 +208,7 @@ class CheckoutController extends Controller
                 
                 if ($orderItem && $product) {
                     // Generate secure download link with expiration (30 days)
-                    $token = \Illuminate\Support\Str::random(64);
+                    $token = Str::random(64);
                     $downloadLink = route('download.serve-file', [
                         'category' => $product->productCategory->id ?? 'general',
                         'product' => $product->id,
