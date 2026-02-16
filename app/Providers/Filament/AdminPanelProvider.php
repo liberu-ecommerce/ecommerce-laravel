@@ -55,13 +55,21 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
-            ->discoverWidgets(in: app_path('Filament/Admin/Widgets/Home'), for: 'App\\Filament\\Admin\\Widgets\\Home')
+            ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\\Filament\\Admin\\Widgets')
             ->pages([
                 FilamentPage\Dashboard::class,
                 EditProfile::class,
                 // Pages\ApiTokenManagerPage::class,
             ])->widgets([
                 AccountWidget::class,
+                \App\Filament\Admin\Widgets\SalesOverviewWidget::class,
+                \App\Filament\Admin\Widgets\SalesTrendsChart::class,
+                \App\Filament\Admin\Widgets\TopProductsWidget::class,
+                \App\Filament\Admin\Widgets\CustomerDemographicsWidget::class,
+                \App\Filament\Admin\Widgets\CustomerGrowthWidget::class,
+                \App\Filament\Admin\Widgets\InventoryStatsWidget::class,
+                \App\Filament\Admin\Widgets\LowStockInventoryWidget::class,
+                \App\Filament\Admin\Widgets\RecentOrdersWidget::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
