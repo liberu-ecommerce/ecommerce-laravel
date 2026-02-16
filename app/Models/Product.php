@@ -248,12 +248,6 @@ class Product extends Model implements Orderable
         return $this->inventory_count <= $this->low_stock_threshold;
     }
 
-    public function getSlugAttribute($value)
-    {
-        // Return the database column if it exists, otherwise generate from name
-        return $value ?? Str::slug($this->name);
-    }
-
     public function getPrice(): float
     {
         if ($this->isFree()) {
