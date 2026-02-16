@@ -7,16 +7,19 @@ use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductCollection extends Model implements Orderable
 {
     use HasFactory;
     use IsTenantModel;
+    use SoftDeletes;
 
     protected $table = "collections";
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'price',
     ];
