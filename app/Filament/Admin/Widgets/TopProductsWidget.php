@@ -6,6 +6,8 @@ use App\Services\AnalyticsService;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class TopProductsWidget extends BaseWidget
 {
@@ -14,17 +16,23 @@ class TopProductsWidget extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $analyticsService = app(AnalyticsService::class);
-        $topProducts = $analyticsService->getTopProducts(10);
-
         return $table
             ->heading('Top 10 Products')
             ->query(
-                fn () => \Illuminate\Database\Eloquent\Builder::fromRawSql(
-                    'SELECT * FROM (' . collect($topProducts)->map(fn($p, $i) => 
-                        "SELECT {$p->id} as id, '{$p->name}' as name, {$p->total_quantity} as total_quantity, {$p->total_revenue} as total_revenue"
-                    )->implode(' UNION ALL ') . ') as t'
-                )
+                fn () => DB::table('order_items')
+                    ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                    ->join('products', 'order_items.product_id', '=', 'products.id')
+                    ->whereBetween('orders.order_date', [now()->subDays(30), now()])
+                    ->where('orders.payment_status', 'paid')
+                    ->select(
+                        'products.id',
+                        'products.name',
+                        DB::raw('SUM(order_items.quantity) as total_quantity'),
+                        DB::raw('SUM(order_items.price * order_items.quantity) as total_revenue')
+                    )
+                    ->groupBy('products.id', 'products.name')
+                    ->orderByDesc('total_revenue')
+                    ->limit(10)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
