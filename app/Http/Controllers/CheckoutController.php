@@ -16,16 +16,19 @@ use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
 use App\Models\Product;
 use App\Services\TaxService;
+use App\Services\CouponService;
 
 class CheckoutController extends Controller
 {
     protected $shippingService;
     protected $taxService;
+    protected $couponService;
 
-    public function __construct(ShippingService $shippingService, TaxService $taxService)
+    public function __construct(ShippingService $shippingService, TaxService $taxService, CouponService $couponService)
     {
         $this->shippingService = $shippingService;
         $this->taxService = $taxService;
+        $this->couponService = $couponService;
     }
 
     public function initiateCheckout(Request $request)
@@ -102,10 +105,22 @@ class CheckoutController extends Controller
                 $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
         }
 
-        // Calculate tax based on shipping address
+        // Apply coupon discount if available
+        $discountAmount = 0;
+        $couponId = null;
+        $couponCode = null;
+        $couponData = Session::get('coupon');
+        if ($couponData) {
+            $discountAmount = $couponData['discount'] ?? 0;
+            $couponId = $couponData['coupon_id'] ?? null;
+            $couponCode = $couponData['code'] ?? null;
+        }
+
+        // Calculate tax based on shipping address (after discount)
+        $taxableAmount = max(0, $subtotal - $discountAmount);
         $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address);
 
-        $totalAmount = $subtotal + $shippingCost + $taxAmount;
+        $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
 
         // Create order
         $order = Order::create([
@@ -116,6 +131,8 @@ class CheckoutController extends Controller
             'total_amount' => $totalAmount,
             'shipping_cost' => $shippingCost,
             'tax_amount' => $taxAmount,
+            'discount_amount' => $discountAmount,
+            'coupon_code' => $couponCode,
             'status' => 'pending',
             'is_dropshipping' => $request->has('dropship'),
             'recipient_name' => $request->recipient_name,
@@ -224,8 +241,9 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // Clear cart
+        // Clear cart and coupon
         Session::forget('cart');
+        Session::forget('coupon');
         
         return redirect()->route('checkout.confirmation', ['order' => $order->id])
             ->with('success', 'Order placed successfully!');

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\CouponService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -84,6 +85,42 @@ class CartController extends Controller
     public function clear()
     {
         Session::forget('cart');
+        Session::forget('coupon');
         return redirect()->back()->with('success', 'Cart cleared successfully!');
+    }
+
+    public function applyCoupon(Request $request, CouponService $couponService)
+    {
+        $request->validate([
+            'coupon_code' => 'required|string',
+        ]);
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            return redirect()->back()->with('error', 'Your cart is empty.');
+        }
+
+        $subtotal = collect($cart)->sum(function ($item) {
+            return $item['price'] * $item['quantity'];
+        });
+
+        $result = $couponService->validateAndApplyCoupon($request->coupon_code, $subtotal);
+
+        if ($result['valid']) {
+            Session::put('coupon', [
+                'code' => $request->coupon_code,
+                'discount' => $result['discount'],
+                'coupon_id' => $result['coupon']->id,
+            ]);
+            return redirect()->back()->with('success', $result['message']);
+        }
+
+        return redirect()->back()->with('error', $result['error']);
+    }
+
+    public function removeCoupon()
+    {
+        Session::forget('coupon');
+        return redirect()->back()->with('success', 'Coupon removed successfully!');
     }
 }
