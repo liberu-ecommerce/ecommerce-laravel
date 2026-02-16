@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DropshippingController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CollectionController;
 
 /*
@@ -28,6 +29,14 @@ Route::middleware('auth:sanctum')->prefix('dropshipping')->group(function () {
     Route::post('/track-order', [DropshippingController::class, 'trackOrder']);
 });
 
+// Product Management API routes
+Route::middleware('auth:sanctum')->prefix('products')->group(function () {
+    Route::get('/', [ProductController::class, 'index']);
+    Route::post('/', [ProductController::class, 'store']);
+    Route::get('/{identifier}', [ProductController::class, 'show']);
+    Route::put('/{id}', [ProductController::class, 'update']);
+    Route::patch('/{id}', [ProductController::class, 'update']);
+    Route::delete('/{id}', [ProductController::class, 'destroy']);
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
     Route::get('/', [CollectionController::class, 'index']);
