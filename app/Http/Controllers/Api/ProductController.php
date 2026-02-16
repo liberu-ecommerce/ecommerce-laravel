@@ -27,11 +27,17 @@ class ProductController extends Controller
         // Apply search filter if provided
         if ($request->has('search')) {
             $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
-                    ->orWhere('short_description', 'like', '%' . $search . '%');
-            });
+            // Sanitize search input to prevent SQL injection
+            $search = strip_tags($search);
+            $search = preg_replace('/[^\w\s\-]/', '', $search);
+            
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%')
+                        ->orWhere('short_description', 'like', '%' . $search . '%');
+                });
+            }
         }
 
         // Apply category filter if provided
@@ -70,14 +76,13 @@ class ProductController extends Controller
      */
     public function show(string $identifier): JsonResponse
     {
-        // Try to find by ID first, then by slug
-        $product = Product::where('id', $identifier)
-            ->orWhere(function ($query) use ($identifier) {
-                // Generate slug from identifier and match
-                $query->whereRaw('LOWER(REPLACE(name, " ", "-")) = ?', [strtolower($identifier)]);
-            })
-            ->with(['category', 'images', 'variants', 'tags', 'review', 'rating'])
-            ->first();
+        // Try to find by ID if identifier is numeric, otherwise by slug
+        $product = is_numeric($identifier)
+            ? Product::with(['category', 'images', 'variants', 'tags', 'review', 'rating'])
+                ->find($identifier)
+            : Product::with(['category', 'images', 'variants', 'tags', 'review', 'rating'])
+                ->where('slug', $identifier)
+                ->first();
 
         if (!$product) {
             return response()->json([

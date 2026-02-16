@@ -22,6 +22,7 @@ class Product extends Model implements Orderable
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'short_description',
         'long_description',
@@ -167,6 +168,20 @@ class Product extends Model implements Orderable
 
     protected static function booted()
     {
+        static::creating(function ($product) {
+            // Auto-generate slug if not provided
+            if (empty($product->slug)) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+
+        static::updating(function ($product) {
+            // Update slug if name changed and slug not manually set
+            if ($product->isDirty('name') && !$product->isDirty('slug')) {
+                $product->slug = Str::slug($product->name);
+            }
+        });
+
         static::saved(function ($product) {
             if ($product->is_downloadable && $product->downloadable_file) {
                 $product->downloadable()->updateOrCreate(
@@ -233,9 +248,10 @@ class Product extends Model implements Orderable
         return $this->inventory_count <= $this->low_stock_threshold;
     }
 
-    public function getSlugAttribute()
+    public function getSlugAttribute($value)
     {
-        return Str::slug($this->name);
+        // Return the database column if it exists, otherwise generate from name
+        return $value ?? Str::slug($this->name);
     }
 
     public function getPrice(): float
