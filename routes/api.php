@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DropshippingController;
+use App\Http\Controllers\Api\CollectionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,4 +26,15 @@ Route::middleware('auth:sanctum')->prefix('dropshipping')->group(function () {
     Route::post('/check-availability', [DropshippingController::class, 'checkAvailability']);
     Route::post('/place-order', [DropshippingController::class, 'placeOrder']);
     Route::post('/track-order', [DropshippingController::class, 'trackOrder']);
+});
+
+// Collection API routes
+Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
+    Route::get('/', [CollectionController::class, 'index']);
+    Route::post('/', [CollectionController::class, 'store']);
+    Route::get('/{idOrSlug}', [CollectionController::class, 'show']);
+    Route::put('/{id}', [CollectionController::class, 'update']);
+    Route::post('/{id}/products', [CollectionController::class, 'addProducts']);
+    Route::delete('/{id}/products', [CollectionController::class, 'removeProducts']);
+    Route::delete('/{id}', [CollectionController::class, 'destroy']);
 });
