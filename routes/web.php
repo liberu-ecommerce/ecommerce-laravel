@@ -20,6 +20,7 @@ use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController; // New controller for cart
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,5 +134,22 @@ Route::view('/shop', 'shop')->name('shop');
 Route::view('/account', 'account')->middleware('auth')->name('account');
 
 // Blog routes
+
+// Chat routes
+Route::prefix('chat')->group(function () {
+    Route::post('/start', [ChatController::class, 'start'])->name('chat.start');
+    Route::get('/session/{sessionId}', [ChatController::class, 'getBySession'])->name('chat.session');
+    Route::post('/{conversationId}/message', [ChatController::class, 'sendMessage'])->name('chat.message');
+    Route::get('/{conversationId}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::post('/{conversationId}/close', [ChatController::class, 'close'])->name('chat.close');
+    Route::post('/{conversationId}/rating', [ChatController::class, 'submitRating'])->name('chat.rating');
+    
+    // Agent routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/agent/conversations', [ChatController::class, 'agentConversations'])->name('chat.agent.conversations');
+        Route::post('/{conversationId}/assign', [ChatController::class, 'assignAgent'])->name('chat.assign');
+        Route::get('/agent/next', [ChatController::class, 'nextQueued'])->name('chat.agent.next');
+    });
+});
 
 require __DIR__.'/socialstream.php';
