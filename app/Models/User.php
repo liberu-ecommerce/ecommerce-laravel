@@ -163,7 +163,7 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
             ->withTimestamps();
     }
 
-    public function customerMetric()
+    public function customerMetric(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(CustomerMetric::class);
     }
