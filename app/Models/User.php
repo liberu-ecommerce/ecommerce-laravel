@@ -150,4 +150,31 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
     {
         return $this->belongsToMany(Team::class)->withPivot(['role']);
     }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function customerSegments(): BelongsToMany
+    {
+        return $this->belongsToMany(CustomerSegment::class, 'customer_segment_members', 'user_id', 'segment_id')
+            ->withPivot('added_at')
+            ->withTimestamps();
+    }
+
+    public function customerMetric(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CustomerMetric::class);
+    }
+
+    public function giftRegistries(): HasMany
+    {
+        return $this->hasMany(GiftRegistry::class);
+    }
+
+    public function productInteractions(): HasMany
+    {
+        return $this->hasMany(ProductInteraction::class);
+    }
 }
