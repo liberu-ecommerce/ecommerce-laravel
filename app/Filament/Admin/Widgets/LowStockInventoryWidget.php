@@ -39,11 +39,11 @@ class LowStockInventoryWidget extends BaseWidget
                     ->label('Product Name')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('inventory_count')
-                    ->label('Current Stock')
-                    ->numeric()
-                    ->sortable()
-                    ->color('danger'),
+                // Tables\Columns\TextColumn::make('inventory_count')
+                //     ->label('Current Stock')
+                //     ->numeric()
+                //     ->sortable()
+                //     ->color('danger'),
                 Tables\Columns\TextColumn::make('low_stock_threshold')
                     ->label('Threshold')
                     ->numeric()

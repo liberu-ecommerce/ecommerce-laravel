@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Widgets;
 
+use App\Models\OrderItem;
+use App\Models\Product;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -17,21 +19,29 @@ class TopProductsWidget extends BaseWidget
         return $table
             ->heading('Top 10 Products')
             ->query(
-                fn () => DB::table('order_items')
-                    ->join('orders', 'order_items.order_id', '=', 'orders.id')
-                    ->join('products', 'order_items.product_id', '=', 'products.id')
-                    ->whereBetween('orders.order_date', [now()->subDays(30), now()])
-                    ->where('orders.payment_status', 'paid')
-                    ->select(
-                        'products.id',
-                        'products.name',
-                        DB::raw('SUM(order_items.quantity) as total_quantity'),
-                        DB::raw('SUM(order_items.price * order_items.quantity) as total_revenue')
+                fn() =>
+                Product::query()
+                    ->fromSub(
+                        OrderItem::query()
+                            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+                            ->join('products', 'order_items.product_id', '=', 'products.id')
+                            ->whereBetween('orders.order_date', [now()->subDays(30), now()])
+                            ->where('orders.payment_status', 'paid')
+                            ->select(
+                                'products.id',
+                                'products.name',
+                                'products.deleted_at',
+                                DB::raw('SUM(order_items.quantity) AS total_quantity'),
+                                DB::raw('SUM(order_items.price * order_items.quantity) AS total_revenue')
+                            )
+                            ->groupBy('products.id', 'products.name', 'products.deleted_at'),
+                        'products'
                     )
-                    ->groupBy('products.id', 'products.name')
                     ->orderByDesc('total_revenue')
                     ->limit(10)
             )
+
+
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Product Name')

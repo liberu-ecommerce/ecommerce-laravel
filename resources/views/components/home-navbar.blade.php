@@ -105,7 +105,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"></path>
                         </svg>
                         <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center transform transition-transform group-hover:scale-110">
-                            @livewire('cart-count')
+                            <livewire:cart-count />
                         </span>
                     </a>
                 </div>

@@ -138,17 +138,25 @@ class AnalyticsService
             ->toArray();
 
         // Customer segmentation by order count
-        $customerSegments = DB::table('customers')
-            ->leftJoin('orders', 'customers.id', '=', 'orders.customer_id')
-            ->select(
-                DB::raw("CASE 
-                    WHEN COUNT(orders.id) = 0 THEN 'No Orders'
-                    WHEN COUNT(orders.id) = 1 THEN 'One-time Buyer'
-                    WHEN COUNT(orders.id) BETWEEN 2 AND 5 THEN 'Regular Customer'
-                    WHEN COUNT(orders.id) > 5 THEN 'Loyal Customer'
-                END as segment"),
-                DB::raw('COUNT(DISTINCT customers.id) as customer_count')
+        $customerSegments = DB::query()
+            ->fromSub(
+                DB::table('customers')
+                    ->leftJoin('orders', 'customers.id', '=', 'orders.customer_id')
+                    ->select(
+                        'customers.id',
+                        DB::raw("
+                            CASE
+                                WHEN COUNT(orders.id) = 0 THEN 'No Orders'
+                                WHEN COUNT(orders.id) = 1 THEN 'One-time Buyer'
+                                WHEN COUNT(orders.id) BETWEEN 2 AND 5 THEN 'Regular Customer'
+                                WHEN COUNT(orders.id) > 5 THEN 'Loyal Customer'
+                            END AS segment
+                        ")
+                    )
+                    ->groupBy('customers.id'),
+                'segmented_customers'
             )
+            ->select('segment', DB::raw('COUNT(*) AS customer_count'))
             ->groupBy('segment')
             ->get()
             ->toArray();
