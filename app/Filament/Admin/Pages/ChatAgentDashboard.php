@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class ChatAgentDashboard extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-chat-bubble-bottom-center-text';
 
-    protected static string $view = 'filament.admin.pages.chat-agent-dashboard';
+    protected string $view = 'filament.admin.pages.chat-agent-dashboard';
 
-    protected static ?string $navigationGroup = 'Customer Support';
+    protected static string | \UnitEnum | null $navigationGroup = 'Customer Support';
 
     protected static ?string $navigationLabel = 'Agent Dashboard';
 

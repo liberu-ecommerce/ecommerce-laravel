@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private string $table = 'product_variation';
+    private string $table = 'product_variations';
     /**
      * Run the migrations.
      */

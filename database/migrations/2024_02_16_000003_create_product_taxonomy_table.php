@@ -63,7 +63,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->unique(['product_id', 'taxonomy_attribute_id']);
-            $table->index('value');
+            // $table->index('value');
         });
     }
 

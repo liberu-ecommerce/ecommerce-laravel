@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerGrowthWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Customer Growth';
+    protected ?string $heading = 'Customer Growth';
     protected static ?int $sort = 8;
 
     protected function getData(): array

@@ -4,9 +4,15 @@ namespace App\Filament\Admin\Resources\TaxClasses;
 
 use App\Filament\Admin\Resources\TaxClasses\Pages;
 use App\Models\TaxClass;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -14,17 +20,17 @@ class TaxClassResource extends Resource
 {
     protected static ?string $model = TaxClass::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calculator';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calculator';
 
-    protected static ?string $navigationGroup = 'Settings';
+    protected static string | \UnitEnum | null $navigationGroup = 'Settings';
 
     protected static ?int $navigationSort = 10;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
+        return $schema
+            ->components([
+                Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
@@ -79,13 +85,13 @@ class TaxClassResource extends Resource
                     ->falseLabel('Inactive only')
                     ->native(false),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

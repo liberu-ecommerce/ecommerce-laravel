@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class SalesTrendsChart extends ChartWidget
 {
-    protected static ?string $heading = 'Sales Trends';
+    protected ?string $heading = 'Sales Trends';
     protected static ?int $sort = 2;
 
     protected function getData(): array

@@ -7,7 +7,7 @@ use Filament\Widgets\ChartWidget;
 
 class CustomerDemographicsWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Customer Segments';
+    protected ?string $heading = 'Customer Segments';
     protected static ?int $sort = 4;
     protected int | string | array $columnSpan = 1;
 

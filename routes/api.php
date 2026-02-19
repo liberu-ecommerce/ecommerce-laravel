@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->prefix('products')->group(function () {
     Route::put('/{id}', [ProductController::class, 'update']);
     Route::patch('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
+});
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
     Route::get('/', [CollectionController::class, 'index']);
