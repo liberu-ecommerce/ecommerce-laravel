@@ -38,6 +38,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Product routes
 Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Category routes
