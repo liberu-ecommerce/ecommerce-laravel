@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsTableSeeder extends Seeder
 {
@@ -14,10 +16,12 @@ class PermissionsTableSeeder extends Seeder
      */
     public function run()
     {
-        
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
+        Schema::disableForeignKeyConstraints();
         \DB::table('permissions')->delete();
-        
+        Schema::enableForeignKeyConstraints();
+
         \DB::table('permissions')->insert(array (
             0 => 
             array (
@@ -1388,7 +1392,7 @@ class PermissionsTableSeeder extends Seeder
                 'updated_at' => '2024-09-04 14:20:26',
             ),
         ));
-        
-        
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
     }
 }
