@@ -136,7 +136,7 @@ class CheckoutController extends Controller
             'discount_amount' => $discountAmount,
             'coupon_code' => $couponCode,
             'status' => 'pending',
-            'is_dropshipping' => $request->has('dropship'),
+            'is_dropshipped' => $request->has('dropship'),
             'recipient_name' => $request->recipient_name,
             'recipient_email' => $request->recipient_email,
             'gift_message' => $request->gift_message,
@@ -177,7 +177,7 @@ class CheckoutController extends Controller
             ->notify(new OrderConfirmationNotification($order));
 
         // If dropshipping, queue supplier order placement
-        if ($order->is_dropshipping) {
+        if ($order->is_dropshipped) {
             try {
                 $supplierId = $request->input('supplier_id', 'dropxl');
                 // persist chosen supplier so admin can see it immediately

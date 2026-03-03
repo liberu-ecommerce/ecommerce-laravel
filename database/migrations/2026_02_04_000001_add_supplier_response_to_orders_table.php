@@ -14,7 +14,7 @@ return new class extends Migration
 
         Schema::table('orders', function (Blueprint $table) {
             if (!Schema::hasColumn('orders', 'supplier_response')) {
-                $table->json('supplier_response')->nullable()->after('supplier_reference');
+                $table->json('supplier_response')->nullable()->after('supplier_order_reference');
             }
         });
     }
