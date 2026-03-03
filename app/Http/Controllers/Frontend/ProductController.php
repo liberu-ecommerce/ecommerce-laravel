@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\BrowsingHistory;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $products = QueryBuilder::for(Product::class)
+        $query = QueryBuilder::for(Product::class)
             ->allowedFilters([
                 'name',
                 'price',
@@ -33,11 +34,57 @@ class ProductController extends Controller
                 AllowedFilter::scope('price_min'),
                 AllowedFilter::scope('price_max'),
             ])
-            ->allowedSorts(['name', 'price', 'created_at'])
-            ->paginate(config('pagination.per_page'))
+            ->allowedSorts(['name', 'price', 'created_at']);
+
+        if ($request->filled('keyword') || $request->filled('search')) {
+            $keyword = $request->input('keyword') ?? $request->input('search');
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('short_description', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        $products = $query->paginate(config('pagination.per_page'))
             ->appends($request->query());
 
         return view('products.index', compact('products'));
+    }
+
+    public function search(Request $request)
+    {
+        $keyword = $request->input('keyword', '');
+        $minPrice = $request->input('min_price');
+        $maxPrice = $request->input('max_price');
+        $categoryId = $request->input('category');
+
+        $query = Product::query();
+
+        if ($keyword) {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('short_description', 'like', '%' . $keyword . '%');
+            });
+        }
+
+        if ($minPrice !== null) {
+            $query->where('price', '>=', (float) $minPrice);
+        }
+
+        if ($maxPrice !== null) {
+            $query->where('price', '<=', (float) $maxPrice);
+        }
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        $products = $query->paginate(config('pagination.per_page'))->appends($request->query());
+
+        $categories = ProductCategory::orderBy('name')->get();
+
+        return view('products.search', compact('products', 'categories', 'keyword'));
     }
 
     public function show(Product $product)

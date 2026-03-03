@@ -1,30 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row">
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Product Categories</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @if($categories->count() > 0)
             @foreach($categories as $category)
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ $category->name }}</h5>
-                            <p class="card-text">{{ $category->description }}</p>
-                            <p class="text-muted">Products: {{ number_format($category->product_count) }}</p>
-                        </div>
+                <a href="{{ route('categories.products', $category) }}" class="block group">
+                    <div class="card card-hover p-6 h-full">
+                        <h5 class="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">{{ $category->name }}</h5>
+                        <p class="text-gray-600 mb-3">{{ $category->description }}</p>
+                        <p class="text-sm text-gray-500">{{ $category->products_count }} Products</p>
                     </div>
-                </div>
+                </a>
             @endforeach
         @else
-            <div class="col-12">
-                <p>No categories available.</p>
+            <div class="col-span-3">
+                <p class="text-gray-500">No categories available.</p>
             </div>
         @endif
     </div>
-    <div class="row">
-        <div class="col-12 d-flex justify-content-center">
-            {{ $categories->links() }}
-        </div>
+    <div class="mt-6 flex justify-center">
+        {{ $categories->links() }}
     </div>
 </div>
 @endsection

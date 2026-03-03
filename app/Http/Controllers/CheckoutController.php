@@ -56,6 +56,7 @@ class CheckoutController extends Controller
             'shippingMethods' => $shippingMethods,
             'isGuest' => $isGuest,
             'subtotal' => $subtotal,
+            'total' => $subtotal,
             'hasPhysicalProducts' => $hasPhysicalProducts,
         ]);
     }
