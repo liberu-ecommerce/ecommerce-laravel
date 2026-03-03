@@ -6,6 +6,7 @@ namespace Database\Seeders;
 
 use Database\Seeders\DummyData\DummyDataSeeder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        Artisan::call('migrate', ['--force' => true]);
+
         $this->call([
 //            SiteSettingsSeeder::class,
             PermissionsTableSeeder::class,
