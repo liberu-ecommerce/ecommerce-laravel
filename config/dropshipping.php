@@ -42,6 +42,8 @@ return [
                 'availability' => env('DROPXL_API_URL', 'https://api.dropxl.com') . '/v1/products/availability',
                 'orders' => env('DROPXL_API_URL', 'https://api.dropxl.com') . '/v1/orders',
                 'tracking' => env('DROPXL_API_URL', 'https://api.dropxl.com') . '/v1/orders/track',
+                'products' => env('DROPXL_API_URL', 'https://api.dropxl.com') . '/v1/products',
+                'categories' => env('DROPXL_API_URL', 'https://api.dropxl.com') . '/v1/categories',
             ],
         ],
     ],
