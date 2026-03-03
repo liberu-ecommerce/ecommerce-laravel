@@ -70,7 +70,7 @@ class DispatchDropshippingOrder implements ShouldQueue
 
             // Persist supplier response for debugging
             $order->supplier_id = $this->supplierId;
-            $order->supplier_reference = $result['data']['reference'] ?? ($result['data']['id'] ?? null);
+            $order->supplier_order_reference = $result['data']['reference'] ?? ($result['data']['id'] ?? null);
             $order->supplier_response = $result['data'] ?? ($result['error'] ?? $result);
 
             if ($result['success']) {

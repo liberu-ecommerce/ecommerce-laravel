@@ -28,18 +28,19 @@ class Order extends Model
         'shipping_method_id',
         'payment_method',
         'status',
-        'is_dropshipping',
+        'is_dropshipped',
         'recipient_name',
         'recipient_email',
         'gift_message',
         'supplier_id',
-        'supplier_reference',
+        'supplier_order_reference',
+        'supplier_tracking_number',
         'supplier_response',
     ];
 
     protected $casts = [
         'supplier_response' => 'array',
-        'is_dropshipping' => 'boolean',
+        'is_dropshipped' => 'boolean',
         'shipping_cost' => 'decimal:2',
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
