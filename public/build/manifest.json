@@ -1,30 +1,32 @@
 {
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
-    "file": "assets/fa-brands-400-BfBXV7Mm.woff2",
+    "file": "assets/fa-brands-400-BP5tdqmh.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
   },
   "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
-    "file": "assets/fa-solid-900-8GirhLYJ.woff2",
+    "file": "assets/fa-solid-900-DRAAbZTg.woff2",
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-D50J1gOp.css",
+    "file": "assets/app-B2mdUCNz.css",
     "src": "resources/css/app.css",
     "isEntry": true,
+    "name": "app",
     "names": [
       "app.css"
     ]
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-DiacRsF-.css",
+    "file": "assets/theme-5u4w9xx2.css",
     "src": "resources/css/filament/admin/theme.css",
     "isEntry": true,
+    "name": "theme",
     "names": [
       "theme.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CS1pBR2o.js",
+    "file": "assets/app-BQEJbC5b.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
