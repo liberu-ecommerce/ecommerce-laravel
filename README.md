@@ -1,17 +1,20 @@
 # Liberu Ecommerce
+
 [![](https://avatars.githubusercontent.com/u/158830885?s=200&v=4)](https://www.liberu.co.uk)
 
 ![](https://img.shields.io/badge/PHP-8.5-informational?style=flat&logo=php&color=4f5b93)
 ![](https://img.shields.io/badge/Laravel-12-informational?style=flat&logo=laravel&color=ef3b2d)
 ![](https://img.shields.io/badge/Filament-5-informational?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgeG1sbnM6dj0iaHR0cHM6Ly92ZWN0YS5pby9uYW5vIj48cGF0aCBkPSJNMCAwaDQ4djQ4SDBWMHoiIGZpbGw9IiNmNGIyNWUiLz48cGF0aCBkPSJNMjggN2wtMSA2LTMuNDM3LjgxM0wyMCAxNWwtMSAzaDZ2NWgtN2wtMyAxOEg4Yy41MTUtNS44NTMgMS40NTQtMTEuMzMgMy0xN0g4di01bDUtMSAuMjUtMy4yNUMxNCAxMSAxNCAxMSAxNS40MzggOC41NjMgMTkuNDI5IDYuMTI4IDIzLjQ0MiA2LjY4NyAyOCA3eiIgZmlsbD0iIzI4MjQxZSIvPjxwYXRoIGQ9Ik0zMCAxOGg0YzIuMjMzIDUuMzM0IDIuMjMzIDUuMzM0IDEuMTI1IDguNUwzNCAyOWMtLjE2OCAzLjIwOS0uMTY4IDMuMjA5IDAgNmwtMiAxIDEgM2gtNXYyaC0yYy44NzUtNy42MjUuODc1LTcuNjI1IDItMTFoMnYtMmgtMnYtMmwyLTF2LTQtM3oiIGZpbGw9IiMyYTIwMTIiLz48cGF0aCBkPSJNMzUuNTYzIDYuODEzQzM4IDcgMzggNyAzOSA4Yy4xODggMi40MzguMTg4IDIuNDM4IDAgNWwtMiAyYy0yLjYyNS0uMzc1LTIuNjI1LS4zNzUtNS0xLS42MjUtMi4zNzUtLjYyNS0yLjM3NS0xLTUgMi0yIDItMiA0LjU2My0yLjE4N3oiIGZpbGw9IiM0MDM5MzEiLz48cGF0aCBkPSJNMzAgMThoNGMyLjA1NSA1LjMxOSAyLjA1NSA1LjMxOSAxLjgxMyA4LjMxM0wzNSAyOGwtMyAxdi0ybC00IDF2LTJsMi0xdi00LTN6IiBmaWxsPSIjMzEyODFlIi8+PHBhdGggZD0iTTI5IDI3aDN2MmgydjJoLTJ2MmwtNC0xdi0yaDJsLTEtM3oiIGZpbGw9IiMxNTEzMTAiLz48cGF0aCBkPSJNMzAgMThoNHYzaC0ydjJsLTMgMSAxLTZ6IiBmaWxsPSIjNjA0YjMyIi8+PC9zdmc+&&color=fdae4b&link=https://filamentphp.com)
-![](https://img.shields.io/badge/Livewire-4.1-informational?style=flat&logo=Livewire&color=fb70a9)
+![](https://img.shields.io/badge/Livewire-4-informational?style=flat&logo=Livewire&color=fb70a9)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)
+[![Open Source Love](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)](https://github.com/liberu-ecommerce/ecommerce-laravel)
+[![Latest Release](https://img.shields.io/github/v/release/liberu-ecommerce/ecommerce-laravel?include_prereleases)](https://github.com/liberu-ecommerce/ecommerce-laravel/releases)
 
+---
 
-## Welcome to Liberu, our visionary open-source initiative that marries the power of Laravel 12, PHP 8.5 and Filament 5.2 to redefine the landscape of web development.
+### Build powerful, scalable e-commerce solutions with Laravel 12, PHP 8.5, Filament 5 and Livewire 4 — open-source and ready for production.
 
-[![Contact us on WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/+447762430333)
+[![Contact us on WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/441793200950)
 [![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@liberusoftware)
 [![Facebook](https://img.shields.io/badge/Facebook-%231877F2.svg?style=for-the-badge&logo=Facebook&logoColor=white)](https://www.facebook.com/liberusoftware)
 [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white)](https://www.instagram.com/liberusoftware)
@@ -24,169 +27,227 @@
 [![Docker](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/main.yml/badge.svg)](https://github.com/liberu-ecommerce/ecommerce-laravel/actions/workflows/main.yml)
 [![Codecov](https://codecov.io/gh/liberu-ecommerce/ecommerce-laravel/branch/main/graph/badge.svg)](https://codecov.io/gh/liberu-ecommerce/ecommerce-laravel)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+---
 
-A modular, production-ready e-commerce platform built with Laravel, Livewire and Filament. Designed for extensibility and fast developer onboarding.
+## About Liberu Ecommerce
 
-- PHP · Laravel · Livewire · Filament
+**Liberu Ecommerce** is a modular, production-ready e-commerce platform built on the latest versions of Laravel 12, PHP 8.5, Filament 5 and Livewire 4. It is part of the [Liberu](https://www.liberu.co.uk) open-source ecosystem — a suite of Laravel-based applications designed to give developers a solid, extensible foundation for real-world business software.
+
+Whether you are launching a small online shop or building a multi-vendor marketplace, Liberu Ecommerce provides the tools, architecture and integrations to get there quickly and confidently. The codebase follows Laravel best practices, uses a clean Filament admin panel, and ships with reactive Livewire components so you spend less time on boilerplate and more time on your product.
 
 ---
 
-## Quick start (local)
+## Main Features
 
-Requirements: PHP 8.3+, Composer, a database (MySQL / MariaDB / Postgres). Docker is optional.
+### Storefront & Cart
+- Reactive shopping cart and checkout built with **Livewire 4**
+- Multiple shipping methods with server-side rate calculation and drop-shipping support
+- Guest and authenticated checkout flows
 
-1. Clone and install
+### Payments
+- Payment gateway factory with pluggable implementations
+- Built-in **Stripe** integration (charges, webhooks, test mode)
+- **PayPal** integration ready to activate
 
-   ```bash
-   git clone https://github.com/liberu-ecommerce/ecommerce-laravel.git
-   cd ecommerce-laravel
-   composer install
-   cp .env.example .env
-   php artisan key:generate
-   ```
+### Dropshipping
+- First-class **DropXL** supplier integration via `config/dropshipping.php`
+- Supplier order placement queued after successful payment
+- Extensible supplier transformation layer for additional providers
 
-2. Configure `.env`
-   - Update database settings.
-   - Add payment and dropshipping keys (example below for Stripe and DropXL):
+### Product & Order Management
+- Full product catalogue with categories, attributes and images
+- Order persistence, status tracking and order-item management
+- **Customer Segmentation** — target customers based on behaviour, LTV and purchase history
+- **AI-Powered Product Recommendations** — collaborative filtering, personalised suggestions and trending items
+- **A/B Testing Framework** — built-in variant assignment and conversion tracking
+- **Abandoned Cart Recovery** — automated campaigns with email/SMS triggers and discount codes
+- **Gift Registry** — complete registry system for weddings, baby showers and other events
+- **Loyalty & Rewards Programme** — points, tiers and reward redemptions
+- **B2B Wholesale Pricing** — tiered pricing, quote requests and wholesale groups
+- **Multi-currency & Tax Management** — exchange rates and location-based tax calculation
+- **Refund & Return Management** — full RMA system with inventory restocking
 
-   ```
-   STRIPE_KEY=pk_test_xxx
-   STRIPE_SECRET=sk_test_xxx
-   STRIPE_WEBHOOK_SECRET=whsec_xxx
-   DROPXL_API_KEY=Bearer xxx
-   DROPXL_API_URL=https://api.dropxl.com
-   ```
+### Admin Panel
+Powered by **Filament 5**, the admin panel provides resources for managing:
+- Products, categories, orders and customers
+- Customer Segments, Gift Registries, A/B Tests and Cart Recovery Campaigns
+- Shipping methods, payment gateways and supplier configuration
 
-3. Migrate and seed
-
-   ```bash
-   php artisan migrate --seed
-   ```
-
-4. Serve locally
-
-   ```bash
-   php -S 127.0.0.1:8000 -t public
-   # or use Sail/Docker if you prefer
-   # ./vendor/bin/sail up -d
-   ```
+### Operations & Analytics
+- Customer analytics and LTV tracking
+- Product performance analytics (views, conversions, return rates)
+- Multi-location inventory management
+- Conversion funnel analytics
 
 ---
 
-## Stripe setup and testing
+## Installation
 
-This project uses a server-side Stripe integration via `stripe/stripe-php`. To enable:
+### Requirements
 
-1. Add keys to `.env` (see above).
-2. Use Stripe test cards in checkout (example):
-   - Card number: 4242 4242 4242 4242
-   - Any future expiry, any CVC, any ZIP
-3. Webhooks: if you use a local webhook helper (stripe CLI) set `STRIPE_WEBHOOK_SECRET` and configure webhooks to point to `/stripe/webhook` if enabled.
+- PHP 8.5+
+- Composer
+- Node.js 20+
+- A database: MySQL, MariaDB or PostgreSQL
+- Docker (optional)
+
+### Option 1 — Automated script (recommended)
+
+The repository ships with an interactive setup script that guides you through environment configuration, dependency installation, database migration and seeding in one step.
+
+**Command line:**
+
+```bash
+git clone https://github.com/liberu-ecommerce/ecommerce-laravel.git
+cd ecommerce-laravel
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will prompt you to copy `.env.example` to `.env`, confirm your database credentials, run `composer install`, generate the application key, run migrations and seed the database, and optionally start the development server — all interactively.
+
+**Graphical installer:**
+
+If a graphical installer package is available for your platform, it can be downloaded from the [Releases](https://github.com/liberu-ecommerce/ecommerce-laravel/releases) page. Run it and follow the on-screen prompts to configure and install the application without using the terminal.
+
+### Option 2 — Manual step-by-step
+
+```bash
+git clone https://github.com/liberu-ecommerce/ecommerce-laravel.git
+cd ecommerce-laravel
+composer install
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure `.env` — update database credentials and add your payment/dropshipping keys:
+
+```env
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+STRIPE_KEY=pk_test_xxx
+STRIPE_SECRET=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+
+DROPXL_API_KEY=Bearer xxx
+DROPXL_API_URL=https://api.dropxl.com
+```
+
+Run migrations and seed:
+
+```bash
+php artisan migrate --seed
+npm install && npm run build
+```
+
+Start the development server:
+
+```bash
+php artisan serve
+# or with Docker / Sail:
+# ./vendor/bin/sail up -d
+```
+
+### Option 3 — Docker
+
+```bash
+git clone https://github.com/liberu-ecommerce/ecommerce-laravel.git
+cd ecommerce-laravel
+cp .env.example .env          # update DB_ and app values
+docker-compose up -d
+docker-compose exec app php artisan migrate --seed
+```
+
+---
+
+## Stripe Setup and Testing
+
+1. Add Stripe keys to `.env` (see above).
+2. Use Stripe test cards in checkout:
+   - Card number: `4242 4242 4242 4242` — any future expiry, any CVC, any ZIP.
+3. For webhooks, install the [Stripe CLI](https://stripe.com/docs/stripe-cli), set `STRIPE_WEBHOOK_SECRET` and forward events to `/stripe/webhook`.
 
 ---
 
 ## Dropshipping (DropXL)
 
-DropXL integration is configurable via `config/dropshipping.php` and expects `DROPXL_API_KEY` and `DROPXL_API_URL` in `.env`.
+DropXL integration is configurable via `config/dropshipping.php`. On checkout, select "Ship directly to recipient (Drop shipping)" to route the order through DropXL. Supplier order placement is queued after a successful payment; `orders` will include `supplier_id` and `supplier_reference`.
 
-On checkout, check "Ship directly to recipient (Drop shipping)" to select a supplier (DropXL is available out of the box). Supplier order placement happens after a successful payment and `orders` will include `supplier_id` and `supplier_reference`.
-
-For local testing, point `DROPXL_API_URL` to a mock endpoint and return a success JSON to avoid hitting production APIs.
-
----
-
-## Additional setup notes
-
-- After pulling the latest changes, run `composer install` to install new dependencies (including Stripe PHP SDK):
-
-```bash
-composer install
-```
-
-- If you rely on queued supplier placement (recommended), run a queue worker locally:
-
-```bash
-php artisan queue:work --tries=3
-```
-
-(or use `php artisan queue:listen` / Horizon if configured)
-
----
-
-## Quick smoke-tests
-
-Stripe (checkout flow)
-1. Ensure `.env` contains STRIPE_KEY and STRIPE_SECRET.
-2. Start the app and queue worker (if using queued supplier placement).
-3. Add a product to cart and go through the normal checkout flow (use the full checkout page in the app).
-4. Choose Stripe as payment method and enter test card: 4242 4242 4242 4242. Complete checkout.
-5. Expected: payment succeeds, order status becomes `paid`, supplier job queued if dropshipping selected.
-
-DropXL (dropshipping)
-1. Set `DROPXL_API_URL` to a mock endpoint (or real DropXL credentials if available).
-2. For local mocks, return successful JSON:
+For local testing, point `DROPXL_API_URL` to a mock endpoint returning:
 
 ```json
 { "success": true, "data": { "id": "dropxl-123", "reference": "DLX-123" } }
 ```
 
-3. Complete a checkout using the Drop shipping option. Ensure `orders.supplier_id` and `orders.supplier_reference` are set after the queued job runs.
-
 ---
 
 ## Troubleshooting
 
-- If orders are stuck with `supplier_queued`, verify the queue worker is running and check `storage/logs/laravel.log` for job errors.
-- If Stripe charges fail: validate `STRIPE_SECRET` in `.env`, confirm the publishable key is present in `config/services.php`, and check the logs for Stripe API errors.
+- **Orders stuck at `supplier_queued`** — verify the queue worker is running (`php artisan queue:work --tries=3`) and check `storage/logs/laravel.log`.
+- **Stripe charges fail** — validate `STRIPE_SECRET` in `.env`, confirm the publishable key is present in `config/services.php`, and review the logs for API errors.
 
 ---
 
-## What’s included
+## Our Projects
 
-- Livewire cart & checkout components
-- Shipping methods with server-side calculation and drop-shipping premium
-- Payment gateway factory with Stripe and PayPal implementations
-- Dropshipping service with supplier transformation for DropXL
-- Order persistence and order item creation
+Liberu Ecommerce is part of the wider **Liberu** open-source ecosystem. All projects are built on the same modern Laravel stack and are designed to work together.
 
----
-
-## Our projects
-
-The Liberu ecosystem contains a number of companion repositories and packages that extend or demonstrate functionality used in this boilerplate. Below is a concise, professional list of those projects with quick descriptions — follow the links to learn more or to contribute.
-
-| Project | Repository | Short description |
-|---|---:|---|
+| Project | Repository | Description |
+|---|---|---|
 | Accounting | [liberu-accounting/accounting-laravel](https://github.com/liberu-accounting/accounting-laravel) | Accounting and invoicing features tailored for Laravel applications. |
 | Automation | [liberu-automation/automation-laravel](https://github.com/liberu-automation/automation-laravel) | Automation tooling and workflow integrations for Laravel projects. |
-| Billing | [liberu-billing/billing-laravel](https://github.com/liberu-billing/billing-laravel) | Subscription and billing management integrations (payments, invoices). |
+| Billing | [liberu-billing/billing-laravel](https://github.com/liberu-billing/billing-laravel) | Subscription and billing management (payments, invoices). |
 | Boilerplate (core) | [liberusoftware/boilerplate](https://github.com/liberusoftware/boilerplate) | Core starter and shared utilities used across Liberu projects. |
-| Browser Game | [liberu-browser-game/browser-game-laravel](https://github.com/liberu-browser-game/browser-game-laravel) | Example Laravel-based browser game platform and mechanics. |
+| Browser Game | [liberu-browser-game/browser-game-laravel](https://github.com/liberu-browser-game/browser-game-laravel) | Laravel-based browser game platform and mechanics. |
 | CMS | [liberu-cms/cms-laravel](https://github.com/liberu-cms/cms-laravel) | Content management features and modular page administration. |
 | Control Panel | [liberu-control-panel/control-panel-laravel](https://github.com/liberu-control-panel/control-panel-laravel) | Administration/control-panel components for managing services. |
 | CRM | [liberu-crm/crm-laravel](https://github.com/liberu-crm/crm-laravel) | Customer relationship management features and integrations. |
-| E‑commerce | [liberu-ecommerce/ecommerce-laravel](https://github.com/liberu-ecommerce/ecommerce-laravel) | E‑commerce storefront, product and order management. |
+| E-commerce | [liberu-ecommerce/ecommerce-laravel](https://github.com/liberu-ecommerce/ecommerce-laravel) | E-commerce storefront, product and order management (this repo). |
 | Genealogy | [liberu-genealogy/genealogy-laravel](https://github.com/liberu-genealogy/genealogy-laravel) | Family tree and genealogy features built on Laravel. |
 | Maintenance | [liberu-maintenance/maintenance-laravel](https://github.com/liberu-maintenance/maintenance-laravel) | Scheduling, tracking and reporting for maintenance tasks. |
 | Real Estate | [liberu-real-estate/real-estate-laravel](https://github.com/liberu-real-estate/real-estate-laravel) | Property listings and real-estate management features. |
 | Social Network | [liberu-social-network/social-network-laravel](https://github.com/liberu-social-network/social-network-laravel) | Social features, profiles, feeds and messaging for Laravel apps. |
 
-If you maintain or use one of these projects and would like a more detailed description or a different categorisation, open an issue or submit a pull request and we'll update the list. Contributions and cross-repo collaboration are warmly encouraged.
-
 ---
 
 ## Contributing
 
-Fork → create a focused branch → open a PR against `main`. Include tests for new behavior. CI runs on push; ensure `install` and `tests` workflows pass.
+Contributions are warmly welcomed! Here is how to get involved:
+
+1. **Fork** the repository and create a feature branch from `main`.
+2. **Write focused, testable code** — add or update tests for any new behaviour.
+3. **Run the CI checks locally** before pushing:
+   ```bash
+   ./vendor/bin/phpunit
+   ```
+4. **Open a Pull Request** against `main` with a clear description of what you changed and why.
+5. The CI pipeline (install, tests, Docker workflows) must pass before a PR can be merged.
+6. A maintainer will review your PR, suggest changes if necessary, and merge when ready.
+
+If you have a larger feature in mind, please open an issue first to discuss the approach — this avoids duplicated effort and helps us keep the codebase cohesive.
 
 ---
 
 ## License
 
-MIT — see the `LICENSE` file.
+This project is licensed under the **MIT Licence** — see the [`LICENSE`](LICENSE) file for the full text.
 
-If you'd like CLI commands, tests, or example API payloads added to the README, tell me which sections to expand.
+### What this means for you
+
+The MIT licence is one of the most permissive open-source licences available. In practical terms:
+
+- ✅ **Use freely** — use the software in any project, commercial or personal, at no cost.
+- ✅ **Modify** — change the source code to suit your needs without restriction.
+- ✅ **Distribute** — share the original or your modified version with anyone.
+- ✅ **Sublicence** — incorporate the code into proprietary software and distribute under your own terms.
+- ℹ️ **Attribution required** — keep the original copyright notice and licence text in any copy or substantial portion of the software.
+- ℹ️ **No warranty** — the software is provided "as is"; the authors accept no liability for damages arising from its use.
+
+Choosing MIT means you can adopt Liberu Ecommerce as the foundation for a commercial product without legal concerns, while still benefiting from community improvements and contributions.
+
+---
 
 ## Advanced Features (Latest from Shopify & Magento 2)
 
@@ -246,4 +307,3 @@ Filament admin resources are available for managing:
 - A/B Tests
 - Cart Recovery Campaigns
 - And all other features...
-
