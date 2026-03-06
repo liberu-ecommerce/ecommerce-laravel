@@ -9,26 +9,25 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * Note: slug column is now added in the original create_products_table migration.
+     * This migration handles generating slugs for any existing products that may not have one.
      */
     public function up(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('name');
-            $table->index('slug');
-        });
+        if (!Schema::hasColumn('products', 'slug')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->string('slug')->nullable()->after('name');
+                $table->index('slug');
+            });
+        }
 
-        // Generate slugs for existing products
-        DB::table('products')->orderBy('id')->chunk(100, function ($products) {
+        // Generate slugs for existing products that don't have one
+        DB::table('products')->whereNull('slug')->orderBy('id')->chunk(100, function ($products) {
             foreach ($products as $product) {
                 DB::table('products')
                     ->where('id', $product->id)
                     ->update(['slug' => Str::slug($product->name)]);
             }
-        });
-
-        // Make slug non-nullable after populating
-        Schema::table('products', function (Blueprint $table) {
-            $table->string('slug')->nullable(false)->change();
         });
     }
 
@@ -37,9 +36,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropIndex(['slug']);
-            $table->dropColumn('slug');
-        });
+        if (Schema::hasColumn('products', 'slug')) {
+            Schema::table('products', function (Blueprint $table) {
+                $table->dropIndex(['slug']);
+                $table->dropColumn('slug');
+            });
+        }
     }
 };

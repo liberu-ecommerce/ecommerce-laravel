@@ -34,6 +34,24 @@ class CollectionController extends Controller
         if ($request->has('per_page')) {
             $perPage = min((int) $request->input('per_page', 15), 100);
             $collections = $query->paginate($perPage);
+
+            return response()->json([
+                'data' => $collections->items(),
+                'links' => [
+                    'first' => $collections->url(1),
+                    'last' => $collections->url($collections->lastPage()),
+                    'prev' => $collections->previousPageUrl(),
+                    'next' => $collections->nextPageUrl(),
+                ],
+                'meta' => [
+                    'current_page' => $collections->currentPage(),
+                    'from' => $collections->firstItem(),
+                    'last_page' => $collections->lastPage(),
+                    'per_page' => $collections->perPage(),
+                    'to' => $collections->lastItem(),
+                    'total' => $collections->total(),
+                ],
+            ]);
         } else {
             $collections = $query->get();
         }
