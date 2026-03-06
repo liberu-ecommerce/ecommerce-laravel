@@ -32,7 +32,6 @@ class CustomerSegment extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'customer_segment_members', 'segment_id', 'user_id')
-            ->withTimestamps()
             ->withPivot('added_at');
     }
 

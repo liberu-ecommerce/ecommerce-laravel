@@ -26,12 +26,24 @@ class ProductFactory extends Factory
     public function definition(): array
     {
         return [
-            "name" => $this->faker->name,
+            "name" => $this->faker->unique()->words(3, true),
             "short_description" => $this->faker->paragraph(),
             "long_description" => $this->faker->paragraph(),
             "category_id" => ProductCategory::factory(),
             'featured_image' => $this->faker->imageUrl(640, 480, 'No image', false, null, true),
             'price' => $this->faker->randomFloat(2, 10, 1000),
         ];
+    }
+
+    /**
+     * Configure the factory to auto-generate slug from name after making.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (Product $product) {
+            if (empty($product->slug)) {
+                $product->slug = \Illuminate\Support\Str::slug($product->name);
+            }
+        });
     }
 }

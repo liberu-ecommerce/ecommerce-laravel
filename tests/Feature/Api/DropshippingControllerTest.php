@@ -19,13 +19,15 @@ class DropshippingControllerTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
+    }
+
+    protected function actingAsUser(): void
+    {
         Sanctum::actingAs($this->user);
     }
 
     public function test_suppliers_endpoint_requires_authentication()
     {
-        auth()->logout();
-
         $response = $this->getJson('/api/dropshipping/suppliers');
 
         $response->assertStatus(401);
@@ -33,6 +35,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_suppliers_endpoint_returns_sanitized_list()
     {
+        $this->actingAsUser();
+
         $response = $this->getJson('/api/dropshipping/suppliers');
 
         $response->assertStatus(200)
@@ -52,8 +56,6 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_requires_authentication()
     {
-        auth()->logout();
-
         $response = $this->postJson('/api/dropshipping/check-availability', [
             'supplier_id' => 'supplier1',
             'sku' => 'SKU-001',
@@ -64,6 +66,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_validates_required_fields()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/check-availability', []);
 
         $response->assertStatus(422)
@@ -73,6 +77,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_validates_quantity_is_integer()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/check-availability', [
             'supplier_id' => 'supplier1',
             'sku' => 'SKU-001',
@@ -85,6 +91,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_calls_supplier_api()
     {
+        $this->actingAsUser();
+
         Http::fake([
             '*' => Http::response(['available' => true, 'stock' => 50], 200),
         ]);
@@ -101,6 +109,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_returns_400_on_supplier_error()
     {
+        $this->actingAsUser();
+
         Http::fake([
             '*' => Http::response('Bad Request', 400),
         ]);
@@ -116,6 +126,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_check_availability_returns_400_for_unknown_supplier()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/check-availability', [
             'supplier_id' => 'nonexistent_supplier',
             'sku' => 'SKU-001',
@@ -127,8 +139,6 @@ class DropshippingControllerTest extends TestCase
 
     public function test_place_order_requires_authentication()
     {
-        auth()->logout();
-
         $response = $this->postJson('/api/dropshipping/place-order', [
             'supplier_id' => 'supplier1',
             'order_data' => [],
@@ -139,6 +149,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_place_order_validates_required_fields()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/place-order', []);
 
         $response->assertStatus(422)
@@ -148,6 +160,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_place_order_validates_order_data_structure()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/place-order', [
             'supplier_id' => 'supplier1',
             'order_data' => ['some_field' => 'value'],
@@ -159,6 +173,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_place_order_calls_supplier_api()
     {
+        $this->actingAsUser();
+
         Http::fake([
             '*' => Http::response(['id' => 'ORD-123', 'status' => 'accepted'], 200),
         ]);
@@ -179,8 +195,6 @@ class DropshippingControllerTest extends TestCase
 
     public function test_track_order_requires_authentication()
     {
-        auth()->logout();
-
         $response = $this->postJson('/api/dropshipping/track-order', [
             'supplier_id' => 'supplier1',
             'order_reference' => 'ORD-123',
@@ -191,6 +205,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_track_order_validates_required_fields()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/track-order', []);
 
         $response->assertStatus(422)
@@ -200,6 +216,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_track_order_calls_supplier_api()
     {
+        $this->actingAsUser();
+
         Http::fake([
             '*' => Http::response(['status' => 'shipped', 'tracking_number' => 'TRK-999'], 200),
         ]);
@@ -215,6 +233,8 @@ class DropshippingControllerTest extends TestCase
 
     public function test_track_order_returns_400_for_unknown_supplier()
     {
+        $this->actingAsUser();
+
         $response = $this->postJson('/api/dropshipping/track-order', [
             'supplier_id' => 'nonexistent_supplier',
             'order_reference' => 'ORD-123',

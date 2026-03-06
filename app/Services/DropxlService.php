@@ -214,7 +214,10 @@ class DropxlService
 
         return ProductCategory::firstOrCreate(
             ['name' => $categoryName],
-            ['description' => 'Imported from DropXL']
+            [
+                'slug' => Str::slug($categoryName),
+                'description' => 'Imported from DropXL',
+            ]
         );
     }
 
