@@ -10,10 +10,9 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Resources\Resource;
 
@@ -74,12 +73,14 @@ class ChatConversationResource extends Resource
                 TextColumn::make('id')
                     ->sortable()
                     ->searchable(),
-                BadgeColumn::make('status')
-                    ->colors([
-                        'warning' => 'queued',
-                        'success' => 'active',
-                        'secondary' => 'closed',
-                    ]),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'queued' => 'warning',
+                        'active' => 'success',
+                        'closed' => 'gray',
+                        default => 'secondary',
+                    }),
                 TextColumn::make('customer.name')
                     ->label('Customer')
                     ->searchable()
@@ -118,7 +119,7 @@ class ChatConversationResource extends Resource
                     ->label('Agent')
                     ->relationship('agent', 'name'),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
             ]);
     }

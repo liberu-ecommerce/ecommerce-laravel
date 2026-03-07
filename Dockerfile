@@ -9,6 +9,18 @@ ARG NODE_VERSION=20-alpine
 
 FROM composer:${COMPOSER_VERSION} AS vendor
 
+FROM node:${NODE_VERSION} AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
 FROM php:${PHP_VERSION}-cli-alpine
 
 LABEL maintainer="SMortexa <seyed.me720@gmail.com>"
@@ -111,6 +123,7 @@ RUN composer install \
     --audit
 
 COPY  --chown=${USER}:${USER} . .
+COPY  --chown=${USER}:${USER} --from=assets /app/public/build ./public/build
 
 RUN mkdir -p \
     storage/framework/sessions \

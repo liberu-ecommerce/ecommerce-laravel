@@ -4,9 +4,15 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerSegmentResource\Pages;
 use App\Models\CustomerSegment;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -14,26 +20,26 @@ class CustomerSegmentResource extends Resource
 {
     protected static ?string $model = CustomerSegment::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
 
-    protected static ?string $navigationGroup = 'Marketing';
+    protected static string|\UnitEnum|null $navigationGroup = 'Marketing';
 
     protected static ?int $navigationSort = 1;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                Forms\Components\Section::make()
+        return $schema
+            ->components([
+                Section::make()
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        
+
                         Forms\Components\Textarea::make('description')
                             ->rows(3)
                             ->columnSpanFull(),
-                        
+
                         Forms\Components\Select::make('match_type')
                             ->options([
                                 'all' => 'Match ALL conditions',
@@ -41,14 +47,14 @@ class CustomerSegmentResource extends Resource
                             ])
                             ->default('all')
                             ->required(),
-                        
+
                         Forms\Components\Toggle::make('is_active')
                             ->default(true)
                             ->required(),
                     ])
                     ->columns(2),
 
-                Forms\Components\Section::make('Conditions')
+                Section::make('Conditions')
                     ->schema([
                         Forms\Components\Repeater::make('conditions')
                             ->schema([
@@ -60,7 +66,7 @@ class CustomerSegmentResource extends Resource
                                         'in_customer_group' => 'Customer Group',
                                     ])
                                     ->required(),
-                                
+
                                 Forms\Components\Select::make('operator')
                                     ->options([
                                         '=' => 'Equals',
@@ -71,7 +77,7 @@ class CustomerSegmentResource extends Resource
                                         '<=' => 'Less or Equal',
                                     ])
                                     ->required(),
-                                
+
                                 Forms\Components\TextInput::make('value')
                                     ->required(),
                             ])
@@ -88,22 +94,23 @@ class CustomerSegmentResource extends Resource
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('customer_count')
                     ->label('Members')
                     ->numeric()
                     ->sortable(),
-                
+
                 Tables\Columns\TextColumn::make('match_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'all' => 'success',
                         'any' => 'warning',
+                        default => 'gray',
                     }),
-                
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
-                
+
                 Tables\Columns\TextColumn::make('last_calculated_at')
                     ->dateTime()
                     ->sortable()
@@ -112,17 +119,17 @@ class CustomerSegmentResource extends Resource
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active'),
             ])
-            ->actions([
-                Tables\Actions\Action::make('calculate')
+            ->recordActions([
+                Action::make('calculate')
                     ->icon('heroicon-o-calculator')
                     ->action(fn (CustomerSegment $record) => $record->calculateMembers())
                     ->requiresConfirmation(),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
