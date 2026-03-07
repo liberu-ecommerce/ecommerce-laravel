@@ -10,28 +10,67 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: liberu_testing
+          MYSQL_USER: liberu
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
-        extensions: xdebug
-      
+        extensions: xdebug, pdo_mysql
+
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache composer dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
     - name: Copy environment file
       run: cp .env.testing .env
-      
+
     - name: Install dependencies
       run: composer install --ignore-platform-req=php --prefer-source
-      
+
     - name: Generate application key
       run: php artisan key:generate
-      
+
+    - name: Wait for MySQL
+      run: |
+        while ! mysqladmin ping -h"127.0.0.1" -P3306 -uroot -proot --silent; do
+          sleep 1
+        done
+
+    - name: Grant test user privileges
+      run: mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "GRANT ALL PRIVILEGES ON liberu_testing.* TO 'liberu'@'%'; FLUSH PRIVILEGES;"
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
     - name: Run tests
       run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage.xml
-    
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
