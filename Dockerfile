@@ -29,8 +29,26 @@ RUN composer install \
     --prefer-dist
 
 ###########################################
+<<<<<<< HEAD
 # Main application stage
 ###########################################
+=======
+
+FROM composer:${COMPOSER_VERSION} AS vendor
+
+FROM node:${NODE_VERSION} AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
+>>>>>>> 0e51d3adb0c680c2c80c8a52debe39c86647ba91
 FROM php:${PHP_VERSION}-cli-alpine
 
 LABEL maintainer="SMortexa <seyed.me720@gmail.com>"
@@ -123,8 +141,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy vendor from composer-deps stage for better caching
 COPY --chown=${USER}:${USER} --from=composer-deps /app/vendor ./vendor
 
+<<<<<<< HEAD
 # Copy composer files (needed for autoloader generation)
 COPY --chown=${USER}:${USER} composer.json composer.lock ./
+=======
+COPY  --chown=${USER}:${USER} . .
+COPY  --chown=${USER}:${USER} --from=assets /app/public/build ./public/build
+>>>>>>> 0e51d3adb0c680c2c80c8a52debe39c86647ba91
 
 # Copy application code first so autoloader can resolve all files
 COPY --chown=${USER}:${USER} . .
