@@ -6842,16 +6842,16 @@
         },
         {
             "name": "spatie/laravel-query-builder",
-            "version": "6.4.3",
+            "version": "6.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-query-builder.git",
-                "reference": "317cf7e7146daec502241dd1cd1d8fd4bb6d5cff"
+                "reference": "ab9c4c369fc913d6c020a0f6776f3c82f3e523fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/317cf7e7146daec502241dd1cd1d8fd4bb6d5cff",
-                "reference": "317cf7e7146daec502241dd1cd1d8fd4bb6d5cff",
+                "url": "https://api.github.com/repos/spatie/laravel-query-builder/zipball/ab9c4c369fc913d6c020a0f6776f3c82f3e523fb",
+                "reference": "ab9c4c369fc913d6c020a0f6776f3c82f3e523fb",
                 "shasum": ""
             },
             "require": {
@@ -6912,7 +6912,7 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-02-21T21:10:32+00:00"
+            "time": "2026-03-08T13:45:05+00:00"
         },
         {
             "name": "spatie/laravel-settings",
