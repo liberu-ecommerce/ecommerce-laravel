@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup script for the control-panel-laravel project.
+# Setup script for the liberu ecommerce project.
 #
 # This script provides installation options for Standalone, Docker, or Kubernetes deployments.
 # It handles composer and npm installations with fallback logic and error checking.
@@ -452,7 +452,7 @@ install_kubernetes() {
 # Main installation menu
 main() {
     clear
-    print_header "LIBERU CONTROL PANEL - INSTALLER"
+    print_header "LIBERU ECOMMERCE - INSTALLER"
 
     echo "Please select installation type:"
     echo ""
