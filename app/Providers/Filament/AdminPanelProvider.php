@@ -89,6 +89,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->navigationGroup('Administration')
             ]);
 
         // if (Features::hasApiFeatures()) {

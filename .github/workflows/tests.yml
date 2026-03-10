@@ -16,7 +16,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: liberu_testing
+          MYSQL_DATABASE: liberu_ecommerce_testing
           MYSQL_USER: liberu
           MYSQL_PASSWORD: secret
         ports:

@@ -85,9 +85,6 @@ class AppPanelProvider extends PanelProvider
             ->authMiddleware([
                 TeamsPermission::class,
                 Authenticate::class,
-            ])
-            ->plugins([
-                // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
             ]);
 
         // if (Features::hasApiFeatures()) {
