@@ -27,7 +27,6 @@ class DatabaseSeeder extends Seeder
             DefaultTeamSeeder::class,
             UserSeeder::class,
             MenuSeeder::class,
-            SiteSettingsSeeder::class,
             DummyDataSeeder::class,
         ]);
     }

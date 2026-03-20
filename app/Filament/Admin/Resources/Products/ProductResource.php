@@ -15,15 +15,18 @@ use App\Filament\Admin\Resources\Products\Pages\ListProducts;
 use App\Filament\Admin\Resources\Products\Pages\CreateProduct;
 use App\Filament\Admin\Resources\Products\Pages\EditProduct;
 use App\Filament\Admin\Resources\ProductResource\Pages;
+use App\Models\InventoryLog;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductTag;
+use Filament\Notifications\Notification;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use League\Csv\Writer;
 use Filament\Forms\Components\Toggle;
@@ -142,24 +145,63 @@ class ProductResource extends Resource
             // ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('addStock')
+                    ->label('Add Stock')
+                    ->icon('heroicon-o-plus-circle')
+                    ->schema([
+                        TextInput::make('quantity')
+                            ->label('Quantity to Add')
+                            ->required()
+                            ->integer()
+                            ->minValue(1),
+                        TextInput::make('reason')
+                            ->label('Reason')
+                            ->required()
+                            ->maxLength(255)
+                            ->default('purchase'),
+                    ])
+                    ->action(function (Product $record, array $data): void {
+                        DB::transaction(function () use ($record, $data): void {
+                            $record->increment('inventory_count', $data['quantity']);
+
+                            InventoryLog::create([
+                                'product_id' => $record->id,
+                                'quantity_change' => $data['quantity'],
+                                'reason' => $data['reason'],
+                            ]);
+                        });
+                    }),
                 Action::make('adjustInventory')
                     ->label('Adjust Inventory')
                     ->icon('heroicon-o-adjustments-horizontal')
                     ->action(function (Product $record, array $data): void {
-                        $record->inventory_count += $data['adjustment'];
-                        $record->save();
+                        $newInventory = $record->inventory_count + $data['adjustment'];
 
-                        // InventoryLog::create([
-                        //     'product_id' => $record->id,
-                        //     'quantity_change' => $data['adjustment'],
-                        //     'reason' => $data['reason'],
-                        // ]);
+                        if ($newInventory < 0) {
+                            Notification::make()
+                                ->title('Inventory cannot go below zero.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        DB::transaction(function () use ($record, $data, $newInventory): void {
+                            $record->update(['inventory_count' => $newInventory]);
+
+                            InventoryLog::create([
+                                'product_id' => $record->id,
+                                'quantity_change' => $data['adjustment'],
+                                'reason' => $data['reason'],
+                            ]);
+                        });
                     })
                     ->schema([
                         TextInput::make('adjustment')
                             ->label('Quantity Adjustment')
                             ->required()
-                            ->integer(),
+                            ->integer()
+                            ->helperText('Use a positive value to increase stock and a negative value to decrease stock.'),
                         TextInput::make('reason')
                             ->label('Reason for Adjustment')
                             ->required(),

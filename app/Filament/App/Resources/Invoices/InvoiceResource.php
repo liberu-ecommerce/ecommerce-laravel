@@ -36,7 +36,7 @@ class InvoiceResource extends Resource
             Select::make('customer_id')
                 ->label('Customer')
                 ->required()
-                ->options(Customer::pluck('name', 'id'))
+                ->options(Customer::pluck('first_name', 'id'))
                 ->reactive(),
             Select::make('order_id')
                 ->label('Order')

@@ -13,17 +13,13 @@
                 @csrf
 
                 <div>
-                    <label class="block font-medium text-sm text-gray-700" for="email">
-                        {{ __('Email') }}
-                    </label>
-                    <input class="border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm block mt-1 w-full" id="email" type="email" name="email" required="required" autofocus="autofocus">
+                    <x-label for="email" value="{{ __('Email') }}" />
+                    <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
                 </div>
 
                 <div class="mt-4">
-                    <label class="block font-medium text-sm text-gray-700" for="password">
-                        {{ __('Password') }}
-                    </label>
-                    <input class="border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm block mt-1 w-full" id="password" type="password" name="password" required="required" autocomplete="current-password">
+                    <x-label for="password" value="{{ __('Password') }}" />
+                    <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
                 </div>
 
                 <div class="block mt-4">
