@@ -2,10 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -14,34 +17,22 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        setPermissionsTeamId(Team::first()->id);
+
+        $adminPassword = Str::random(12);
         $adminUser = User::create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make($adminPassword),
             'email_verified_at' => now(),
         ]);
-        $adminUser->assignRole('admin');
 
-        $staffUser = User::create([
-            'name' => 'Staff User',
-            'email' => 'staff@example.com',
-            'password' => Hash::make('password'),
-            'email_verified_at' => now(),
-        ]);
-        $staffUser->assignRole('staff');
+        $team = Team::firstOrFail();
+        $adminUser->teams()->syncWithoutDetaching([$team->id]);
 
-        // Create teams for admin and staff users
-        $this->createTeamForUser($adminUser);
-        $this->createTeamForUser($staffUser);
-    }
+        $role = Role::where('name', 'super_admin')->firstOrFail();
+        $adminUser->assignRole($role);
 
-    private function createTeamForUser($user)
-    {
-        $team = Team::first();
-        $team->users()->attach($user);
-
-        $user->current_team_id = 1;
-        $user->save();
+        // Print passwords to console
+        echo "Admin password: {$adminPassword}\n";
     }
 }
