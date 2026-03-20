@@ -8,25 +8,29 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BMR4QO7A.css",
-    "src": "resources/css/app.css",
-    "isEntry": true,
+    "file": "assets/app-D8fH7CR3.css",
     "name": "app",
     "names": [
       "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "assets": [
+      "assets/fa-solid-900-DRAAbZTg.woff2",
+      "assets/fa-brands-400-BP5tdqmh.woff2"
     ]
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-BsFYg4A1.css",
-    "src": "resources/css/filament/admin/theme.css",
-    "isEntry": true,
+    "file": "assets/theme-Bnz_S3Eo.css",
     "name": "theme",
     "names": [
       "theme.css"
-    ]
+    ],
+    "src": "resources/css/filament/admin/theme.css",
+    "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BQEJbC5b.js",
+    "file": "assets/app-DyisjcfH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
