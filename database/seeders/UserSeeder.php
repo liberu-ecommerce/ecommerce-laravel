@@ -33,6 +33,6 @@ class UserSeeder extends Seeder
         $adminUser->assignRole($role);
 
         // Print passwords to console
-        echo "Admin password: {$adminPassword}\n";
+        $this->command->info("Admin password: {$adminPassword}");
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Categories;
 
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -24,6 +26,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class CategoryResource extends Resource
 {
@@ -40,9 +43,26 @@ class CategoryResource extends Resource
         return $schema
             ->components([
                 Section::make()
+                    ->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
                             ->required()
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Set $set, Get $get, ?string $old, ?string $state): void {
+                                $currentSlug = (string) ($get('slug') ?? '');
+                                $oldNameSlug = Str::slug((string) ($old ?? ''));
+
+                                // Keep auto-syncing only while slug still matches previous auto-generated value.
+                                if ($currentSlug !== '' && $currentSlug !== $oldNameSlug) {
+                                    return;
+                                }
+
+                                $set('slug', Str::slug((string) $state));
+                            })
+                            ->maxLength(255),
+                        TextInput::make('slug')
+                            ->required()
+                            ->unique(ignoreRecord: true)
                             ->maxLength(255),
                         RichEditor::make('description'),
                         Select::make('parent_category_id')
@@ -57,7 +77,9 @@ class CategoryResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->label(__('Name')),
-                    TextColumn::make('parent.name'),
+                TextColumn::make('slug')
+                    ->label(__('Slug')),
+                TextColumn::make('parent.name'),
                 TextColumn::make('products_count')
                     ->counts('products')
                     ->label(__('Total Products'))

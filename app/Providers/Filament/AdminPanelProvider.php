@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Actions\Action;
 use Filament\Widgets\AccountWidget;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Filament\App\Pages;
@@ -46,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Gray,
             ])
             ->userMenuItems([
-                MenuItem::make()
+                Action::make('profile')
                     ->label('Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => $this->shouldRegisterMenuItem()
@@ -104,10 +105,10 @@ class AdminPanelProvider extends PanelProvider
         // }
 
         if (Features::hasTeamFeatures()) {
-            // $panel
-            //     ->tenant(Team::class, ownershipRelationship: 'team')
-            //     ->tenantRegistration(Pages\CreateTeam::class)
-            //     ->tenantProfile(Pages\EditTeam::class)
+            $panel
+                ->tenant(Team::class, ownershipRelationship: 'team')
+                ->tenantRegistration(Pages\CreateTeam::class)
+                ->tenantProfile(Pages\EditTeam::class);
             //     ->userMenuItems([
             //         MenuItem::make()
             //             ->label('Team Settings')
