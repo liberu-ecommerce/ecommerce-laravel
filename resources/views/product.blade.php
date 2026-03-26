@@ -98,6 +98,7 @@
 
                     <div class="flex space-x-4">
                         @auth
+                            @if(Route::has('wishlist.add') && Route::has('wishlist.remove'))
                             @if(auth()->user()->wishlist()->where('product_id', $product->id)->exists())
                                 <form action="{{ route('wishlist.remove', $product) }}" method="POST">
                                     @csrf
@@ -119,6 +120,7 @@
                                         Add to Wishlist
                                     </button>
                                 </form>
+                            @endif
                             @endif
                         @endauth
                         <button class="flex items-center text-gray-600 hover:text-blue-600">

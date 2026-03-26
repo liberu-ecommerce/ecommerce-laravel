@@ -64,6 +64,7 @@
                         <p class="text-danger"><strong>Out of Stock</strong></p>
                     @endif
                     @auth
+                    @if(Route::has('wishlist.add') && Route::has('wishlist.remove'))
                         @if(auth()->user()->wishlist()->where('product_id', $product->id)->exists())
                             <form action="{{ route('wishlist.remove', $product) }}" method="POST">
                                 @csrf
@@ -76,6 +77,7 @@
                                 <button type="submit" class="btn btn-primary">Add to Wishlist</button>
                             </form>
                         @endif
+                    @endif
                     @endauth
                     {{-- <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
                         @csrf
@@ -97,7 +99,7 @@
                                         <div class="card-body">
                                             <h5 class="card-title">{{ $recommendedProduct->name }}</h5>
                                             <p class="card-text">${{ number_format($recommendedProduct->price, 2) }}</p>
-                                            <a href="{{ route('products.show', $recommendedProduct->id) }}" class="btn btn-sm btn-primary">View Product</a>
+                                            <a href="{{ route('products.show', $recommendedProduct) }}" class="btn btn-sm btn-primary">View Product</a>
                                             @if($recommendedProduct->inventory_count == 0)
                                                 <p class="text-danger mt-2">Out of Stock</p>
                                             @endif
@@ -159,7 +161,7 @@
     ],
     'offers' => [
         '@type' => 'Offer',
-        'url' => route('products.show', $product->id),
+        'url' => route('products.show', $product),
         'priceCurrency' => 'USD',
         'price' => $product->price,
         'availability' => $product->inventory_count > 0
@@ -181,6 +183,6 @@
     <meta property="og:title" content="{{ $product->meta_title ?? $product->name }}">
     <meta property="og:description" content="{{ $product->meta_description ?? $product->short_description }}">
     <meta property="og:image" content="{{ asset('/images/placeholder.png') }}">
-    <meta property="og:url" content="{{ route('products.show', $product->id) }}">
+    <meta property="og:url" content="{{ route('products.show', $product) }}">
     <meta name="twitter:card" content="summary_large_image">
 @endsection

@@ -14,14 +14,14 @@ class ProductSeeder extends Seeder
      */
     public function run(): void
     {
-         // Fetch categories by name to avoid hardcoding IDs
-         $electronicsCategory = ProductCategory::where('name', 'Electronics')->first();
-         $clothingCategory = ProductCategory::where('name', 'Clothing')->first();
-         $booksCategory = ProductCategory::where('name', 'Books')->first();
-         $homeKitchenCategory = ProductCategory::where('name', 'Home & Kitchen')->first();
-         $sportsOutdoorsCategory = ProductCategory::where('name', 'Sports & Outdoors')->first();
-         $healthBeautyCategory = ProductCategory::where('name', 'Health & Beauty')->first();
-         $toysGamesCategory = ProductCategory::where('name', 'Toys & Games')->first();
+         // Fetch categories by slug to avoid hardcoding IDs
+         $electronicsCategory = ProductCategory::where('slug', 'electronics')->first();
+         $clothingCategory = ProductCategory::where('slug', 'clothing')->first();
+         $booksCategory = ProductCategory::where('slug', 'books')->first();
+         $homeKitchenCategory = ProductCategory::where('slug', 'home')->first();
+         $sportsOutdoorsCategory = ProductCategory::where('slug', 'sports')->first();
+         $healthBeautyCategory = ProductCategory::where('slug', 'beauty')->first();
+         $toysGamesCategory = ProductCategory::where('slug', 'toys')->first();
  
          // Products for Electronics
          Product::factory()->create([

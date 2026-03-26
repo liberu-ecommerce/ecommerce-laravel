@@ -163,7 +163,7 @@
                 @foreach($latestProducts as $product)
                     <div class="product-card group">
                         <div class="relative overflow-hidden">
-                            <a href="{{ route('products.show', $product->id) }}">
+                            <a href="{{ route('products.show', $product) }}">
                                 <img src="{{ $product->image_url ?? asset('images/placeholder.png') }}" 
                                      alt="{{ $product->name }}" 
                                      class="product-image">
@@ -200,7 +200,7 @@
 
                         <div class="p-6">
                             <div class="mb-2">
-                                <a href="{{ route('products.show', $product->id) }}" 
+                                <a href="{{ route('products.show', $product) }}" 
                                    class="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2">
                                     {{ $product->name }}
                                 </a>

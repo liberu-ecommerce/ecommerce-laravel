@@ -49,7 +49,7 @@
                         <td>Actions</td>
                         @foreach($products as $product)
                             <td>
-                                <a href="{{ route('products.show', $product->id) }}" class="btn btn-sm btn-primary">View</a>
+                                <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-primary">View</a>
                                 <form action="{{ route('products.removeFromCompare', $product->id) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
