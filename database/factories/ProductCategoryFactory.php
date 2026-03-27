@@ -36,7 +36,12 @@ class ProductCategoryFactory extends Factory
             "name" => $this->faker->name,
             "slug" => null,
             "description" => $this->faker->paragraph,
-            'image' => $this->faker->imageUrl(640, 480, 'No image', false, null, true),
+            'image' => 'https://placehold.co/'
+                . $this->faker->numberBetween(300, 800) . 'x'
+                . $this->faker->numberBetween(200, 600) . '/'
+                . $this->faker->safeColorName() . '/'
+                . $this->faker->safeColorName()
+                . '.png?text=' . rawurlencode($this->faker->word()),
         ];
     }
 }

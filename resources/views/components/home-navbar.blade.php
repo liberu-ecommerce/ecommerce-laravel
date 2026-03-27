@@ -221,13 +221,13 @@
         <div class="container mx-auto px-4">
             <ul class="flex space-x-8 overflow-x-auto pb-1 hide-scrollbar">
                 <li><a href="{{ route('products.index') }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap font-medium">All Products</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'electronics']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Electronics</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'clothing']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Clothing</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'home']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Home & Living</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'books']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Books</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'beauty']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Beauty</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'sports']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Sports</a></li>
-                <li><a href="{{ route('categories.products', ['category' => 'toys']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Toys</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'electronics']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Electronics</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'clothing']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Clothing</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'home']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Home & Living</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'books']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Books</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'beauty']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Beauty</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'sports']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Sports</a></li>
+                <li><a href="{{ route('categories.show', ['category' => 'toys']) }}" class="text-gray-700 hover:text-blue-600 whitespace-nowrap">Toys</a></li>
             </ul>
         </div>
     </nav>

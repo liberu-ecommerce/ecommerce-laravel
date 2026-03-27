@@ -75,7 +75,7 @@
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
-                <a href="{{ route('categories.products', ['category' => 'electronics']) }}" 
+                <a href="{{ route('categories.show', ['category' => 'electronics']) }}" 
                    class="group card card-hover">
                     <div class="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
@@ -91,7 +91,7 @@
                         <p class="text-sm text-gray-500 mt-1">Latest gadgets & tech</p>
                     </div>
                 </a>
-                <a href="{{ route('categories.products', ['category' => 'clothing']) }}" 
+                <a href="{{ route('categories.show', ['category' => 'clothing']) }}" 
                    class="group card card-hover">
                     <div class="relative h-48 bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-pink-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
@@ -108,7 +108,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('categories.products', ['category' => 'home']) }}" 
+                <a href="{{ route('categories.show', ['category' => 'home']) }}" 
                    class="group card card-hover">
                     <div class="relative h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
@@ -122,7 +122,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('categories.products', ['category' => 'books']) }}" 
+                <a href="{{ route('categories.show', ['category' => 'books']) }}" 
                    class="group card card-hover">
                     <div class="relative h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
