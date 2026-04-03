@@ -26,8 +26,8 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             DefaultTeamSeeder::class,
             UserSeeder::class,
-            MenuSeeder::class,
             DummyDataSeeder::class,
+            MenuSeeder::class,
         ]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\IsTenantModel;
+use Biostate\FilamentMenuBuilder\Traits\Menuable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,6 +11,7 @@ class ProductCategory extends Model
 {
     use HasFactory;
     use IsTenantModel;
+    use Menuable;
 
     protected $table = 'product_categories';
 
@@ -36,5 +38,20 @@ class ProductCategory extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    public function getMenuLinkAttribute(): string
+    {
+        return route('categories.show', $this);
+    }
+
+    public function getMenuNameAttribute(): string
+    {
+        return $this->name;
+    }
+
+    public static function getFilamentSearchLabel(): string
+    {
+        return 'name';
     }
 }
