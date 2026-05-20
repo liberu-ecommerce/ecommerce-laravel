@@ -8,7 +8,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C3Q0ucfP.css",
+    "file": "assets/app-X8EcXSFy.css",
     "name": "app",
     "names": [
       "app.css"
@@ -21,7 +21,7 @@
     ]
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/theme-Dh6oXaKU.css",
+    "file": "assets/theme-i0okfNCj.css",
     "name": "theme",
     "names": [
       "theme.css"
@@ -30,7 +30,7 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-DyisjcfH.js",
+    "file": "assets/app-CTA4ggRE.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
