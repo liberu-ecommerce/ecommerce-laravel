@@ -33,6 +33,9 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -46,33 +49,42 @@ class ProductResource extends Resource
     {
         return $schema
             ->components([
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                Textarea::make('description')
-                    ->maxLength(65535),
-                TextInput::make('price')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
-                Select::make('category_id')
-                    ->label('Category')
-                    ->options(ProductCategory::all()->pluck('name', 'id'))
-                    ->searchable(),
-                TextInput::make('inventory_count')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0),
-                TextInput::make('low_stock_threshold')
-                    ->required()
-                    ->numeric()
-                    ->minValue(0)
-                    ->label('Low Stock Threshold'),
-                Select::make('tags')
-                    ->multiple()
-                    ->relationship('tags', 'name')
-                    ->preload(),
+                Section::make('Basic Information')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Set $set, Get $get, ?string $old, ?string $state): void {
+                                $currentSlug = (string) ($get('slug') ?? '');
+                                $oldNameSlug = Str::slug((string) ($old ?? ''));
+                                if ($currentSlug !== '' && $currentSlug !== $oldNameSlug) {
+                                    return;
+                                }
+                                $set('slug', Str::slug((string) $state));
+                            }),
+                        TextInput::make('slug')
+                            ->required()
+                            ->unique(ignoreRecord: true)
+                            ->maxLength(255),
+                        Select::make('category_id')
+                            ->label('Category')
+                            ->options(ProductCategory::all()->pluck('name', 'id'))
+                            ->searchable(),
+                        Select::make('tags')
+                            ->multiple()
+                            ->relationship('tags', 'name')
+                            ->preload(),
+                        Textarea::make('description')
+                            ->maxLength(65535)
+                            ->columnSpanFull(),
+                    ]),
+
                 Section::make('Pricing')
+                    ->columnSpanFull()
+                    ->columns(2)
                     ->schema([
                         Select::make('pricing_type')
                             ->options([
@@ -81,51 +93,65 @@ class ProductResource extends Resource
                                 'donation' => 'Pay What You Want',
                             ])
                             ->default('fixed')
-                            ->reactive(),
-                            
+                            ->live(),
                         TextInput::make('price')
                             ->required()
                             ->numeric()
                             ->prefix('$')
-                            ->visible(fn (callable $get) => $get('pricing_type') === 'fixed'),
-                            
+                            ->visible(fn (Get $get) => $get('pricing_type') === 'fixed'),
                         TextInput::make('suggested_price')
                             ->numeric()
                             ->prefix('$')
-                            ->visible(fn (callable $get) => $get('pricing_type') === 'donation'),
-                            
+                            ->visible(fn (Get $get) => $get('pricing_type') === 'donation'),
                         TextInput::make('minimum_price')
                             ->numeric()
                             ->prefix('$')
                             ->default(0)
-                            ->visible(fn (callable $get) => $get('pricing_type') === 'donation'),
+                            ->visible(fn (Get $get) => $get('pricing_type') === 'donation'),
                     ]),
+
+                Section::make('Inventory')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('inventory_count')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0),
+                        TextInput::make('low_stock_threshold')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0)
+                            ->label('Low Stock Threshold'),
+                    ]),
+
                 Section::make('Downloadable Product')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->collapsible()
                     ->schema([
                         Toggle::make('is_downloadable')
                             ->label('Is Downloadable Product')
-                            ->reactive(),
-
+                            ->live()
+                            ->columnSpanFull(),
                         FileUpload::make('downloadable_file')
                             ->label('Product File')
                             ->disk('local')
                             ->directory('downloadable_products')
                             ->visibility('private')
                             ->acceptedFileTypes(['application/pdf', 'application/zip'])
-                            ->maxSize(50 * 1024) // 50MB
-                            ->visible(fn (callable $get) => $get('is_downloadable')),
-
+                            ->maxSize(50 * 1024)
+                            ->visible(fn (Get $get) => $get('is_downloadable'))
+                            ->columnSpanFull(),
                         TextInput::make('download_limit')
                             ->label('Download Limit')
                             ->numeric()
                             ->minValue(1)
-                            ->visible(fn (callable $get) => $get('is_downloadable')),
-
+                            ->visible(fn (Get $get) => $get('is_downloadable')),
                         DateTimePicker::make('expiration_time')
                             ->label('Download Expiration')
-                            ->visible(fn (callable $get) => $get('is_downloadable')),
-                    ])
-                    ->collapsible(),
+                            ->visible(fn (Get $get) => $get('is_downloadable')),
+                    ]),
             ]);
     }
 

@@ -27,7 +27,12 @@ class ProductImageFactory extends Factory
     {
         return [
             'product_id' => Product::factory(),
-            'image' => $this->faker->imageUrl(640, 480, 'products'),
+            'image' => 'https://placehold.co/'
+                . $this->faker->numberBetween(300, 800) . 'x'
+                . $this->faker->numberBetween(200, 600) . '/'
+                . $this->faker->safeColorName() . '/'
+                . $this->faker->safeColorName()
+                . '.png?text=' . rawurlencode($this->faker->word()),
             'order' => $this->faker->numberBetween(1, 10),
         ];
     }

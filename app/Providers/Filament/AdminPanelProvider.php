@@ -2,17 +2,22 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Actions\Action;
 use Filament\Widgets\AccountWidget;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use App\Filament\Admin\Resources\MenuItemResource;
+use App\Filament\Admin\Resources\MenuResource;
 use App\Filament\App\Pages;
 use App\Filament\App\Pages\EditProfile;
 use App\Http\Middleware\TeamsPermission;
+use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\Team;
+use Biostate\FilamentMenuBuilder\FilamentMenuBuilderPlugin;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
 use Filament\Pages as FilamentPage;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -46,7 +51,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Gray,
             ])
             ->userMenuItems([
-                MenuItem::make()
+                Action::make('profile')
                     ->label('Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => $this->shouldRegisterMenuItem()
@@ -89,7 +94,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
-                    ->navigationGroup('Administration')
+                    ->navigationGroup('Administration'),
+                FilamentMenuBuilderPlugin::make()
+                    ->usingMenuModel(Menu::class)
+                    ->usingMenuItemModel(MenuItem::class)
+                    ->usingMenuResource(MenuResource::class)
+                    ->usingMenuItemResource(MenuItemResource::class),
             ]);
 
         // if (Features::hasApiFeatures()) {
@@ -104,10 +114,10 @@ class AdminPanelProvider extends PanelProvider
         // }
 
         if (Features::hasTeamFeatures()) {
-            // $panel
-            //     ->tenant(Team::class, ownershipRelationship: 'team')
-            //     ->tenantRegistration(Pages\CreateTeam::class)
-            //     ->tenantProfile(Pages\EditTeam::class)
+            $panel
+                ->tenant(Team::class, ownershipRelationship: 'team')
+                ->tenantRegistration(Pages\CreateTeam::class)
+                ->tenantProfile(Pages\EditTeam::class);
             //     ->userMenuItems([
             //         MenuItem::make()
             //             ->label('Team Settings')

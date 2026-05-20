@@ -2,3 +2,5 @@
 
 @source '../../../../app/Filament/Admin/**/*';
 @source '../../../../resources/views/filament/admin/**/*';
+@source '../../../../resources/views/vendor/filament-menu-builder/**/*.blade.php';
+@source '../../../../vendor/biostate/filament-menu-builder/resources/views/**/*.blade.php';

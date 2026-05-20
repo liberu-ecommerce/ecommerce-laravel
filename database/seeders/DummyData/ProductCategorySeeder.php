@@ -9,17 +9,54 @@ use Illuminate\Database\Seeder;
 class ProductCategorySeeder extends Seeder
 {
     /**
+     * Define the product categories to seed.
+     * Each category can be easily customized or extended.
+     */
+    private array $categories = [
+        [
+            'name' => 'Electronics',
+            'slug' => 'electronics',
+            'description' => 'Gadgets, devices, and home appliances.',
+        ],
+        [
+            'name' => 'Clothing',
+            'slug' => 'clothing',
+            'description' => 'Men\'s, women\'s, and kids\' fashion.',
+        ],
+        [
+            'name' => 'Books',
+            'slug' => 'books',
+            'description' => 'Fiction, non-fiction, and educational books.',
+        ],
+        [
+            'name' => 'Home & Living',
+            'slug' => 'home',
+            'description' => 'Furniture, decor, and essentials for every room.',
+        ],
+        [
+            'name' => 'Beauty',
+            'slug' => 'beauty',
+            'description' => 'Skincare, cosmetics, and personal care products.',
+        ],
+        [
+            'name' => 'Sports',
+            'slug' => 'sports',
+            'description' => 'Sporting goods, fitness gear, and outdoor equipment.',
+        ],
+        [
+            'name' => 'Toys',
+            'slug' => 'toys',
+            'description' => 'Kids toys, games, and family entertainment.',
+        ],
+    ];
+
+    /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        ProductCategory::factory()->create(['name' => 'Electronics', 'description' => 'Gadgets, devices, and home appliances.']);
-        ProductCategory::factory()->create(['name' => 'Clothing', 'description' => 'Men’s, women’s, and kids’ fashion.']);
-        ProductCategory::factory()->create(['name' => 'Books', 'description' => 'Fiction, non-fiction, and educational books.']);
-        ProductCategory::factory()->create(['name' => 'Home & Kitchen', 'description' => 'Furniture, kitchen appliances, and decor.']);
-        ProductCategory::factory()->create(['name' => 'Sports & Outdoors', 'description' => 'Sporting goods and outdoor equipment.']);
-        ProductCategory::factory()->create(['name' => 'Health & Beauty', 'description' => 'Skincare, fitness equipment, and more.']);
-        ProductCategory::factory()->create(['name' => 'Toys & Games', 'description' => 'Kids toys, video games, and board games.']);
-    
+        foreach ($this->categories as $category) {
+            ProductCategory::factory()->create($category);
+        }
     }
 }

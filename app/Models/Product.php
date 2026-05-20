@@ -50,6 +50,11 @@ class Product extends Model implements Orderable
         'minimum_price' => 'decimal:2',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     public function category()
     {
         return $this->belongsTo(ProductCategory::class);

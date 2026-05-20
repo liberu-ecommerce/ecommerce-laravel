@@ -6,7 +6,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @if($categories->count() > 0)
             @foreach($categories as $category)
-                <a href="{{ route('categories.products', $category) }}" class="block group">
+                <a href="{{ route('categories.show', $category) }}" class="block group">
                     <div class="card card-hover p-6 h-full">
                         <h5 class="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">{{ $category->name }}</h5>
                         <p class="text-gray-600 mb-3">{{ $category->description }}</p>

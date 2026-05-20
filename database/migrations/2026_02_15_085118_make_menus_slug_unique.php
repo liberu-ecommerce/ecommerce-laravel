@@ -6,17 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
     public function up()
     {
         Schema::table('menus', function (Blueprint $table) {
-            $table->text('icon')->nullable();
+            $table->unique(['slug']);
         });
     }
 
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
     public function down()
     {
         Schema::table('menus', function (Blueprint $table) {
-            $table->dropColumn('icon');
+            $table->dropUnique(['slug']);
         });
     }
 };

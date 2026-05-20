@@ -24,7 +24,17 @@ class ProductCategoryController extends Controller
 
     public function show(ProductCategory $category)
     {
-        return view('categories.show', compact('category'));
+        $productCount = Product::query()
+            ->where('category_id', $category->id)
+            ->count();
+
+        $featuredProducts = Product::query()
+            ->where('category_id', $category->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('categories.show', compact('category', 'productCount', 'featuredProducts'));
     }
 
     public function products(Request $request, ProductCategory $category)

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Actions\Action;
 use Filament\Widgets\AccountWidget;
 use App\Filament\App\Pages\CreateTeam;
 use App\Filament\App\Pages\EditTeam;
@@ -53,7 +54,7 @@ class AppPanelProvider extends PanelProvider
                 'primary' => Color::Gray,
             ])
             ->userMenuItems([
-                MenuItem::make()
+                Action::make('profile')
                     ->label('Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => $this->shouldRegisterMenuItem()

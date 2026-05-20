@@ -30,7 +30,12 @@ class ProductFactory extends Factory
             "short_description" => $this->faker->paragraph(),
             "long_description" => $this->faker->paragraph(),
             "category_id" => ProductCategory::factory(),
-            'featured_image' => $this->faker->imageUrl(640, 480, 'No image', false, null, true),
+            'featured_image' => 'https://placehold.co/'
+                . $this->faker->numberBetween(300, 800) . 'x'
+                . $this->faker->numberBetween(200, 600) . '/'
+                . $this->faker->safeColorName() . '/'
+                . $this->faker->safeColorName()
+                . '.png?text=' . rawurlencode($this->faker->words(2, true)),
             'price' => $this->faker->randomFloat(2, 10, 1000),
         ];
     }
