@@ -171,7 +171,7 @@ class Product extends Model implements Orderable
         return $this->is_downloadable && $this->downloadable()->exists();
     }
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($product) {
             // Auto-generate slug if not provided

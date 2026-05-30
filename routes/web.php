@@ -21,6 +21,7 @@ use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController; // New controller for cart
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\InvoiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -118,6 +119,10 @@ Route::delete('/products/compare/clear', [ProductController::class, 'clearCompar
 Route::middleware('auth')->group(function () {
     Route::get('/download/{category}/{product}', [DownloadController::class, 'generateSecureLink'])->name('download.generate-link');
     Route::get('/download/file/{category}/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
+
+    // Invoice routes
+    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
 });
 
 Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
@@ -153,4 +158,6 @@ Route::prefix('chat')->group(function () {
     });
 });
 
-require __DIR__.'/socialstream.php';
+if (class_exists(\JoelButcher\Socialstream\Socialstream::class)) {
+    require __DIR__.'/socialstream.php';
+}

@@ -4,7 +4,7 @@
 
 @section('content')
     <!-- Enhanced Hero Section -->
-    <div class="relative bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
+    <div class="relative bg-linear-to-br from-blue-50 via-white to-purple-50 overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
@@ -16,7 +16,7 @@
         <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
             <div class="text-center space-y-8 animate-fade-in-up">
                 <div class="space-y-4">
-                    <h1 class="heading-1 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
+                    <h1 class="heading-1 bg-linear-to-r from-blue-600 via-purple-600 to-blue-800 bg-clip-text text-transparent">
                         Welcome to {{config('app.name')}}
                     </h1>
                     <p class="text-xl lg:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -77,7 +77,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 lg:gap-8">
                 <a href="{{ route('categories.show', ['category' => 'electronics']) }}" 
                    class="group card card-hover">
-                    <div class="relative h-48 bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
+                    <div class="relative h-48 bg-linear-to-br from-blue-100 to-blue-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                         <svg class="h-16 w-16 text-blue-600 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -93,7 +93,7 @@
                 </a>
                 <a href="{{ route('categories.show', ['category' => 'clothing']) }}" 
                    class="group card card-hover">
-                    <div class="relative h-48 bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center overflow-hidden">
+                    <div class="relative h-48 bg-linear-to-br from-pink-100 to-pink-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-pink-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                         <svg class="h-16 w-16 text-pink-600 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -110,7 +110,7 @@
 
                 <a href="{{ route('categories.show', ['category' => 'home']) }}" 
                    class="group card card-hover">
-                    <div class="relative h-48 bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center overflow-hidden">
+                    <div class="relative h-48 bg-linear-to-br from-green-100 to-green-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-green-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                         <svg class="h-16 w-16 text-green-600 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 9h14l1 12H4L5 9z"></path>
@@ -124,7 +124,7 @@
 
                 <a href="{{ route('categories.show', ['category' => 'books']) }}" 
                    class="group card card-hover">
-                    <div class="relative h-48 bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center overflow-hidden">
+                    <div class="relative h-48 bg-linear-to-br from-purple-100 to-purple-200 flex items-center justify-center overflow-hidden">
                         <div class="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
                         <svg class="h-16 w-16 text-purple-600 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>

@@ -110,7 +110,7 @@ class GiftCard extends Model
         $this->save();
     }
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($giftCard) {
             if (empty($giftCard->code)) {

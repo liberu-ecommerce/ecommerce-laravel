@@ -117,7 +117,7 @@ class AppPanelProvider extends PanelProvider
         return $panel;
     }
 
-    public function boot()
+    public function boot(): void
     {
         /**
          * Disable Fortify routes.

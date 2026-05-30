@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginResponse implements LoginResponseContract
 {
-    protected $roleRedirects = [
+    protected array $roleRedirects = [
         'admin' => '/admin',
         'staff' => '/app',
     ];
 
-    protected function shouldRedirect(Request $request, $redirect)
+    protected function shouldRedirect(Request $request, string $redirect): bool
     {
         // Check if the current request path matches the redirect path
         return !$request->is($redirect) && !$request->is($redirect . '/*');

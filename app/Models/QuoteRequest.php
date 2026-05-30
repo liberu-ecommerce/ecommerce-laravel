@@ -30,7 +30,7 @@ class QuoteRequest extends Model
         'responded_at' => 'datetime',
     ];
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($quote) {
             if (!$quote->quote_number) {

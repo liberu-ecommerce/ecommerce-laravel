@@ -7,43 +7,39 @@ use Illuminate\Support\Str;
 
 class ChatWidget extends Component
 {
-    public $isOpen = false;
-    public $sessionId;
-    public $conversationId = null;
-    public $messages = [];
-    public $newMessage = '';
-    public $isLoading = false;
-    public $showRating = false;
-    public $rating = 0;
-    public $feedback = '';
+    public bool $isOpen = false;
+    public string $sessionId = '';
+    public ?int $conversationId = null;
+    public array $messages = [];
+    public string $newMessage = '';
+    public bool $isLoading = false;
+    public bool $showRating = false;
+    public int $rating = 0;
+    public string $feedback = '';
 
-    public function mount()
+    public function mount(): void
     {
-        // Generate or retrieve session ID from browser storage
         $this->sessionId = session('chat_session_id', Str::uuid()->toString());
         session(['chat_session_id' => $this->sessionId]);
     }
 
-    public function toggleChat()
+    public function toggleChat(): void
     {
         $this->isOpen = !$this->isOpen;
-        
+
         if ($this->isOpen && !$this->conversationId) {
             $this->loadOrCreateConversation();
         }
     }
 
-    public function loadOrCreateConversation()
+    public function loadOrCreateConversation(): void
     {
         $this->isLoading = true;
-        
-        // This would typically call the API
         $this->dispatch('chat-conversation-started');
-        
         $this->isLoading = false;
     }
 
-    public function sendMessage()
+    public function sendMessage(): void
     {
         if (empty(trim($this->newMessage))) {
             return;
@@ -57,7 +53,7 @@ class ChatWidget extends Component
         $this->newMessage = '';
     }
 
-    public function closeChat()
+    public function closeChat(): void
     {
         if ($this->conversationId) {
             $this->showRating = true;
@@ -66,7 +62,7 @@ class ChatWidget extends Component
         }
     }
 
-    public function submitRating()
+    public function submitRating(): void
     {
         if ($this->rating > 0) {
             $this->dispatch('chat-submit-rating', [
@@ -75,7 +71,7 @@ class ChatWidget extends Component
                 'feedback' => $this->feedback,
             ]);
         }
-        
+
         $this->reset(['isOpen', 'conversationId', 'messages', 'showRating', 'rating', 'feedback']);
     }
 
