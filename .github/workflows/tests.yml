@@ -5,11 +5,16 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-
   tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       mysql:
@@ -35,6 +40,7 @@ jobs:
       with:
         php-version: '8.5'
         extensions: xdebug, pdo_mysql
+        coverage: xdebug
 
     - name: Get composer cache directory
       id: composer-cache
@@ -51,7 +57,7 @@ jobs:
       run: cp .env.testing .env
 
     - name: Install dependencies
-      run: composer install --ignore-platform-req=php --prefer-source
+      run: composer install --no-interaction --no-progress --prefer-dist
 
     - name: Generate application key
       run: php artisan key:generate
@@ -63,7 +69,9 @@ jobs:
         done
 
     - name: Grant test user privileges
-      run: mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "GRANT ALL PRIVILEGES ON liberu_testing.* TO 'liberu'@'%'; FLUSH PRIVILEGES;"
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -uroot -proot \
+          -e "GRANT ALL PRIVILEGES ON \`liberu_ecommerce_testing\`.* TO 'liberu'@'%'; FLUSH PRIVILEGES;"
 
     - name: Run database migrations
       run: php artisan migrate --force
@@ -74,9 +82,8 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
-         token: ${{ secrets.CODECOV_TOKEN }}
-         files: ./coverage.xml
-         flags: unittests
-         name: codecov-umbrella
-         fail_ci_if_error: false
-      
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
