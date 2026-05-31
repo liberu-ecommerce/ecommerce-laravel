@@ -96,7 +96,7 @@ class ProductControllerTest extends TestCase
             'name' => $productName
         ]);
 
-        $response = $this->get(route('products.show', ['product' => $product->id]));
+        $response = $this->get(route('products.show', ['product' => $product->slug]));
 
         $response->assertStatus(200);
         $response->assertViewIs('products.show');

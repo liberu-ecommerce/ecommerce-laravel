@@ -23,11 +23,11 @@ class CollectionController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = QueryBuilder::for(ProductCollection::class)
-            ->allowedFilters([
+            ->allowedFilters(
                 'name',
                 AllowedFilter::exact('id'),
-            ])
-            ->allowedSorts(['name', 'created_at', 'updated_at'])
+            )
+            ->allowedSorts('name', 'created_at', 'updated_at')
             ->with('products');
 
         // Check if pagination is requested

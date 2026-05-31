@@ -147,6 +147,7 @@ RUN mkdir -p \
 COPY --chown=${USER}:${USER} .docker/supervisord.conf /etc/supervisor/
 COPY --chown=${USER}:${USER} .docker/octane/RoadRunner/supervisord.roadrunner.conf /etc/supervisor/conf.d/
 COPY --chown=${USER}:${USER} .docker/supervisord.horizon.conf /etc/supervisor/conf.d/
+COPY --chown=${USER}:${USER} .docker/supervisord.reverb.conf /etc/supervisor/conf.d/
 COPY --chown=${USER}:${USER} .docker/supervisord.scheduler.conf /etc/supervisor/conf.d/
 COPY --chown=${USER}:${USER} .docker/supervisord.worker.conf /etc/supervisor/conf.d/
 COPY --chown=${USER}:${USER} .docker/php.ini ${PHP_INI_DIR}/conf.d/99-octane.ini

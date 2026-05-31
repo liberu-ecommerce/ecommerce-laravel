@@ -210,7 +210,7 @@ class ProductCategoryControllerTest extends TestCase
         $category = ProductCategory::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id]);
 
-        $response = $this->get(route('categories.show', $category->id));
+        $response = $this->get(route('categories.show', $category->slug));
 
         $response->assertStatus(200);
         $response->assertViewHas('category', function ($viewCategory) use ($category, $product) {

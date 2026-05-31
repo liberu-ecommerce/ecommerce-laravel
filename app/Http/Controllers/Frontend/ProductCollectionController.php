@@ -14,8 +14,8 @@ class ProductCollectionController extends Controller
     public function index()
     {
         $collections = QueryBuilder::for(ProductCollection::class)
-            ->allowedFilters(['name'])
-            ->allowedSorts(['name', 'created_at'])
+            ->allowedFilters('name')
+            ->allowedSorts('name', 'created_at')
             ->paginate();
 
         return view('collections.index', compact('collections'));
@@ -29,14 +29,14 @@ class ProductCollectionController extends Controller
     public function products(Request $request, ProductCollection $collection)
     {
         $products = QueryBuilder::for($collection->products())
-            ->allowedFilters([
+            ->allowedFilters(
                 'name',
                 'price',
                 'created_at',
                 AllowedFilter::scope('price_min'),
                 AllowedFilter::scope('price_max'),
-            ])
-            ->allowedSorts(['name', 'price', 'created_at'])
+            )
+            ->allowedSorts('name', 'price', 'created_at')
             ->paginate(config('pagination.per_page'))
             ->appends($request->query());
 

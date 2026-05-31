@@ -27,14 +27,14 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = QueryBuilder::for(Product::class)
-            ->allowedFilters([
+            ->allowedFilters(
                 'name',
                 'price',
                 'created_at',
                 AllowedFilter::scope('price_min'),
                 AllowedFilter::scope('price_max'),
-            ])
-            ->allowedSorts(['name', 'price', 'created_at']);
+            )
+            ->allowedSorts('name', 'price', 'created_at');
 
         if ($request->filled('keyword') || $request->filled('search')) {
             $keyword = $request->input('keyword') ?? $request->input('search');

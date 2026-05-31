@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ecommerce-laravel-storage-pvc
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
