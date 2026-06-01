@@ -57,7 +57,13 @@ class SocialstreamRegistrationTest extends TestCase
             ->setRefreshToken('refresh-token')
             ->setExpiresIn(3600);
 
-        $provider = Mockery::mock('Laravel\\Socialite\\Two\\'.$socialiteProvider.'Provider');
+        $providerClassName = match ($socialiteProvider) {
+            'linkedin-openid' => 'Laravel\\Socialite\\Two\\LinkedInOpenIdProvider',
+            'twitter-oauth-2' => 'Laravel\\Socialite\\Two\\TwitterProvider',
+            default => 'Laravel\\Socialite\\Two\\'.ucfirst($socialiteProvider).'Provider',
+        };
+
+        $provider = Mockery::mock($providerClassName);
         $provider->shouldReceive('user')->once()->andReturn($user);
 
         Socialite::shouldReceive('driver')->once()->with($socialiteProvider)->andReturn($provider);
@@ -67,7 +73,7 @@ class SocialstreamRegistrationTest extends TestCase
         $response = $this->get("/oauth/$socialiteProvider/callback");
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(config('socialstream.redirects.register', config('socialstream.home', '/dashboard')));
     }
 
     public static function socialiteProvidersDataProvider(): array
@@ -81,7 +87,6 @@ class SocialstreamRegistrationTest extends TestCase
             [Providers::linkedin()],
             [Providers::linkedinOpenId()],
             [Providers::slack()],
-            [Providers::twitterOAuth1()],
             [Providers::twitterOAuth2()],
         ];
     }

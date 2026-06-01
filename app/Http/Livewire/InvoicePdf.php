@@ -3,24 +3,23 @@
 namespace App\Http\Livewire;
 
 use Livewire\Component;
-use Barryvdh\DomPDF\Facade as PDF;
 use App\Models\Invoice;
 
 class InvoicePdf extends Component
 {
-    public $invoiceId;
+    public int $invoiceId;
+    public ?Invoice $invoice = null;
 
-    public function mount($invoiceId)
+    public function mount(int $invoiceId): void
     {
         $this->invoiceId = $invoiceId;
+        $this->invoice = Invoice::findOrFail($invoiceId);
     }
 
     public function render()
     {
-        $invoice = Invoice::findOrFail($this->invoiceId);
-        $pdf = PDF::loadView('invoices.pdf', ['invoice' => $invoice]);
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->stream();
-        }, "invoice-{$this->invoiceId}.pdf");
+        return view('livewire.invoice-pdf', [
+            'invoice' => $this->invoice,
+        ]);
     }
 }

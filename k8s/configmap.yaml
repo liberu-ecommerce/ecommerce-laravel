@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecommerce-laravel-config
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+data:
+  APP_ENV: production
+  APP_DEBUG: "false"
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: error
+  QUEUE_CONNECTION: redis
+  CACHE_DRIVER: redis
+  SESSION_DRIVER: redis
+  OCTANE_SERVER: roadrunner
+  CONTAINER_MODE: http
+  BROADCAST_DRIVER: reverb
+  REVERB_HOST: "reverb-service"
+  REVERB_PORT: "8080"
+  REVERB_SCHEME: http
+  DB_CONNECTION: mysql
+  DB_PORT: "3306"
+  MAIL_MAILER: smtp
+  MAIL_PORT: "587"

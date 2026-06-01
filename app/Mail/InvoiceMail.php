@@ -5,28 +5,27 @@ namespace App\Mail;
 use App\Models\Invoice;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade as PDF;
 
 class InvoiceMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $invoice;
+    public function __construct(public readonly Invoice $invoice) {}
 
-    public function __construct(Invoice $invoice)
+    public function envelope(): Envelope
     {
-        $this->invoice = $invoice;
+        return new Envelope(
+            subject: 'Your Invoice from ' . config('app.name'),
+        );
     }
 
-    public function build()
+    public function content(): Content
     {
-        $pdf = PDF::loadView('invoices.pdf', ['invoice' => $this->invoice]);
-
-        return $this->subject('Your Invoice from Ecommerce')
-                    ->view('emails.invoice')
-                    ->attachData($pdf->output(), "invoice-{$this->invoice->id}.pdf", [
-                        'mime' => 'application/pdf',
-                    ]);
+        return new Content(
+            view: 'emails.invoice',
+        );
     }
 }

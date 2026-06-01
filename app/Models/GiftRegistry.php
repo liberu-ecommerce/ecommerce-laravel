@@ -37,7 +37,7 @@ class GiftRegistry extends Model
         'is_active' => 'boolean',
     ];
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($registry) {
             if (!$registry->slug) {

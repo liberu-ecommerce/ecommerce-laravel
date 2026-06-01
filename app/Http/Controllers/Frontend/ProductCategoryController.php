@@ -14,8 +14,8 @@ class ProductCategoryController extends Controller
     public function index()
     {
         $categories = QueryBuilder::for(ProductCategory::class)
-            ->allowedFilters(['name'])
-            ->allowedSorts(['name', 'created_at'])
+            ->allowedFilters('name')
+            ->allowedSorts('name', 'created_at')
             ->withCount('products')
             ->paginate();
 
@@ -40,15 +40,15 @@ class ProductCategoryController extends Controller
     public function products(Request $request, ProductCategory $category)
     {
         $products = QueryBuilder::for(Product::class)
-            ->allowedFilters([
+            ->allowedFilters(
                 'name',
                 'price',
                 'created_at',
                 AllowedFilter::scope('price_min'),
                 AllowedFilter::scope('price_max'),
-            ])
+            )
             ->where('category_id', $category->id)
-            ->allowedSorts(['name', 'price', 'created_at'])
+            ->allowedSorts('name', 'price', 'created_at')
             ->paginate(config('pagination.per_page'))
             ->appends($request->query());
 

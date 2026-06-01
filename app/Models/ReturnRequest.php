@@ -30,7 +30,7 @@ class ReturnRequest extends Model
         'received_at' => 'datetime',
     ];
 
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($returnRequest) {
             if (!$returnRequest->rma_number) {

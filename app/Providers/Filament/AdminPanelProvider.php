@@ -131,7 +131,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel;
     }
 
-    public function boot()
+    public function boot(): void
     {
        
     }

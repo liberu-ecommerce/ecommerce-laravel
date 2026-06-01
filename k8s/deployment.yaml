@@ -1,0 +1,153 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-laravel-app
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ecommerce-laravel-app
+  template:
+    metadata:
+      labels:
+        app: ecommerce-laravel-app
+        app.kubernetes.io/name: ecommerce-laravel
+        app.kubernetes.io/component: app
+    spec:
+      containers:
+        - name: app
+          image: ecommerce-laravel:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          env:
+            - name: CONTAINER_MODE
+              value: http
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: storage
+              mountPath: /var/www/html/storage/app
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: ecommerce-laravel-storage-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-laravel-horizon
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: horizon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-laravel-horizon
+  template:
+    metadata:
+      labels:
+        app: ecommerce-laravel-horizon
+        app.kubernetes.io/name: ecommerce-laravel
+        app.kubernetes.io/component: horizon
+    spec:
+      containers:
+        - name: horizon
+          image: ecommerce-laravel:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          env:
+            - name: CONTAINER_MODE
+              value: horizon
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: storage
+              mountPath: /var/www/html/storage/app
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: ecommerce-laravel-storage-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-laravel-reverb
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: reverb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-laravel-reverb
+  template:
+    metadata:
+      labels:
+        app: ecommerce-laravel-reverb
+        app.kubernetes.io/name: ecommerce-laravel
+        app.kubernetes.io/component: reverb
+    spec:
+      containers:
+        - name: reverb
+          image: ecommerce-laravel:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: ws
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          env:
+            - name: CONTAINER_MODE
+              value: reverb
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-laravel-app
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: app
+spec:
+  selector:
+    app: ecommerce-laravel-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reverb-service
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: reverb
+spec:
+  selector:
+    app: ecommerce-laravel-reverb
+  ports:
+    - name: ws
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

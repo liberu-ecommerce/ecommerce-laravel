@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/managed-by: liberu-control-panel

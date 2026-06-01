@@ -57,7 +57,7 @@ class TaxonomyCategory extends Model
     /**
      * Update the materialized path when parent changes
      */
-    protected static function booted()
+    protected static function booted(): void
     {
         static::saving(function ($category) {
             if ($category->parent_id) {

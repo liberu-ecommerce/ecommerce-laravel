@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-gradient-to-br from-blue-50 via-white to-cyan-50 border-b border-gray-100">
+<div class="bg-linear-to-br from-blue-50 via-white to-cyan-50 border-b border-gray-100">
     <div class="container mx-auto px-4 py-10 md:py-14">
         <nav class="text-sm text-gray-500 mb-5">
             <a href="{{ route('home') }}" class="hover:text-blue-600">Home</a>

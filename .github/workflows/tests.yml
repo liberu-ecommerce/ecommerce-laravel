@@ -4,26 +4,64 @@ on:
   push:
     branches: [main]
   pull_request:
+<<<<<<< HEAD
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
+=======
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+>>>>>>> f9b0411bae6581731ea3d1d77229d654c966886c
 
 jobs:
   tests:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     timeout-minutes: 15
+=======
+    timeout-minutes: 30
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: liberu_ecommerce_testing
+          MYSQL_USER: liberu
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+>>>>>>> f9b0411bae6581731ea3d1d77229d654c966886c
 
     steps:
       - uses: actions/checkout@v4
 
+<<<<<<< HEAD
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
           extensions: mbstring, pdo, pdo_sqlite, bcmath, opcache, zip, gd, intl
           coverage: xdebug
+=======
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.5'
+        extensions: xdebug, pdo_mysql
+        coverage: xdebug
+>>>>>>> f9b0411bae6581731ea3d1d77229d654c966886c
 
       - name: Get composer cache directory
         id: composer-cache
@@ -39,8 +77,13 @@ jobs:
       - name: Copy environment file
         run: cp .env.example .env
 
+<<<<<<< HEAD
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+=======
+    - name: Install dependencies
+      run: composer install --no-interaction --no-progress --prefer-dist
+>>>>>>> f9b0411bae6581731ea3d1d77229d654c966886c
 
       - name: Generate application key
         run: php artisan key:generate
@@ -48,6 +91,7 @@ jobs:
       - name: Run tests
         run: php artisan test --coverage-clover=coverage.xml
 
+<<<<<<< HEAD
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
@@ -56,3 +100,24 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
+=======
+    - name: Grant test user privileges
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -uroot -proot \
+          -e "GRANT ALL PRIVILEGES ON \`liberu_ecommerce_testing\`.* TO 'liberu'@'%'; FLUSH PRIVILEGES;"
+
+    - name: Run database migrations
+      run: php artisan migrate --force
+
+    - name: Run tests
+      run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage.xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+>>>>>>> f9b0411bae6581731ea3d1d77229d654c966886c

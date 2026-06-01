@@ -2,38 +2,35 @@
 
 namespace App\Http\Livewire;
 
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Illuminate\Support\Facades\Session;
 use App\Models\Product;
 
 class ShoppingCart extends Component
 {
-    public $items = [];
-    protected $listeners = ['addToCart'];
+    public array $items = [];
 
-    public function mount()
+    public function mount(): void
     {
         $this->items = Session::get('cart', []);
     }
 
     public function render()
     {
-        $hasPhysicalProducts = $this->hasPhysicalProducts();
-        $total = $this->calculateTotal();
-
         return view('livewire.shopping-cart', [
             'items' => $this->items,
-            'total' => $total,
-            'hasPhysicalProducts' => $hasPhysicalProducts,
-            'canCheckout' => count($this->items) > 0
+            'total' => $this->calculateTotal(),
+            'hasPhysicalProducts' => $this->hasPhysicalProducts(),
+            'canCheckout' => count($this->items) > 0,
         ]);
     }
 
-    public function addToCart($productId, $name, $price, $quantity = 1, $isDownloadable = false, $weight = 0)
+    #[On('addToCart')]
+    public function addToCart(int $productId, string $name, float $price, int $quantity = 1, bool $isDownloadable = false, float $weight = 0): void
     {
         $product = Product::findOrFail($productId);
 
-        // Verify inventory for physical products
         if (!$isDownloadable && $product->inventory_count < $quantity) {
             session()->flash('error', 'Not enough inventory available.');
             return;
@@ -57,11 +54,11 @@ class ShoppingCart extends Component
         }
 
         Session::put('cart', $this->items);
-        $this->emit('cartUpdated');
+        $this->dispatch('cartUpdated');
         session()->flash('success', 'Product added to cart successfully!');
     }
 
-    public function hasPhysicalProducts()
+    public function hasPhysicalProducts(): bool
     {
         foreach ($this->items as $item) {
             if (!$item['is_downloadable']) {
@@ -71,11 +68,8 @@ class ShoppingCart extends Component
         return false;
     }
 
-    public function updateQuantity($productId, $quantity)
+    public function updateQuantity(int $productId, int $quantity): void
     {
-        // Accept numeric strings from the frontend (wire:model / $event.target.value)
-        $quantity = (int) $quantity;
-
         if ($quantity < 1) {
             $this->addError('quantity', 'Quantity must be at least 1');
             return;
@@ -86,7 +80,6 @@ class ShoppingCart extends Component
             return;
         }
 
-        // If product is physical, verify inventory
         $isDownloadable = $this->items[$productId]['is_downloadable'] ?? false;
         if (!$isDownloadable) {
             $product = Product::find($productId);
@@ -94,7 +87,6 @@ class ShoppingCart extends Component
                 $this->addError('product', 'Product not found');
                 return;
             }
-
             if ($quantity > $product->inventory_count) {
                 session()->flash('error', 'Requested quantity exceeds available stock.');
                 return;
@@ -103,35 +95,34 @@ class ShoppingCart extends Component
 
         $this->items[$productId]['quantity'] = $quantity;
         Session::put('cart', $this->items);
-        $this->emit('cartUpdated');
+        $this->dispatch('cartUpdated');
         session()->flash('success', 'Cart updated');
     }
 
-    public function removeItem($productId)
+    public function removeItem(int $productId): void
     {
         if (isset($this->items[$productId])) {
             unset($this->items[$productId]);
             Session::put('cart', $this->items);
-            $this->emit('cartUpdated');
+            $this->dispatch('cartUpdated');
             session()->flash('success', 'Item removed from cart');
         }
     }
 
-    public function clearCart()
+    public function clearCart(): void
     {
         $this->items = [];
         Session::forget('cart');
-        $this->emit('cartUpdated');
+        $this->dispatch('cartUpdated');
         session()->flash('success', 'Cart cleared');
     }
 
-    public function calculateTotal()
+    public function calculateTotal(): float
     {
-        $total = 0;
-        foreach ($this->items as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
-        return round($total, 2);
+        return round(array_reduce(
+            $this->items,
+            fn(float $carry, array $item) => $carry + ($item['price'] * $item['quantity']),
+            0.0
+        ), 2);
     }
 }
-
