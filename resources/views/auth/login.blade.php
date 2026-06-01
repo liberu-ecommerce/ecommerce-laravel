@@ -35,10 +35,14 @@
                     </button>                    
                 </div>
 
-                <a href="/forgot-password" class="underline text-sm text-gray-600 hover:text-gray-900" >Forgot password?</a>
+                <a href="/forgot-password" class="underline text-sm text-gray-600 hover:text-gray-900">Forgot password?</a>
             </form>
 
-           {{-- Demo Credentials Section --}}
+            @if (JoelButcher\Socialstream\Socialstream::show())
+                <x-socialstream::socialstream />
+            @endif
+
+            {{-- Demo Credentials Section --}}
 <div class="mt-6 p-4 bg-gray-100 rounded-lg shadow">
     <h3 class="text-lg font-semibold text-gray-700 mb-4">Demo Credentials</h3>
 

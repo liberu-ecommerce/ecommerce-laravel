@@ -39,6 +39,10 @@
                     </x-button>
                 </div>
             </form>
+
+            @if (JoelButcher\Socialstream\Socialstream::show())
+                <x-socialstream::socialstream />
+            @endif
         </div>
     </div>
 @endsection

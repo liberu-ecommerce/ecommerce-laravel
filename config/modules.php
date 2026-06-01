@@ -135,7 +135,7 @@ return [
     |
     */
 
-    'development' => env('APP_DEBUG', false),
+    'development' => env('MODULES_DEVELOPMENT', env('APP_DEBUG', false)),
 
     /*
     |--------------------------------------------------------------------------
@@ -147,8 +147,8 @@ return [
     */
 
     'requirements' => [
-        'php' => '8.1',
-        'laravel' => '11.0',
+        'php' => '8.5',
+        'laravel' => '13.0',
     ],
 
 ];

@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ecommerce-laravel-quota
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "10"
+    requests.storage: 100Gi
+    pods: "30"
+    services: "15"
+    configmaps: "15"
+    secrets: "15"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ecommerce-laravel-limits
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+spec:
+  limits:
+    - max:
+        cpu: "4"
+        memory: 4Gi
+      min:
+        cpu: "100m"
+        memory: 64Mi
+      default:
+        cpu: "500m"
+        memory: 512Mi
+      defaultRequest:
+        cpu: "250m"
+        memory: 256Mi
+      type: Container
+    - max:
+        cpu: "8"
+        memory: 8Gi
+      min:
+        cpu: "200m"
+        memory: 128Mi
+      type: Pod
+    - max:
+        storage: 50Gi
+      min:
+        storage: 1Gi
+      type: PersistentVolumeClaim

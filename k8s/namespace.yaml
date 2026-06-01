@@ -3,5 +3,6 @@ kind: Namespace
 metadata:
   name: ecommerce-laravel
   labels:
+    name: ecommerce-laravel
     app.kubernetes.io/name: ecommerce-laravel
     app.kubernetes.io/managed-by: liberu-control-panel

@@ -1,7 +1,7 @@
-#!/bin/bash
-# Setup script for the liberu ecommerce project.
+#!/usr/bin/env bash
+# Setup script for the Liberu Ecommerce project.
 #
-# Supports: Standalone, Laravel Sail (Docker), Kubernetes, and Docker Compose deployments.
+# Supports: Standalone, Laravel Sail (Docker), Docker Compose, and Kubernetes deployments.
 # Handles PHP 8.5+ detection with fallback to system php.
 
 set -e
@@ -35,13 +35,13 @@ detect_php() {
     return 1
 }
 
-# Detect composer
+# Detect or download composer
 detect_composer() {
     if command_exists composer; then
         COMPOSER_CMD="composer"
         return 0
     fi
-    for loc in /usr/local/bin/composer /usr/bin/composer "$HOME/.composer/composer.phar"; do
+    for loc in /usr/local/bin/composer /usr/bin/composer "$HOME/.composer/composer.phar" "$HOME/.local/bin/composer"; do
         if [ -f "$loc" ]; then
             COMPOSER_CMD="$PHP_CMD $loc"
             return 0
@@ -50,7 +50,7 @@ detect_composer() {
 
     print_warning "Composer not found. Downloading..."
     if ! command_exists curl; then
-        print_error "curl required. Install curl or composer manually."
+        print_error "curl is required to download Composer. Install curl or composer manually."
         return 1
     fi
     $PHP_CMD -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
@@ -58,7 +58,7 @@ detect_composer() {
     $PHP_CMD -r "unlink('composer-setup.php');"
     if [ -f "composer.phar" ]; then
         COMPOSER_CMD="$PHP_CMD composer.phar"
-        print_success "Composer downloaded."
+        print_success "Composer downloaded successfully."
         return 0
     fi
     print_error "Failed to download Composer."
@@ -68,16 +68,16 @@ detect_composer() {
 install_composer_dependencies() {
     print_header "COMPOSER INSTALL"
     if [ -d "vendor" ] && [ -f "vendor/autoload.php" ]; then
-        read -p "vendor/ exists. Reinstall? (y/n) " -n 1 -r; echo
-        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping composer install"; return 0; }
+        read -p "vendor/ already exists. Reinstall? (y/n) " -n 1 -r; echo
+        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping composer install."; return 0; }
     fi
     detect_php || return 1
     detect_composer || return 1
     print_info "Running: $COMPOSER_CMD install"
     if eval "$COMPOSER_CMD install --no-interaction --prefer-dist --ignore-platform-req=ext-posix"; then
-        print_success "Composer dependencies installed"
+        print_success "Composer dependencies installed successfully."
     else
-        print_error "Composer install failed"
+        print_error "Composer install failed."
         return 1
     fi
 }
@@ -85,17 +85,17 @@ install_composer_dependencies() {
 install_npm_dependencies() {
     print_header "NPM INSTALL"
     if [ -d "node_modules" ]; then
-        read -p "node_modules/ exists. Reinstall? (y/n) " -n 1 -r; echo
-        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping npm install"; return 0; }
+        read -p "node_modules/ already exists. Reinstall? (y/n) " -n 1 -r; echo
+        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping npm install."; return 0; }
     fi
     if ! command_exists npm; then
         print_error "npm not found. Install Node.js from https://nodejs.org/"
         return 1
     fi
     if npm install; then
-        print_success "NPM dependencies installed"
+        print_success "NPM dependencies installed successfully."
     else
-        print_error "NPM install failed"
+        print_error "NPM install failed."
         return 1
     fi
 }
@@ -107,9 +107,9 @@ build_frontend_assets() {
         return 1
     fi
     if npm run build; then
-        print_success "Frontend assets built"
+        print_success "Frontend assets built successfully."
     else
-        print_error "NPM build failed"
+        print_error "NPM build failed."
         return 1
     fi
 }
@@ -126,41 +126,65 @@ install_standalone() {
         read -p "Copy .env.example to .env? (y/n) " -n 1 -r; echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             cp .env.example .env
-            print_success ".env created"
+            print_success ".env created from .env.example"
         fi
     fi
 
     read -p "Database credentials configured in .env? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] || { print_warning "Configure .env and re-run."; exit 0; }
+    [[ $REPLY =~ ^[Yy]$ ]] || { print_warning "Configure .env with database credentials and re-run."; exit 0; }
 
     install_composer_dependencies || exit 1
     install_npm_dependencies || print_warning "NPM install failed, continuing..."
     build_frontend_assets || print_warning "NPM build failed, continuing..."
 
     print_header "KEY:GENERATE"
-    $PHP_CMD artisan key:generate && print_success "App key generated" || { print_error "Key generate failed"; exit 1; }
+    if $PHP_CMD artisan key:generate; then
+        print_success "Application key generated."
+    else
+        print_error "Key generation failed."; exit 1
+    fi
 
-    print_header "MIGRATE"
-    $PHP_CMD artisan migrate:fresh && print_success "Database migrated" || { print_error "Migration failed"; exit 1; }
+    print_header "MIGRATE:FRESH"
+    if $PHP_CMD artisan migrate:fresh; then
+        print_success "Database migrated successfully."
+    else
+        print_error "Migration failed."; exit 1
+    fi
 
     print_header "DB:SEED"
-    $PHP_CMD artisan db:seed && print_success "Database seeded" || { print_error "Seeding failed"; exit 1; }
-
-    print_header "PHPUNIT TESTS"
-    if [ -f "vendor/bin/phpunit" ]; then
-        $PHP_CMD vendor/bin/phpunit --no-coverage || print_warning "Tests failed - review output above"
+    if $PHP_CMD artisan db:seed; then
+        print_success "Database seeded successfully."
     else
-        print_warning "PHPUnit not found, skipping tests"
+        print_error "Seeding failed."; exit 1
+    fi
+
+    print_header "RUNNING TESTS"
+    if [ -f "vendor/bin/pest" ]; then
+        $PHP_CMD vendor/bin/pest --no-coverage || print_warning "Tests failed — review output above."
+    elif [ -f "vendor/bin/phpunit" ]; then
+        $PHP_CMD vendor/bin/phpunit --no-coverage || print_warning "Tests failed — review output above."
+    else
+        print_warning "No test runner found, skipping tests."
     fi
 
     print_header "OPTIMIZE"
     $PHP_CMD artisan optimize:clear
     $PHP_CMD artisan route:clear
 
-    print_success "Installation complete!"
     echo ""
-    read -p "Start development server? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] && $PHP_CMD artisan serve || print_info "Run: php artisan serve"
+    print_success "=================================="
+    print_success "     INSTALLATION COMPLETE        "
+    print_success "=================================="
+    echo ""
+    echo "Useful commands:"
+    echo "  $PHP_CMD artisan serve          - Start development server"
+    echo "  $PHP_CMD artisan horizon        - Start queue worker dashboard"
+    echo "  $PHP_CMD artisan reverb:start   - Start WebSocket server"
+    echo "  $PHP_CMD artisan octane:start   - Start Octane server"
+    echo "  npm run dev                     - Start Vite dev server"
+    echo ""
+    read -p "Start development server now? (y/n) " -n 1 -r; echo
+    [[ $REPLY =~ ^[Yy]$ ]] && $PHP_CMD artisan serve || print_info "Run: $PHP_CMD artisan serve"
 }
 
 # Laravel Sail (Docker) installation
@@ -183,30 +207,27 @@ install_sail() {
         read -p "Press Enter after editing .env..."
     fi
 
-    # Install composer deps without scripts (Sail not yet available)
     eval "$COMPOSER_CMD install --no-interaction --ignore-platform-req=ext-posix"
 
-    # Publish Sail if not already there
-    if [ ! -f "docker-compose.sail.yml" ] && ! grep -q "laravel/sail" composer.json 2>/dev/null; then
+    if ! grep -q '"laravel/sail"' composer.json 2>/dev/null; then
         print_warning "Laravel Sail not in composer.json. Install with: composer require laravel/sail --dev"
     fi
 
+    SAIL_CMD="./vendor/bin/sail"
+    command_exists sail && SAIL_CMD="sail"
+
     print_info "Starting Sail..."
-    if command_exists sail; then
-        sail up -d
-    else
-        ./vendor/bin/sail up -d
-    fi
+    $SAIL_CMD up -d
 
     print_info "Running Sail setup commands..."
-    ./vendor/bin/sail artisan key:generate
-    ./vendor/bin/sail artisan migrate
-    ./vendor/bin/sail artisan db:seed
+    $SAIL_CMD artisan key:generate
+    $SAIL_CMD artisan migrate
+    $SAIL_CMD artisan db:seed
 
     print_success "Sail installation complete! App at: http://localhost"
-    print_info "Use './vendor/bin/sail' prefix for artisan commands"
-    print_info "Horizon:  ./vendor/bin/sail artisan horizon"
-    print_info "Reverb:   ./vendor/bin/sail artisan reverb:start"
+    print_info "Use '$SAIL_CMD' prefix for artisan commands."
+    print_info "Horizon:  $SAIL_CMD artisan horizon"
+    print_info "Reverb:   $SAIL_CMD artisan reverb:start"
 }
 
 # Docker Compose installation
@@ -215,6 +236,11 @@ install_docker() {
 
     if ! command_exists docker; then
         print_error "Docker not installed. Visit: https://docs.docker.com/get-docker/"
+        exit 1
+    fi
+
+    if ! command_exists docker-compose && ! docker compose version >/dev/null 2>&1; then
+        print_error "Docker Compose not available. Visit: https://docs.docker.com/compose/install/"
         exit 1
     fi
 
@@ -254,18 +280,26 @@ install_kubernetes() {
     read -p "Apply to this context? (y/n) " -n 1 -r; echo
     [[ $REPLY =~ ^[Yy]$ ]] || { print_info "Cancelled."; exit 0; }
 
-    print_warning "Edit k8s/secret.yaml with real credentials before applying!"
+    print_warning "Ensure k8s/secret.yaml contains real credentials before applying!"
     read -p "Secrets configured? (y/n) " -n 1 -r; echo
     [[ $REPLY =~ ^[Yy]$ ]] || { print_warning "Configure secrets and re-run."; exit 0; }
 
-    kubectl apply -f k8s/namespace.yaml
-    kubectl apply -f k8s/configmap.yaml
-    kubectl apply -f k8s/secret.yaml
-    kubectl apply -f k8s/pvc.yaml
-    kubectl apply -f k8s/deployment.yaml
-    kubectl apply -f k8s/service.yaml
-    kubectl apply -f k8s/ingress.yaml
-    kubectl apply -f k8s/hpa.yaml
+    if command_exists kustomize || kubectl kustomize --help >/dev/null 2>&1; then
+        print_info "Applying via kustomize..."
+        kubectl apply -k k8s/
+    else
+        print_info "Applying manifests individually..."
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/configmap.yaml
+        kubectl apply -f k8s/secret.yaml
+        kubectl apply -f k8s/pvc.yaml
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+        kubectl apply -f k8s/ingress.yaml
+        kubectl apply -f k8s/hpa.yaml
+        kubectl apply -f k8s/network-policy.yaml
+        kubectl apply -f k8s/resource-quota.yaml
+    fi
 
     print_success "Kubernetes resources applied!"
     print_info "Check status: kubectl get pods -n ecommerce-laravel"
@@ -291,8 +325,8 @@ main() {
             2) install_sail; break ;;
             3) install_docker; break ;;
             4) install_kubernetes; break ;;
-            5) print_info "Cancelled"; exit 0 ;;
-            *) print_warning "Enter 1-5" ;;
+            5) print_info "Cancelled."; exit 0 ;;
+            *) print_warning "Please enter 1-5." ;;
         esac
     done
 }

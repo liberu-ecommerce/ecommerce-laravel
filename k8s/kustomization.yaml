@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce-laravel
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - pvc.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - network-policy.yaml
+  - resource-quota.yaml
+
+commonLabels:
+  app.kubernetes.io/name: ecommerce-laravel
+  app.kubernetes.io/managed-by: liberu-control-panel
