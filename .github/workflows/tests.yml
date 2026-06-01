@@ -4,17 +4,16 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +25,7 @@ jobs:
           extensions: mbstring, pdo, pdo_sqlite, bcmath, opcache, zip, gd, intl
           coverage: xdebug
 
-     - name: Get composer cache directory
+      - name: Get composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
@@ -40,8 +39,8 @@ jobs:
       - name: Copy environment file
         run: cp .env.example .env
 
-    - name: Install dependencies
-      run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Generate application key
         run: php artisan key:generate
@@ -57,4 +56,3 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
-
