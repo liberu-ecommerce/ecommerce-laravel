@@ -6,10 +6,21 @@ metadata:
   labels:
     app.kubernetes.io/name: ecommerce-laravel
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "ECOMMERCE_SESS"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "10800"
+    nginx.ingress.kubernetes.io/session-cookie-secure: "true"
+    nginx.ingress.kubernetes.io/session-cookie-samesite: "Lax"
+    nginx.ingress.kubernetes.io/limit-connections: "200"
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod  (enabled in production overlay)
 spec:
+  ingressClassName: nginx
   rules:
     - host: "${APP_DOMAIN}"
       http:
@@ -28,7 +39,8 @@ spec:
                 name: reverb-service
                 port:
                   number: 8080
-  tls:
-    - hosts:
-        - "${APP_DOMAIN}"
-      secretName: ecommerce-laravel-tls
+  # Uncomment and set APP_DOMAIN to enable TLS:
+  # tls:
+  #   - hosts:
+  #       - "${APP_DOMAIN}"
+  #     secretName: ecommerce-laravel-tls

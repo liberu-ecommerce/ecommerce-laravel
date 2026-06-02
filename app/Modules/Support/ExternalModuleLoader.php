@@ -37,6 +37,75 @@ class ExternalModuleLoader
         }
     }
 
+    /**
+     * Scan Composer vendor packages for modules by reading installed.json PSR-4 metadata.
+     * Packages exposing a *Module class implementing ModuleInterface are auto-registered.
+     */
+    public function loadFromVendor(string $vendorPath = null): void
+    {
+        $vendorPath ??= base_path('vendor');
+        $installedJson = $vendorPath.'/composer/installed.json';
+
+        if (! File::exists($installedJson)) {
+            return;
+        }
+
+        $installed = json_decode(File::get($installedJson), true) ?? [];
+        $packages = $installed['packages'] ?? $installed;
+
+        foreach ($packages as $package) {
+            $autoload = $package['autoload']['psr-4'] ?? [];
+
+            foreach ($autoload as $namespace => $srcPath) {
+                $absolutePath = $vendorPath.'/'.$package['name'].'/'.$srcPath;
+
+                if (! File::isDirectory($absolutePath)) {
+                    continue;
+                }
+
+                $namespace = rtrim($namespace, '\\');
+                $this->discoverModuleClass($absolutePath, $namespace);
+            }
+        }
+    }
+
+    /**
+     * Look for a *Module.php class in the given path that implements ModuleInterface.
+     */
+    protected function discoverModuleClass(string $srcPath, string $namespace): void
+    {
+        foreach (File::files($srcPath) as $file) {
+            if (! str_ends_with($file->getFilename(), 'Module.php')) {
+                continue;
+            }
+
+            $className = $namespace.'\\'.pathinfo($file->getFilename(), PATHINFO_FILENAME);
+
+            if (! class_exists($className)) {
+                try {
+                    require_once $file->getPathname();
+                } catch (\Throwable $e) {
+                    Log::warning("Failed requiring vendor module file {$file->getPathname()}: ".$e->getMessage());
+                    continue;
+                }
+            }
+
+            if (! class_exists($className)) {
+                continue;
+            }
+
+            try {
+                $module = new $className;
+                if ($module instanceof ModuleInterface && ! $this->moduleManager->has($module->getName())) {
+                    $this->moduleManager->register($module);
+                    Log::debug("Loaded vendor module: {$module->getName()} from {$className}");
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed loading vendor module from '{$className}': ".$e->getMessage());
+            }
+        }
+    }
+
     protected function loadModuleFromDirectory(string $directory, string $baseNamespace): void
     {
         $moduleName = basename($directory);

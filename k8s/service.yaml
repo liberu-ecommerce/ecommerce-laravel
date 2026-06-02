@@ -9,6 +9,10 @@ metadata:
 spec:
   selector:
     app: ecommerce-laravel-app
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
   ports:
     - name: http
       port: 80

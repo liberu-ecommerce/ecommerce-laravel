@@ -8,6 +8,8 @@ resources:
   - configmap.yaml
   - secret.yaml
   - pvc.yaml
+  - mysql-statefulset.yaml
+  - redis.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

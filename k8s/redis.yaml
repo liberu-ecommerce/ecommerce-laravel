@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-laravel-redis
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-laravel-redis
+  template:
+    metadata:
+      labels:
+        app: ecommerce-laravel-redis
+        app.kubernetes.io/name: ecommerce-laravel
+        app.kubernetes.io/component: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          command: ["redis-server", "--appendonly", "yes"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-laravel-redis
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: redis
+spec:
+  selector:
+    app: ecommerce-laravel-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+  type: ClusterIP

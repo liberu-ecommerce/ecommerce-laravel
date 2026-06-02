@@ -5,7 +5,6 @@ namespace App\Modules;
 use App\Models\Module;
 use App\Modules\Support\ExternalModuleLoader;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -43,6 +42,14 @@ class ModuleServiceProvider extends ServiceProvider
         $vendorModulesPath = base_path('vendor/liberu');
         if (File::exists($vendorModulesPath)) {
             $loader->loadFromPath($vendorModulesPath, 'Liberu');
+        }
+
+        foreach (config('modules.external_paths', []) as $path => $namespace) {
+            $loader->loadFromPath($path, $namespace);
+        }
+
+        if (config('modules.scan_vendor', false)) {
+            $loader->loadFromVendor();
         }
     }
 
@@ -83,6 +90,8 @@ class ModuleServiceProvider extends ServiceProvider
             if (File::exists($langPath)) {
                 $this->loadTranslationsFrom($langPath, Str::snake($moduleName));
             }
+
+            $this->registerFilamentResources($moduleName, $modulePath);
         }
     }
 
@@ -109,6 +118,55 @@ class ModuleServiceProvider extends ServiceProvider
             $path = $routesPath.'/'.$routeFile;
             if (File::exists($path)) {
                 $this->loadRoutesFrom($path);
+            }
+        }
+    }
+
+    /**
+     * Register Filament resources, pages, and widgets for a module so Filament
+     * auto-discovers them without manual panel configuration.
+     */
+    protected function registerFilamentResources(string $moduleName, string $modulePath): void
+    {
+        if (! class_exists(\Filament\FilamentManager::class)) {
+            return;
+        }
+
+        foreach (['Filament/Resources', 'Filament/Pages', 'Filament/Widgets'] as $subPath) {
+            $path = $modulePath.'/'.$subPath;
+            if (File::exists($path)) {
+                $namespace = "App\\Modules\\{$moduleName}\\".str_replace('/', '\\', $subPath);
+                $this->app->afterResolving('filament', function ($filament) use ($path, $namespace) {
+                    $this->discoverFilamentClasses($filament, $path, $namespace);
+                });
+            }
+        }
+    }
+
+    protected function discoverFilamentClasses(mixed $filament, string $path, string $namespace): void
+    {
+        foreach (File::allFiles($path) as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $relative = str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+            $class = $namespace.'\\'.$relative;
+
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            try {
+                if (is_subclass_of($class, \Filament\Resources\Resource::class)) {
+                    method_exists($filament, 'resources') && $filament->resources([$class]);
+                } elseif (is_subclass_of($class, \Filament\Pages\Page::class)) {
+                    method_exists($filament, 'pages') && $filament->pages([$class]);
+                } elseif (is_subclass_of($class, \Filament\Widgets\Widget::class)) {
+                    method_exists($filament, 'widgets') && $filament->widgets([$class]);
+                }
+            } catch (\Throwable) {
+                // Filament may not be fully booted yet; the panel's own discovery handles it.
             }
         }
     }

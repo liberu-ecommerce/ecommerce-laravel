@@ -142,8 +142,16 @@ class ModuleManager
     protected function loadModules(): void
     {
         try {
-            if (config('modules.cache', true) && ! config('modules.development', false)) {
-                $cachedModules = Cache::get(config('modules.cache_key', 'app.modules'));
+            $cacheEnabled = is_array(config('modules.cache'))
+                ? config('modules.cache.enabled', true)
+                : config('modules.cache', true);
+
+            if ($cacheEnabled && ! config('modules.development', false)) {
+                $cacheKey = is_array(config('modules.cache'))
+                    ? config('modules.cache.key', 'app.modules')
+                    : config('modules.cache_key', 'app.modules');
+
+                $cachedModules = Cache::get($cacheKey);
 
                 if ($cachedModules) {
                     $this->modules = collect($cachedModules);
@@ -162,6 +170,14 @@ class ModuleManager
             }
         }
 
+        foreach (config('modules.external_paths', []) as $path => $namespace) {
+            if (File::exists($path)) {
+                foreach (File::directories($path) as $modulePath) {
+                    $this->loadModuleFromExternalPath(basename($modulePath), $modulePath, $namespace);
+                }
+            }
+        }
+
         $modularPath = base_path(config('modular.modules_directory', 'app-modules'));
         if (File::exists($modularPath)) {
             foreach (File::directories($modularPath) as $modulePath) {
@@ -170,15 +186,51 @@ class ModuleManager
         }
 
         try {
-            if (config('modules.cache', true) && ! config('modules.development', false)) {
-                Cache::put(
-                    config('modules.cache_key', 'app.modules'),
-                    $this->modules->all(),
-                    config('modules.cache_ttl', 3600)
-                );
+            $cacheEnabled = is_array(config('modules.cache'))
+                ? config('modules.cache.enabled', true)
+                : config('modules.cache', true);
+
+            if ($cacheEnabled && ! config('modules.development', false)) {
+                $cacheKey = is_array(config('modules.cache'))
+                    ? config('modules.cache.key', 'app.modules')
+                    : config('modules.cache_key', 'app.modules');
+                $cacheTtl = is_array(config('modules.cache'))
+                    ? config('modules.cache.ttl', 3600)
+                    : config('modules.cache_ttl', 3600);
+
+                Cache::put($cacheKey, $this->modules->all(), $cacheTtl);
             }
         } catch (\Throwable $e) {
             // Cache may not be available during early bootstrap
+        }
+    }
+
+    protected function loadModuleFromExternalPath(string $moduleName, string $modulePath, string $namespace): void
+    {
+        $moduleClass = "{$namespace}\\{$moduleName}\\{$moduleName}Module";
+
+        if (! class_exists($moduleClass)) {
+            $mainFile = $modulePath."/{$moduleName}Module.php";
+            if (File::exists($mainFile)) {
+                try {
+                    require_once $mainFile;
+                } catch (\Throwable $e) {
+                    \Log::warning("Failed requiring external module file: ".$e->getMessage());
+                }
+            }
+        }
+
+        if (! class_exists($moduleClass)) {
+            return;
+        }
+
+        try {
+            $module = new $moduleClass;
+            if ($module instanceof \App\Modules\Contracts\ModuleInterface) {
+                $this->register($module);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning("Failed loading external module '{$moduleName}': ".$e->getMessage());
         }
     }
 
@@ -382,7 +434,11 @@ class ModuleManager
 
     public function clearCache(): void
     {
-        Cache::forget(config('modules.cache_key', 'app.modules'));
+        $cacheKey = is_array(config('modules.cache'))
+            ? config('modules.cache.key', 'app.modules')
+            : config('modules.cache_key', 'app.modules');
+
+        Cache::forget($cacheKey);
     }
 
     public function checkHealth(string $name): array

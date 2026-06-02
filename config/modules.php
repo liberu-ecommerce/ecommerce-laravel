@@ -36,29 +36,11 @@ return [
     |
     */
 
-    'cache' => env('MODULES_CACHE', true),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Key
-    |--------------------------------------------------------------------------
-    |
-    | The cache key used to store module information.
-    |
-    */
-
-    'cache_key' => 'app.modules',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache TTL
-    |--------------------------------------------------------------------------
-    |
-    | The time-to-live for cached module information in seconds.
-    |
-    */
-
-    'cache_ttl' => 3600,
+    'cache' => [
+        'enabled' => env('MODULES_CACHE', ! env('APP_DEBUG', false)),
+        'key' => 'app.modules',
+        'ttl' => 3600,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -84,6 +66,44 @@ return [
     'enabled' => [
         // 'ExampleModule',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | External Module Paths
+    |--------------------------------------------------------------------------
+    |
+    | Additional paths to scan for modules. Each entry maps a path to its
+    | base namespace: ['path/to/modules' => 'CustomNamespace'].
+    |
+    */
+
+    'external_paths' => [
+        // base_path('custom-modules') => 'CustomModules',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scan Vendor for Modules
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the module system will scan all installed Composer packages
+    | for classes implementing ModuleInterface using PSR-4 metadata. Disabled
+    | by default to avoid the I/O cost on large vendor trees.
+    |
+    */
+
+    'scan_vendor' => env('MODULES_SCAN_VENDOR', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Composer Modules (vendor/liberu path)
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the module system will scan vendor/liberu for modules.
+    |
+    */
+
+    'load_composer_modules' => env('MODULES_LOAD_COMPOSER', false),
 
     /*
     |--------------------------------------------------------------------------

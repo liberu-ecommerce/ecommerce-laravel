@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ecommerce-laravel-mysql
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: mysql
+spec:
+  replicas: 1
+  serviceName: ecommerce-laravel-mysql
+  selector:
+    matchLabels:
+      app: ecommerce-laravel-mysql
+  template:
+    metadata:
+      labels:
+        app: ecommerce-laravel-mysql
+        app.kubernetes.io/name: ecommerce-laravel
+        app.kubernetes.io/component: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-laravel-secret
+                  key: DB_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-laravel-secret
+                  key: DB_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-laravel-secret
+                  key: DB_USERNAME
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-laravel-secret
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+        labels:
+          app.kubernetes.io/name: ecommerce-laravel
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-laravel-mysql
+  namespace: ecommerce-laravel
+  labels:
+    app.kubernetes.io/name: ecommerce-laravel
+    app.kubernetes.io/component: mysql
+spec:
+  selector:
+    app: ecommerce-laravel-mysql
+  clusterIP: None
+  ports:
+    - port: 3306
+      targetPort: 3306

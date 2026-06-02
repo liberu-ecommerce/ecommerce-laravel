@@ -18,6 +18,36 @@ spec:
         app.kubernetes.io/name: ecommerce-laravel
         app.kubernetes.io/component: app
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z ${DB_HOST} ${DB_PORT:-3306}; do echo "waiting for db..."; sleep 2; done']
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+        - name: run-migrations
+          image: ecommerce-laravel:latest
+          imagePullPolicy: Always
+          command: ['php', 'artisan', 'migrate', '--force']
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
       containers:
         - name: app
           image: ecommerce-laravel:latest
@@ -42,25 +72,41 @@ spec:
               memory: 1Gi
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /
+              path: /health
               port: 8000
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: storage
               mountPath: /var/www/html/storage/app
+            - name: cache
+              mountPath: /var/www/html/storage/framework/cache
+            - name: sessions
+              mountPath: /var/www/html/storage/framework/sessions
+            - name: views
+              mountPath: /var/www/html/storage/framework/views
       volumes:
         - name: storage
           persistentVolumeClaim:
             claimName: ecommerce-laravel-storage-pvc
+        - name: cache
+          emptyDir: {}
+        - name: sessions
+          emptyDir: {}
+        - name: views
+          emptyDir: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -82,6 +128,23 @@ spec:
         app.kubernetes.io/name: ecommerce-laravel
         app.kubernetes.io/component: horizon
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command: ['sh', '-c', 'until nc -z ${DB_HOST} ${DB_PORT:-3306}; do echo "waiting for db..."; sleep 2; done']
+          envFrom:
+            - configMapRef:
+                name: ecommerce-laravel-config
+            - secretRef:
+                name: ecommerce-laravel-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
       containers:
         - name: horizon
           image: ecommerce-laravel:latest
@@ -101,6 +164,10 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: storage
               mountPath: /var/www/html/storage/app
@@ -129,6 +196,10 @@ spec:
         app.kubernetes.io/name: ecommerce-laravel
         app.kubernetes.io/component: reverb
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: reverb
           image: ecommerce-laravel:latest
@@ -151,3 +222,7 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

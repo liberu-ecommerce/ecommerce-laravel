@@ -4,7 +4,7 @@
 # Supports: Standalone, Laravel Sail (Docker), Docker Compose, and Kubernetes deployments.
 # Handles PHP 8.5+ detection with fallback to system php.
 
-set -e
+set -euo pipefail
 
 RED='\e[91m'
 GREEN='\e[92m'
@@ -21,17 +21,24 @@ print_warning() { print_message "$YELLOW" "WARNING: $1"; }
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# Detect best available PHP binary (prefer 8.5)
+# Detect best available PHP binary (prefer 8.5, accept 8.3+)
 detect_php() {
-    for php_bin in php85 php8.5 php84 php8.4 php; do
+    for php_bin in php85 php8.5 php84 php8.4 php83 php8.3 php; do
         if command_exists "$php_bin"; then
             PHP_CMD="$php_bin"
-            PHP_VERSION=$($php_bin -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "unknown")
-            print_info "Using PHP binary: $php_bin ($PHP_VERSION)"
-            return 0
+            PHP_VERSION=$("$php_bin" -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "unknown")
+            MAJOR=$("$php_bin" -r 'echo PHP_MAJOR_VERSION;' 2>/dev/null || echo "0")
+            MINOR=$("$php_bin" -r 'echo PHP_MINOR_VERSION;' 2>/dev/null || echo "0")
+
+            if [[ "$MAJOR" -gt 8 ]] || { [[ "$MAJOR" -eq 8 ]] && [[ "$MINOR" -ge 3 ]]; }; then
+                print_info "Using PHP binary: $php_bin ($PHP_VERSION)"
+                return 0
+            else
+                print_warning "PHP $PHP_VERSION found at $php_bin — requires 8.3+. Trying next..."
+            fi
         fi
     done
-    print_error "No PHP binary found. Please install PHP 8.5+."
+    print_error "No PHP 8.3+ binary found. Install PHP 8.5 from https://php.net"
     return 1
 }
 
@@ -53,9 +60,9 @@ detect_composer() {
         print_error "curl is required to download Composer. Install curl or composer manually."
         return 1
     fi
-    $PHP_CMD -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    $PHP_CMD composer-setup.php --quiet
-    $PHP_CMD -r "unlink('composer-setup.php');"
+    "$PHP_CMD" -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+    "$PHP_CMD" composer-setup.php --quiet
+    "$PHP_CMD" -r "unlink('composer-setup.php');"
     if [ -f "composer.phar" ]; then
         COMPOSER_CMD="$PHP_CMD composer.phar"
         print_success "Composer downloaded successfully."
@@ -68,8 +75,8 @@ detect_composer() {
 install_composer_dependencies() {
     print_header "COMPOSER INSTALL"
     if [ -d "vendor" ] && [ -f "vendor/autoload.php" ]; then
-        read -p "vendor/ already exists. Reinstall? (y/n) " -n 1 -r; echo
-        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping composer install."; return 0; }
+        read -rp "vendor/ already exists. Reinstall? (y/n) " -n 1 REPLY; echo
+        [[ "$REPLY" =~ ^[Yy]$ ]] || { print_success "Skipping composer install."; return 0; }
     fi
     detect_php || return 1
     detect_composer || return 1
@@ -85,8 +92,8 @@ install_composer_dependencies() {
 install_npm_dependencies() {
     print_header "NPM INSTALL"
     if [ -d "node_modules" ]; then
-        read -p "node_modules/ already exists. Reinstall? (y/n) " -n 1 -r; echo
-        [[ $REPLY =~ ^[Yy]$ ]] || { print_success "Skipping npm install."; return 0; }
+        read -rp "node_modules/ already exists. Reinstall? (y/n) " -n 1 REPLY; echo
+        [[ "$REPLY" =~ ^[Yy]$ ]] || { print_success "Skipping npm install."; return 0; }
     fi
     if ! command_exists npm; then
         print_error "npm not found. Install Node.js from https://nodejs.org/"
@@ -114,6 +121,30 @@ build_frontend_assets() {
     fi
 }
 
+run_migrations() {
+    print_header "DATABASE MIGRATION"
+    read -rp "Fresh migration (migrate:fresh) or incremental (migrate)? [f/i]: " -n 1 REPLY; echo
+    if [[ "$REPLY" =~ ^[Ff]$ ]]; then
+        print_warning "This will DROP and recreate all tables."
+        read -rp "Are you sure? (y/n) " -n 1 CONFIRM; echo
+        [[ "$CONFIRM" =~ ^[Yy]$ ]] || { print_info "Using incremental migration instead."; REPLY="i"; }
+    fi
+
+    if [[ "$REPLY" =~ ^[Ff]$ ]]; then
+        if "$PHP_CMD" artisan migrate:fresh --force; then
+            print_success "Database migrated (fresh) successfully."
+        else
+            print_error "Migration failed."; return 1
+        fi
+    else
+        if "$PHP_CMD" artisan migrate --force; then
+            print_success "Database migrated successfully."
+        else
+            print_error "Migration failed."; return 1
+        fi
+    fi
+}
+
 # Standalone installation
 install_standalone() {
     print_header "STANDALONE INSTALLATION"
@@ -123,53 +154,51 @@ install_standalone() {
     echo ""
 
     if [ ! -f ".env" ]; then
-        read -p "Copy .env.example to .env? (y/n) " -n 1 -r; echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        read -rp "Copy .env.example to .env? (y/n) " -n 1 REPLY; echo
+        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
             cp .env.example .env
             print_success ".env created from .env.example"
         fi
     fi
 
-    read -p "Database credentials configured in .env? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] || { print_warning "Configure .env with database credentials and re-run."; exit 0; }
+    read -rp "Database credentials configured in .env? (y/n) " -n 1 REPLY; echo
+    [[ "$REPLY" =~ ^[Yy]$ ]] || { print_warning "Configure .env with database credentials and re-run."; exit 0; }
 
     install_composer_dependencies || exit 1
     install_npm_dependencies || print_warning "NPM install failed, continuing..."
     build_frontend_assets || print_warning "NPM build failed, continuing..."
 
     print_header "KEY:GENERATE"
-    if $PHP_CMD artisan key:generate; then
+    if "$PHP_CMD" artisan key:generate; then
         print_success "Application key generated."
     else
         print_error "Key generation failed."; exit 1
     fi
 
-    print_header "MIGRATE:FRESH"
-    if $PHP_CMD artisan migrate:fresh; then
-        print_success "Database migrated successfully."
-    else
-        print_error "Migration failed."; exit 1
-    fi
+    run_migrations || exit 1
 
     print_header "DB:SEED"
-    if $PHP_CMD artisan db:seed; then
-        print_success "Database seeded successfully."
-    else
-        print_error "Seeding failed."; exit 1
+    read -rp "Seed the database now? (y/n) " -n 1 REPLY; echo
+    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+        if "$PHP_CMD" artisan db:seed; then
+            print_success "Database seeded successfully."
+        else
+            print_error "Seeding failed."; exit 1
+        fi
     fi
 
     print_header "RUNNING TESTS"
     if [ -f "vendor/bin/pest" ]; then
-        $PHP_CMD vendor/bin/pest --no-coverage || print_warning "Tests failed — review output above."
+        "$PHP_CMD" vendor/bin/pest --no-coverage || print_warning "Tests failed — review output above."
     elif [ -f "vendor/bin/phpunit" ]; then
-        $PHP_CMD vendor/bin/phpunit --no-coverage || print_warning "Tests failed — review output above."
+        "$PHP_CMD" vendor/bin/phpunit --no-coverage || print_warning "Tests failed — review output above."
     else
         print_warning "No test runner found, skipping tests."
     fi
 
     print_header "OPTIMIZE"
-    $PHP_CMD artisan optimize:clear
-    $PHP_CMD artisan route:clear
+    "$PHP_CMD" artisan optimize:clear
+    "$PHP_CMD" artisan route:clear
 
     echo ""
     print_success "=================================="
@@ -183,8 +212,8 @@ install_standalone() {
     echo "  $PHP_CMD artisan octane:start   - Start Octane server"
     echo "  npm run dev                     - Start Vite dev server"
     echo ""
-    read -p "Start development server now? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] && $PHP_CMD artisan serve || print_info "Run: $PHP_CMD artisan serve"
+    read -rp "Start development server now? (y/n) " -n 1 REPLY; echo
+    [[ "$REPLY" =~ ^[Yy]$ ]] && "$PHP_CMD" artisan serve || print_info "Run: $PHP_CMD artisan serve"
 }
 
 # Laravel Sail (Docker) installation
@@ -204,7 +233,7 @@ install_sail() {
     if [ ! -f ".env" ]; then
         cp .env.example .env
         print_info "Configure .env for Sail (DB_HOST=mysql, REDIS_HOST=redis, etc.)"
-        read -p "Press Enter after editing .env..."
+        read -rp "Press Enter after editing .env..."
     fi
 
     eval "$COMPOSER_CMD install --no-interaction --ignore-platform-req=ext-posix"
@@ -217,12 +246,12 @@ install_sail() {
     command_exists sail && SAIL_CMD="sail"
 
     print_info "Starting Sail..."
-    $SAIL_CMD up -d
+    "$SAIL_CMD" up -d
 
     print_info "Running Sail setup commands..."
-    $SAIL_CMD artisan key:generate
-    $SAIL_CMD artisan migrate
-    $SAIL_CMD artisan db:seed
+    "$SAIL_CMD" artisan key:generate
+    "$SAIL_CMD" artisan migrate --force
+    "$SAIL_CMD" artisan db:seed
 
     print_success "Sail installation complete! App at: http://localhost"
     print_info "Use '$SAIL_CMD' prefix for artisan commands."
@@ -277,32 +306,51 @@ install_kubernetes() {
     fi
 
     print_info "Current context: $(kubectl config current-context)"
-    read -p "Apply to this context? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] || { print_info "Cancelled."; exit 0; }
+
+    echo ""
+    echo "Select deployment environment:"
+    echo "  1) Base         - Default configuration"
+    echo "  2) Development  - 1 replica, debug enabled"
+    echo "  3) Production   - 3+ replicas, TLS, tighter HPA"
+    echo ""
+    read -rp "Environment (1-3): " -n 1 env_choice; echo
+
+    case $env_choice in
+        2) K8S_MANIFEST="k8s/overlays/development" ;;
+        3) K8S_MANIFEST="k8s/overlays/production" ;;
+        *) K8S_MANIFEST="k8s" ;;
+    esac
+
+    print_info "Manifest path: $K8S_MANIFEST"
+
+    if [ -f "k8s/validate.sh" ]; then
+        print_info "Running pre-deploy validation..."
+        bash k8s/validate.sh "${env_choice:-}" || print_warning "Validation issues found — review above."
+    fi
+
+    read -rp "Apply to this context? (y/n) " -n 1 REPLY; echo
+    [[ "$REPLY" =~ ^[Yy]$ ]] || { print_info "Cancelled."; exit 0; }
 
     print_warning "Ensure k8s/secret.yaml contains real credentials before applying!"
-    read -p "Secrets configured? (y/n) " -n 1 -r; echo
-    [[ $REPLY =~ ^[Yy]$ ]] || { print_warning "Configure secrets and re-run."; exit 0; }
+    read -rp "Secrets configured? (y/n) " -n 1 REPLY; echo
+    [[ "$REPLY" =~ ^[Yy]$ ]] || { print_warning "Configure secrets and re-run."; exit 0; }
 
-    if command_exists kustomize || kubectl kustomize --help >/dev/null 2>&1; then
+    if kubectl kustomize --help >/dev/null 2>&1; then
         print_info "Applying via kustomize..."
-        kubectl apply -k k8s/
+        kubectl apply -k "$K8S_MANIFEST"
     else
-        print_info "Applying manifests individually..."
-        kubectl apply -f k8s/namespace.yaml
-        kubectl apply -f k8s/configmap.yaml
-        kubectl apply -f k8s/secret.yaml
-        kubectl apply -f k8s/pvc.yaml
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
-        kubectl apply -f k8s/ingress.yaml
-        kubectl apply -f k8s/hpa.yaml
-        kubectl apply -f k8s/network-policy.yaml
-        kubectl apply -f k8s/resource-quota.yaml
+        print_info "Applying manifests individually (from k8s/)..."
+        for manifest in namespace.yaml configmap.yaml secret.yaml pvc.yaml \
+                        mysql-statefulset.yaml redis.yaml deployment.yaml \
+                        service.yaml ingress.yaml hpa.yaml \
+                        network-policy.yaml resource-quota.yaml; do
+            [ -f "k8s/$manifest" ] && kubectl apply -f "k8s/$manifest"
+        done
     fi
 
     print_success "Kubernetes resources applied!"
     print_info "Check status: kubectl get pods -n ecommerce-laravel"
+    print_info "Watch rollout: kubectl rollout status deployment/ecommerce-laravel-app -n ecommerce-laravel"
     print_info "Compatible with: https://github.com/liberu-control-panel/control-panel-laravel"
 }
 
@@ -315,18 +363,20 @@ main() {
     echo "  2) Laravel Sail   - Docker dev environment (recommended)"
     echo "  3) Docker Compose - Production container deployment"
     echo "  4) Kubernetes     - K8s cluster deployment"
-    echo "  5) Exit"
+    echo "  5) K8s Validate   - Validate manifests (no deploy)"
+    echo "  6) Exit"
     echo ""
 
     while true; do
-        read -p "Choice (1-5): " choice
+        read -rp "Choice (1-6): " choice
         case $choice in
             1) install_standalone; break ;;
             2) install_sail; break ;;
             3) install_docker; break ;;
             4) install_kubernetes; break ;;
-            5) print_info "Cancelled."; exit 0 ;;
-            *) print_warning "Please enter 1-5." ;;
+            5) bash k8s/validate.sh; break ;;
+            6) print_info "Cancelled."; exit 0 ;;
+            *) print_warning "Please enter 1-6." ;;
         esac
     done
 }

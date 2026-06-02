@@ -10,8 +10,8 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: ecommerce-laravel-app
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 3
+  maxReplicas: 20
   metrics:
     - type: Resource
       resource:
@@ -33,13 +33,13 @@ spec:
           value: 100
           periodSeconds: 30
         - type: Pods
-          value: 2
+          value: 3
           periodSeconds: 30
       selectPolicy: Max
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
         - type: Percent
-          value: 50
+          value: 25
           periodSeconds: 60
       selectPolicy: Min

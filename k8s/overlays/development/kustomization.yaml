@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce-laravel
+
+resources:
+  - ../../
+
+patches:
+  - target:
+      kind: Deployment
+      name: ecommerce-laravel-app
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "http"
+  - target:
+      kind: ConfigMap
+      name: ecommerce-laravel-config
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: local
+      - op: replace
+        path: /data/APP_DEBUG
+        value: "true"
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: debug
+
+configMapGenerator:
+  - name: ecommerce-laravel-config
+    behavior: merge
+    literals:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - LOG_LEVEL=debug

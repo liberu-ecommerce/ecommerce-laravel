@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\ProductCategoryController;
 use App\Http\Controllers\CheckoutController;
@@ -33,6 +34,16 @@ use App\Http\Controllers\InvoiceController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+// Kubernetes liveness/readiness probe endpoint
+Route::get('/health', function () {
+    try {
+        DB::connection()->getPdo();
+        return response()->json(['status' => 'ok', 'db' => 'connected'], 200);
+    } catch (\Throwable $e) {
+        return response()->json(['status' => 'degraded', 'db' => 'unavailable'], 503);
+    }
+})->name('health');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

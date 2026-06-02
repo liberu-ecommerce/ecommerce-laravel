@@ -16,6 +16,37 @@ class SocialstreamRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_socialstream_config_has_social_media_providers(): void
+    {
+        $providers = config('socialstream.providers', []);
+
+        $this->assertNotEmpty($providers, 'socialstream.providers must not be empty');
+
+        $expected = [
+            Providers::bitbucket(),
+            Providers::facebook(),
+            Providers::github(),
+            Providers::gitlab(),
+            Providers::google(),
+            Providers::linkedin(),
+            Providers::linkedinOpenId(),
+            Providers::slack(),
+            Providers::twitterOAuth2(),
+        ];
+
+        foreach ($expected as $provider) {
+            $this->assertTrue(
+                Providers::enabled($provider),
+                "Provider [{$provider}] should be enabled in socialstream config."
+            );
+        }
+
+        $this->assertFalse(
+            Providers::enabled(Providers::twitterOAuth1()),
+            'Twitter OAuth 1.0 must not be enabled (requires live API keys even for redirect).'
+        );
+    }
+
     #[DataProvider('socialiteProvidersDataProvider')]
     public function test_users_get_redirected_correctly(string $provider): void
     {
@@ -34,7 +65,7 @@ class SocialstreamRegistrationTest extends TestCase
     }
 
     #[DataProvider('socialiteProvidersDataProvider')]
-    public function test_users_can_register_using_socialite_providers(string $socialiteProvider)
+    public function test_users_can_register_using_socialite_providers(string $socialiteProvider): void
     {
         if (! FortifyFeatures::enabled(FortifyFeatures::registration())) {
             $this->markTestSkipped('Registration support is not enabled.');
