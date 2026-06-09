@@ -1,0 +1,120 @@
+<?php
+
+namespace Tests\Unit;
+
+use App\Models\LoyaltyPoints;
+use App\Models\LoyaltyProgram;
+use App\Models\LoyaltyReward;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class LoyaltyRewardModelTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private LoyaltyProgram $program;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->program = LoyaltyProgram::create([
+            'name' => 'Reward Test Program',
+            'points_per_dollar' => 1,
+            'points_value' => 0.01,
+            'is_active' => true,
+        ]);
+    }
+
+    private function makeReward(array $overrides = []): LoyaltyReward
+    {
+        return LoyaltyReward::create(array_merge([
+            'loyalty_program_id' => $this->program->id,
+            'name' => '10% Off Coupon',
+            'reward_type' => 'discount',
+            'discount_value' => 10.00,
+            'points_cost' => 500,
+            'is_active' => true,
+        ], $overrides));
+    }
+
+    public function test_reward_can_be_created(): void
+    {
+        $reward = $this->makeReward();
+
+        $this->assertInstanceOf(LoyaltyReward::class, $reward);
+        $this->assertEquals('10% Off Coupon', $reward->name);
+    }
+
+    public function test_is_available_returns_true_for_active_reward(): void
+    {
+        $reward = $this->makeReward(['is_active' => true, 'stock_quantity' => null]);
+
+        $this->assertTrue($reward->isAvailable());
+    }
+
+    public function test_is_available_returns_false_when_inactive(): void
+    {
+        $reward = $this->makeReward(['is_active' => false]);
+
+        $this->assertFalse($reward->isAvailable());
+    }
+
+    public function test_is_available_returns_false_when_stock_depleted(): void
+    {
+        $reward = $this->makeReward(['stock_quantity' => 0]);
+
+        $this->assertFalse($reward->isAvailable());
+    }
+
+    public function test_is_available_returns_false_before_start(): void
+    {
+        $reward = $this->makeReward([
+            'available_from' => now()->addDays(5),
+        ]);
+
+        $this->assertFalse($reward->isAvailable());
+    }
+
+    public function test_is_available_returns_false_after_end(): void
+    {
+        $reward = $this->makeReward([
+            'available_until' => now()->subDay(),
+        ]);
+
+        $this->assertFalse($reward->isAvailable());
+    }
+
+    public function test_redeem_returns_null_when_unavailable(): void
+    {
+        $user = User::factory()->create();
+        $reward = $this->makeReward(['is_active' => false]);
+
+        $result = $reward->redeem($user->id);
+
+        $this->assertNull($result);
+    }
+
+    public function test_redeem_returns_null_when_insufficient_points(): void
+    {
+        $user = User::factory()->create();
+        LoyaltyPoints::create([
+            'user_id' => $user->id,
+            'loyalty_program_id' => $this->program->id,
+            'balance' => 100,
+        ]);
+
+        $reward = $this->makeReward(['points_cost' => 500]);
+
+        $result = $reward->redeem($user->id);
+
+        $this->assertNull($result);
+    }
+
+    public function test_belongs_to_program(): void
+    {
+        $reward = $this->makeReward();
+
+        $this->assertInstanceOf(LoyaltyProgram::class, $reward->program);
+    }
+}
