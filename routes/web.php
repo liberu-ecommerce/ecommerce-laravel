@@ -23,6 +23,7 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController; // New controller for cart
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\InventoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,7 +49,13 @@ Route::get('/health', function () {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Product routes
-Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+Route::get('/wishlist/shared/{shareToken}', [WishlistController::class, 'sharedWishlist'])->name('wishlist.shared');
+Route::middleware('auth')->group(function () {
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/add/{product}', [WishlistController::class, 'add'])->name('wishlist.add');
+    Route::delete('/wishlist/remove/{product}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+    Route::post('/wishlist/share', [WishlistController::class, 'share'])->name('wishlist.share');
+});
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
@@ -79,8 +86,10 @@ Route::put('/shipping/{shippingMethod}', [ShippingController::class, 'update'])-
 Route::delete('/shipping/{shippingMethod}', [ShippingController::class, 'destroy'])->name('shipping.destroy');
 
 // Order history routes
-Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
-Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
+Route::middleware('auth')->group(function () {
+    Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
+});
 
 Route::prefix('payment_methods')->group(function () {
     Route::get('/', [PaymentMethodController::class,'index'])->name('payment_methods.index');
@@ -92,6 +101,10 @@ Route::prefix('payment_methods')->group(function () {
 });
 
 Route::post('/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('payment.create');
+Route::post('/stripe/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('stripe.payment.create');
+Route::post('/stripe/subscription', [StripePaymentController::class, 'createSubscription'])->name('stripe.subscription.create');
+Route::patch('/stripe/subscription', [StripePaymentController::class, 'updateSubscription'])->name('stripe.subscription.update');
+Route::delete('/stripe/subscription', [StripePaymentController::class, 'cancelSubscription'])->name('stripe.subscription.cancel');
 
 Route::get('/subscriptions', [SubscriptionController::class, 'viewAvailableSubscriptions'])->name('subscriptions.view');
 Route::post('/subscription', [SubscriptionController::class, 'subscribeToPlan'])->name('subscription.create');
@@ -141,6 +154,9 @@ Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->
 Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->name('site_settings.update');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
+
+// Inventory routes
+Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory'])->name('inventory.adjust');
 
 // Pages
 // TODO: implement CMS features for page and form editing 

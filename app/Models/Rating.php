@@ -12,7 +12,7 @@ class Rating extends Model
     protected $table = 'ratings';
 
     protected $fillable = [
-        'user_id', 'product_id', 'rating'
+        'user_id', 'product_id', 'rating', 'overall_rating', 'quality_rating', 'value_rating', 'price_rating',
     ];
 
     public function user()

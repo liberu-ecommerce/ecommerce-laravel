@@ -45,7 +45,7 @@ class InvoiceController extends Controller
 
     public function show(int $id): View
     {
-        $invoice = Invoice::with(['order', 'order.products'])->findOrFail($id);
+        $invoice = Invoice::with(['order', 'order.items'])->findOrFail($id);
         return view('invoices.show', compact('invoice'));
     }
 }

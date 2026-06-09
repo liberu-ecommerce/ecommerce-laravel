@@ -11,6 +11,10 @@ class ABTestAssignment extends Model
 {
     use HasFactory, IsTenantModel;
 
+    protected $table = 'ab_test_assignments';
+
+    public $timestamps = false;
+
     protected $fillable = [
         'test_id',
         'user_id',

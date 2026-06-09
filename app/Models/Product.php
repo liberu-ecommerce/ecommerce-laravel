@@ -41,6 +41,7 @@ class Product extends Model implements Orderable
         'pricing_type',
         'suggested_price',
         'minimum_price',
+        'is_featured',
     ];
 
     protected $casts = [

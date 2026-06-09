@@ -14,6 +14,7 @@ class RatingController extends Controller
         $rating = new Rating();
         $rating->user_id = Auth::id();
         $rating->product_id = $request->product_id;
+        $rating->rating = $request->overall_rating;
         $rating->overall_rating = $request->overall_rating;
         $rating->quality_rating = $request->quality_rating;
         $rating->value_rating = $request->value_rating;

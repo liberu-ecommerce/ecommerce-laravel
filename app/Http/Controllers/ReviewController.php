@@ -57,7 +57,7 @@ class ReviewController extends Controller
     {
         $reviews = Review::where('product_id', $productId)
             ->where('approved', true)
-            ->with('customer')
+            ->with('user')
             ->get();
         return response()->json($reviews);
     }
