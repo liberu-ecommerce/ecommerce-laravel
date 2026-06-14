@@ -8,7 +8,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.5",
+        "php": "^8.4",
         "bezhansalleh/filament-shield": "^4.0",
         "biostate/filament-menu-builder": "^5.0",
         "bursteri/socialstream": "^7.0",
