@@ -208,4 +208,33 @@ class ChatServiceTest extends TestCase
         $this->assertCount(1, $results);
         $this->assertEquals($conversation->id, $results->first()->id);
     }
+
+    public function test_assign_agent_records_positive_response_time(): void
+    {
+        $agent = User::factory()->create();
+        $this->freezeTime();
+        $conversation = $this->service->createConversation(['session_id' => 'sess_rt']);
+
+        $this->travel(30)->seconds();
+        $this->service->assignAgent($conversation->id, $agent->id);
+
+        $analytics = ChatAnalytics::where('conversation_id', $conversation->id)->first();
+        $this->assertGreaterThanOrEqual(0, $analytics->response_time_seconds);
+        $this->assertEqualsWithDelta(30, $analytics->response_time_seconds, 1);
+    }
+
+    public function test_close_conversation_records_positive_resolution_time(): void
+    {
+        $agent = User::factory()->create();
+        $this->freezeTime();
+        $conversation = $this->service->createConversation(['session_id' => 'sess_res']);
+        $this->service->assignAgent($conversation->id, $agent->id);
+
+        $this->travel(60)->seconds();
+        $this->service->closeConversation($conversation->id);
+
+        $analytics = ChatAnalytics::where('conversation_id', $conversation->id)->first();
+        $this->assertGreaterThanOrEqual(0, $analytics->resolution_time_seconds);
+        $this->assertEqualsWithDelta(60, $analytics->resolution_time_seconds, 1);
+    }
 }

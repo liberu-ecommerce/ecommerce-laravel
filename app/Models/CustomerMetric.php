@@ -64,7 +64,7 @@ class CustomerMetric extends Model
             'first_purchase_at' => $orders->min('created_at'),
             'last_purchase_at' => $orders->max('created_at'),
             'days_since_last_purchase' => $orders->max('created_at')
-                ? now()->diffInDays($orders->max('created_at'))
+                ? $orders->max('created_at')->diffInDays(now())
                 : null,
             'customer_segment' => $this->calculateSegment($orders),
             'retention_score' => $this->calculateRetentionScore($orders),

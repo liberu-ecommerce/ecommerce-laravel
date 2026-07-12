@@ -11,6 +11,10 @@ class ProductPerformance extends Model
 {
     use HasFactory, IsTenantModel;
 
+    // Migration creates `product_performance`; without this, Eloquent would
+    // pluralise to the non-existent `product_performances` and every query fatals.
+    protected $table = 'product_performance';
+
     protected $fillable = [
         'product_id',
         'date',
@@ -24,7 +28,10 @@ class ProductPerformance extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        // No date cast: the record* helpers store/query the date as a plain
+        // 'Y-m-d' string. A Carbon cast serialises to 'Y-m-d 00:00:00', which
+        // updateOrCreate's raw lookup then never matches -> duplicate INSERT
+        // and a unique(product_id, date) violation on the second call of a day.
         'views' => 'integer',
         'add_to_cart' => 'integer',
         'purchases' => 'integer',

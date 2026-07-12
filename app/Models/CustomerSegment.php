@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CustomerSegment extends Model
@@ -45,9 +44,15 @@ class CustomerSegment extends Model
         }
 
         $query = User::query();
-        
+
+        // match_type 'any' => OR the conditions, 'all' => AND them.
+        // Each condition is its own nested group so whereHas/has clauses combine correctly.
+        $boolean = $this->match_type === 'any' ? 'orWhere' : 'where';
+
         foreach ($this->conditions as $condition) {
-            $this->applyCondition($query, $condition);
+            $query->{$boolean}(function ($q) use ($condition) {
+                $this->applyCondition($q, $condition);
+            });
         }
 
         $userIds = $query->pluck('id');
@@ -77,9 +82,9 @@ class CustomerSegment extends Model
 
         // Handle different condition types
         match($field) {
-            'total_orders' => $query->whereHas('orders', function($q) use ($operator, $value) {
-                $q->havingRaw("COUNT(*) {$operator} ?", [$value]);
-            }),
+            // has() builds a correlated `(select count(*) ...) <op> <value>` predicate.
+            // The old havingRaw()-in-whereHas produced invalid SQL ("HAVING on a non-aggregate query").
+            'total_orders' => $query->has('orders', $operator, (int) $value),
             'lifetime_value' => $query->whereHas('customerMetric', function($q) use ($operator, $value) {
                 $q->where('lifetime_value', $operator, $value);
             }),
