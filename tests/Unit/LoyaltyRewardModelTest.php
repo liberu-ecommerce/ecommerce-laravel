@@ -111,6 +111,49 @@ class LoyaltyRewardModelTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function test_redeem_success_deducts_points_stock_and_records_redemption(): void
+    {
+        $user = User::factory()->create();
+        $points = LoyaltyPoints::create([
+            'user_id' => $user->id,
+            'loyalty_program_id' => $this->program->id,
+            'balance' => 600,
+            'lifetime_earned' => 600,
+            'lifetime_redeemed' => 0,
+        ]);
+        $reward = $this->makeReward(['points_cost' => 500, 'stock_quantity' => 3]);
+
+        $redemption = $reward->redeem($user->id);
+
+        $this->assertNotNull($redemption);
+        $this->assertEquals(500, $redemption->points_spent);
+        $this->assertEquals('pending', $redemption->status);
+        // Points deducted exactly once.
+        $this->assertEquals(100, $points->fresh()->balance);
+        $this->assertEquals(500, $points->fresh()->lifetime_redeemed);
+        // Stock decremented once.
+        $this->assertEquals(2, $reward->fresh()->stock_quantity);
+    }
+
+    public function test_redeem_twice_respects_max_redemptions_and_deducts_once(): void
+    {
+        $user = User::factory()->create();
+        $points = LoyaltyPoints::create([
+            'user_id' => $user->id,
+            'loyalty_program_id' => $this->program->id,
+            'balance' => 2000,
+            'lifetime_earned' => 2000,
+        ]);
+        $reward = $this->makeReward(['points_cost' => 500, 'max_redemptions' => 1]);
+
+        $first = $reward->redeem($user->id);
+        $second = $reward->redeem($user->id);
+
+        $this->assertNotNull($first);
+        $this->assertNull($second);
+        $this->assertEquals(1500, $points->fresh()->balance);
+    }
+
     public function test_belongs_to_program(): void
     {
         $reward = $this->makeReward();

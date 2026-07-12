@@ -3,37 +3,31 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Cashier\Billable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Subscription extends Model
 {
-    use Billable;
-
     protected $fillable = [
         'name', 'stripe_id', 'stripe_status', 'stripe_plan', 'quantity', 'trial_ends_at', 'ends_at',
     ];
 
-    public function user()
+    protected $casts = [
+        'trial_ends_at' => 'datetime',
+        'ends_at' => 'datetime',
+    ];
+
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->stripe_status === 'active';
     }
 
-    public function cancel()
-    {
-        $this->subscription('default')->cancel();
-    }
-
-    public function renew()
-    {
-        if ($this->onGracePeriod()) {
-            $this->subscription('default')->resume();
-        } else {
-            // Handle logic for subscriptions that are not in grace period
-        }
-    }
+    // ponytail: removed cancel()/renew() — they called Cashier Billable methods
+    // ($this->subscription('default'), $this->onGracePeriod(), ->resume()) that don't
+    // exist on this model and depended on laravel/cashier, which is not installed.
+    // Re-add real cancel/renew when a Stripe/Cashier billing integration is actually wired.
 }

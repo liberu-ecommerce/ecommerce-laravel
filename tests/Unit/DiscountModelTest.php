@@ -67,4 +67,26 @@ class DiscountModelTest extends TestCase
 
         $this->assertFalse($discount->is_active);
     }
+
+    public function test_percentage_calculate_discount(): void
+    {
+        $discount = $this->makeDiscount(['type' => Discount::TYPE_PERCENTAGE, 'value' => 25]);
+
+        $this->assertEquals(25.0, $discount->calculateDiscount([], 100.0));
+    }
+
+    public function test_percentage_discount_capped_at_subtotal(): void
+    {
+        // A percentage over 100 must never exceed the subtotal.
+        $discount = $this->makeDiscount(['type' => Discount::TYPE_PERCENTAGE, 'value' => 150]);
+
+        $this->assertEquals(80.0, $discount->calculateDiscount([], 80.0));
+    }
+
+    public function test_fixed_amount_discount_capped_at_subtotal(): void
+    {
+        $discount = $this->makeDiscount(['type' => Discount::TYPE_FIXED_AMOUNT, 'value' => 200]);
+
+        $this->assertEquals(50.0, $discount->calculateDiscount([], 50.0));
+    }
 }

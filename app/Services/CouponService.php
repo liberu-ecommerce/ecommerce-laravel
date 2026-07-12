@@ -56,7 +56,7 @@ class CouponService
     public function calculateDiscount(Coupon $coupon, float $subtotal): float
     {
         if ($coupon->type === 'percentage') {
-            $discount = ($subtotal * $coupon->value) / 100;
+            $discount = min(($subtotal * $coupon->value) / 100, $subtotal); // Never exceed subtotal
         } elseif ($coupon->type === 'fixed') {
             $discount = min($coupon->value, $subtotal); // Don't exceed subtotal
         } else {

@@ -96,11 +96,21 @@ class LoyaltyPoints extends Model
             ->get();
 
         foreach ($expiredTransactions as $transaction) {
-            $this->decrement('balance', $transaction->points);
+            // Only points still sitting in the balance can expire. A lot that was
+            // already (partly) spent must not drive the balance negative.
+            // ponytail: no per-lot tracking — clamp to the running balance; add FIFO lots only if partial-lot expiry is ever required.
+            $expiring = (int) min($transaction->points, max(0, $this->balance));
+
             $transaction->update(['is_expired' => true]);
 
+            if ($expiring <= 0) {
+                continue;
+            }
+
+            $this->decrement('balance', $expiring);
+
             $this->transactions()->create([
-                'points' => -$transaction->points,
+                'points' => -$expiring,
                 'type' => 'expired',
                 'description' => 'Points expired',
             ]);
