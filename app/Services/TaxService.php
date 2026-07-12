@@ -9,7 +9,7 @@ class TaxService
     /**
      * Calculate tax for a cart based on shipping address
      */
-    public function calculateTaxForCart(array $cart, ?string $shippingAddress = null): float
+    public function calculateTaxForCart(array $cart, ?string $shippingAddress = null, float $discount = 0): float
     {
         if (!$shippingAddress) {
             return 0;
@@ -30,15 +30,16 @@ class TaxService
             return 0;
         }
 
-        // Calculate subtotal
+        // Calculate subtotal, then tax the amount left AFTER any discount.
         $subtotal = collect($cart)->sum(function ($item) {
             return $item['price'] * $item['quantity'];
         });
+        $taxable = max(0, $subtotal - $discount);
 
         // Calculate tax
         $totalTax = 0;
         foreach ($taxRates as $rate) {
-            $totalTax += $rate->calculateTax($subtotal);
+            $totalTax += $rate->calculateTax($taxable);
         }
 
         return round($totalTax, 2);

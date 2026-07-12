@@ -124,4 +124,15 @@ class TaxServiceTest extends TestCase
 
         $this->assertEquals(8.00, $tax);
     }
+
+    public function test_tax_for_cart_is_calculated_on_the_amount_after_discount(): void
+    {
+        $this->makeRate(['rate' => 10.00]);
+        $cart = [['price' => 100, 'quantity' => 1]];
+
+        // subtotal 100, discount 20 => taxable 80 => 10% = 8 (not 10 on the full subtotal)
+        $tax = $this->service->calculateTaxForCart($cart, '123 Main St, CA 90210', 20);
+
+        $this->assertEquals(8.00, $tax);
+    }
 }
