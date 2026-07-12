@@ -2,60 +2,61 @@
 
 namespace Tests\Feature;
 
+use App\Interfaces\PaymentGatewayInterface;
+use App\Services\PaymentGateways\PayPalGateway;
 use Tests\TestCase;
-use Mockery;
-use App\Http\Controllers\PaypalPaymentController;
-use App\Services\PaymentGatewayService;
-use App\Services\SubscriptionService;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 
 class PaypalPaymentControllerTest extends TestCase
 {
-    public function testCreateOneTimePaymentSuccess()
+    private function bindPaypalGateway(array $return): void
     {
-        $paymentGatewayServiceMock = Mockery::mock(PaymentGatewayService::class);
-        $subscriptionServiceMock = Mockery::mock(SubscriptionService::class);
-        $request = Request::create('/createOneTimePayment', 'POST', [
-            'paymentMethodId' => 'validMethodId',
-            'amount' => 100
-        ]);
+        $this->app->instance(PayPalGateway::class, new class($return) implements PaymentGatewayInterface {
+            public function __construct(private array $return) {}
 
-        $paymentGatewayServiceMock->shouldReceive('processPaypalPayment')
-            ->once()
-            ->with('validMethodId', 100)
-            ->andReturn(['success' => true, 'message' => 'PayPal payment successful']);
+            public function processPayment(float $amount, array $paymentDetails): array
+            {
+                return $this->return + ['payment_id' => $paymentDetails['payment_id'] ?? null];
+            }
 
-        $controller = new PaypalPaymentController($paymentGatewayServiceMock, $subscriptionServiceMock);
-        $response = $controller->createOneTimePayment($request);
+            public function processSubscription(string $planId, array $subscriptionDetails): array
+            {
+                return $this->return;
+            }
 
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(200, $response->status());
-        $this->assertEquals(['success' => true, 'message' => 'PayPal payment successful'], $response->getData(true));
+            public function refundPayment(string $transactionId, float $amount): array
+            {
+                return $this->return;
+            }
+        });
     }
 
-    public function testCreateOneTimePaymentFailure()
+    public function test_one_time_payment_delegates_to_the_paypal_gateway(): void
     {
-        $paymentGatewayServiceMock = Mockery::mock(PaymentGatewayService::class);
-        $subscriptionServiceMock = Mockery::mock(SubscriptionService::class);
-        $request = Request::create('/createOneTimePayment', 'POST', [
-            'paymentMethodId' => 'invalidMethodId',
-            'amount' => 0
+        $this->bindPaypalGateway(['success' => true, 'transaction_id' => 'txn_test']);
+
+        $response = $this->postJson(route('paypal.payment.create'), [
+            'paymentMethodId' => 'pm_123',
+            'amount' => 25,
         ]);
 
-        $paymentGatewayServiceMock->shouldReceive('processPaypalPayment')
-            ->once()
-            ->with('invalidMethodId', 0)
-            ->andReturn(['success' => false, 'message' => 'Payment failed']);
-
-        $controller = new PaypalPaymentController($paymentGatewayServiceMock, $subscriptionServiceMock);
-        $response = $controller->createOneTimePayment($request);
-
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(200, $response->status());
-        $this->assertEquals(['success' => false, 'message' => 'Payment failed'], $response->getData(true));
+        $response->assertOk();
+        $response->assertJson([
+            'success' => true,
+            'transaction_id' => 'txn_test',
+            'payment_id' => 'pm_123',
+        ]);
     }
 
-    // Similar test methods will be created for createSubscription, updateSubscription, and cancelSubscription methods, covering all possible scenarios including success, failure, and edge cases.
+    public function test_one_time_payment_returns_gateway_failure(): void
+    {
+        $this->bindPaypalGateway(['success' => false, 'error' => 'declined']);
 
+        $response = $this->postJson(route('paypal.payment.create'), [
+            'paymentMethodId' => 'pm_bad',
+            'amount' => 10,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson(['success' => false, 'error' => 'declined']);
+    }
 }

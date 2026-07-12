@@ -22,7 +22,9 @@ class PaypalPaymentController extends Controller
         $paymentMethodId = $request->input('paymentMethodId');
         $amount = $request->input('amount');
 
-        $result = $this->paymentGatewayService->processPaypalPayment($paymentMethodId, $amount);
+        $result = $this->paymentGatewayService->processPayment('paypal', (float) $amount, [
+            'payment_id' => $paymentMethodId,
+        ]);
 
         return response()->json($result);
     }

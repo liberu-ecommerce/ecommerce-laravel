@@ -3,41 +3,26 @@
 namespace App\Services;
 
 use App\Factories\PaymentGatewayFactory;
-use App\Interfaces\PaymentGatewayInterface;
-use App\Models\PaymentMethod;
-use InvalidArgumentException;
 
 class PaymentGatewayService
 {
-    protected $paymentGateway;
-
-    public function __construct()
+    /**
+     * Thin wrapper over PaymentGatewayFactory: resolve the named gateway per call
+     * and delegate. (Previously this held a $paymentGateway that was never set, so
+     * every method fataled on a null dereference.)
+     */
+    public function processPayment(string $gateway, float $amount, array $paymentDetails): array
     {
-        // $this->paymentGateway = PaymentGatewayFactory::create($gateway);
+        return PaymentGatewayFactory::create($gateway)->processPayment($amount, $paymentDetails);
     }
 
-    // public function __construct()
-    // {
-    //     $this->stripeClient = new StripeClient(Config::get('services.stripe.secret'));
-    //     $this->paypalContext = new ApiContext(new OAuthTokenCredential(
-    //         Config::get('services.paypal.client_id'),
-    //         Config::get('services.paypal.secret')
-    //     ));
-    //     $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
-    // }
-
-    public function processPayment(float $amount, array $paymentDetails): array
+    public function processSubscription(string $gateway, string $planId, array $subscriptionDetails): array
     {
-        return $this->paymentGateway->processPayment($amount, $paymentDetails);
+        return PaymentGatewayFactory::create($gateway)->processSubscription($planId, $subscriptionDetails);
     }
 
-    public function processSubscription(string $planId, array $subscriptionDetails): array
+    public function refundPayment(string $gateway, string $transactionId, float $amount): array
     {
-        return $this->paymentGateway->processSubscription($planId, $subscriptionDetails);
-    }
-
-    public function refundPayment(string $transactionId, float $amount): array
-    {
-        return $this->paymentGateway->refundPayment($transactionId, $amount);
+        return PaymentGatewayFactory::create($gateway)->refundPayment($transactionId, $amount);
     }
 }
