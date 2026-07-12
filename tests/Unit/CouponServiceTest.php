@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Models\Coupon;
 use App\Services\CouponService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CouponServiceTest extends TestCase
@@ -116,5 +117,81 @@ class CouponServiceTest extends TestCase
 
         $this->assertTrue($result['valid']);
         $this->assertEquals(10.0, $result['discount']);
+    }
+
+    public function test_usage_limited_coupon_applies_without_error(): void
+    {
+        // max_uses set + no orders: must apply cleanly (relation must resolve, not fatal).
+        Coupon::create([
+            'code' => 'LIMITED',
+            'type' => 'percentage',
+            'value' => 10,
+            'valid_from' => now()->subDay(),
+            'valid_until' => now()->addDay(),
+            'max_uses' => 10,
+            'min_purchase_amount' => null,
+        ]);
+
+        $result = $this->service->validateAndApplyCoupon('LIMITED', 100.0);
+
+        $this->assertTrue($result['valid']);
+        $this->assertEquals(10.0, $result['discount']);
+    }
+
+    public function test_usage_limit_reached_returns_error(): void
+    {
+        Coupon::create([
+            'code' => 'USEDUP',
+            'type' => 'percentage',
+            'value' => 10,
+            'valid_from' => now()->subDay(),
+            'valid_until' => now()->addDay(),
+            'max_uses' => 1,
+            'min_purchase_amount' => null,
+        ]);
+
+        $customerId = DB::table('customers')->insertGetId([
+            'first_name' => 'Test',
+            'last_name' => 'Buyer',
+            'email' => 'buyer@example.com',
+            'phone_number' => 5551234,
+            'address' => '1 Main St',
+            'city' => 'Town',
+            'state' => 'CA',
+            'postal_code' => '00000',
+        ]);
+        DB::table('orders')->insert([
+            'customer_id' => $customerId,
+            'order_date' => now()->toDateString(),
+            'total_amount' => 100,
+            'payment_status' => 'paid',
+            'shipping_status' => 'pending',
+            'coupon_code' => 'USEDUP',
+        ]);
+
+        $result = $this->service->validateAndApplyCoupon('USEDUP', 100.0);
+
+        $this->assertFalse($result['valid']);
+        $this->assertStringContainsString('usage limit', $result['error']);
+        $this->assertEquals(0, $result['discount']);
+    }
+
+    public function test_percentage_discount_capped_at_subtotal(): void
+    {
+        // A percentage over 100 must never discount more than the cart subtotal.
+        Coupon::create([
+            'code' => 'OVER100',
+            'type' => 'percentage',
+            'value' => 150,
+            'valid_from' => now()->subDay(),
+            'valid_until' => now()->addDay(),
+            'max_uses' => null,
+            'min_purchase_amount' => null,
+        ]);
+
+        $result = $this->service->validateAndApplyCoupon('OVER100', 80.0);
+
+        $this->assertTrue($result['valid']);
+        $this->assertEquals(80.0, $result['discount']);
     }
 }

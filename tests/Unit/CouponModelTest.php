@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Coupon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CouponModelTest extends TestCase
@@ -21,6 +22,32 @@ class CouponModelTest extends TestCase
             'max_uses' => null,
             'min_purchase_amount' => null,
         ], $overrides));
+    }
+
+    /** Insert $count orders linked to a coupon by code (the real linkage column). */
+    private function seedOrders(string $couponCode, int $count): void
+    {
+        $customerId = DB::table('customers')->insertGetId([
+            'first_name' => 'Test',
+            'last_name' => 'Buyer',
+            'email' => 'buyer@example.com',
+            'phone_number' => 5551234,
+            'address' => '1 Main St',
+            'city' => 'Town',
+            'state' => 'CA',
+            'postal_code' => '00000',
+        ]);
+
+        for ($i = 0; $i < $count; $i++) {
+            DB::table('orders')->insert([
+                'customer_id' => $customerId,
+                'order_date' => now()->toDateString(),
+                'total_amount' => 100,
+                'payment_status' => 'paid',
+                'shipping_status' => 'pending',
+                'coupon_code' => $couponCode,
+            ]);
+        }
     }
 
     public function test_is_valid_returns_true_for_active_coupon(): void
@@ -63,5 +90,42 @@ class CouponModelTest extends TestCase
         $coupon = $this->makeCoupon();
 
         $this->assertInstanceOf(\Carbon\Carbon::class, $coupon->valid_until);
+    }
+
+    public function test_is_valid_handles_usage_limit_without_error(): void
+    {
+        // Coupon with a usage limit and no orders yet must be valid, not fatal.
+        // The orders() relation must resolve against the real linkage column.
+        $coupon = $this->makeCoupon(['max_uses' => 5]);
+
+        $this->assertTrue($coupon->isValid());
+    }
+
+    public function test_is_valid_false_when_usage_limit_reached(): void
+    {
+        $coupon = $this->makeCoupon(['code' => 'LIMIT2', 'max_uses' => 2]);
+        $this->seedOrders('LIMIT2', 2);
+
+        $this->assertSame(2, $coupon->orders()->count());
+        $this->assertFalse($coupon->isValid());
+    }
+
+    public function test_is_valid_true_below_usage_limit(): void
+    {
+        $coupon = $this->makeCoupon(['code' => 'LIMIT3', 'max_uses' => 3]);
+        $this->seedOrders('LIMIT3', 2);
+
+        $this->assertTrue($coupon->isValid());
+    }
+
+    public function test_is_valid_true_with_null_dates(): void
+    {
+        // Null valid_from/valid_until means unbounded (always valid), not expired.
+        $coupon = $this->makeCoupon([
+            'valid_from' => null,
+            'valid_until' => null,
+        ]);
+
+        $this->assertTrue($coupon->isValid());
     }
 }

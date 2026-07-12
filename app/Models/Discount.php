@@ -152,7 +152,7 @@ class Discount extends Model
     {
         switch ($this->type) {
             case self::TYPE_PERCENTAGE:
-                return $subtotal * ($this->value / 100);
+                return min($subtotal * ($this->value / 100), $subtotal); // Never exceed subtotal
 
             case self::TYPE_FIXED_AMOUNT:
                 return min($this->value, $subtotal);

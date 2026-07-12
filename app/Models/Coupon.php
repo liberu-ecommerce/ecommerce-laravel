@@ -31,12 +31,19 @@ class Coupon extends Model
 
     public function orders()
     {
-        return $this->hasMany(Order::class);
+        // Orders link to coupons by code, not coupon_id (see orders.coupon_code column).
+        return $this->hasMany(Order::class, 'coupon_code', 'code');
     }
 
     public function isValid()
     {
         $now = now();
-        return $this->valid_from <= $now && $this->valid_until >= $now && ($this->max_uses === null || $this->orders()->count() < $this->max_uses);
+
+        // Null bounds mean unbounded (no start / no expiry), not "invalid".
+        $started = $this->valid_from === null || $this->valid_from <= $now;
+        $notExpired = $this->valid_until === null || $this->valid_until >= $now;
+        $underLimit = $this->max_uses === null || $this->orders()->count() < $this->max_uses;
+
+        return $started && $notExpired && $underLimit;
     }
 }
