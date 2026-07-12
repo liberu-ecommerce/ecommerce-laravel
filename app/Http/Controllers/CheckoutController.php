@@ -202,20 +202,20 @@ class CheckoutController extends Controller
                 $paymentResult = $this->processPayPalPayment($order, $request->paypal_payment_id);
             } else {
                 $this->releaseInventory($order, $cart);
-                $order->update(['status' => 'failed']);
+                $order->transitionTo(Order::STATUS_FAILED, notes: 'Invalid payment information');
                 return redirect()->back()
                     ->with('error', 'Invalid payment information. Please try again.');
             }
 
             if (!$paymentResult['success']) {
                 $this->releaseInventory($order, $cart);
-                $order->update(['status' => 'failed']);
+                $order->transitionTo(Order::STATUS_FAILED, notes: 'Payment failed: ' . ($paymentResult['error'] ?? 'unknown'));
                 return redirect()->back()
                     ->with('error', 'Payment failed: ' . ($paymentResult['error'] ?? 'Please try again.'));
             }
         }
 
-        $order->update(['status' => 'paid']);
+        $order->transitionTo(Order::STATUS_PAID, notes: 'Payment captured');
 
         // Send order confirmation email
         Notification::route('mail', $order->customer_email)
@@ -232,11 +232,11 @@ class CheckoutController extends Controller
                 \App\Jobs\DispatchDropshippingOrder::dispatch($order->id, $supplierId);
 
                 // set temporary status indicating background placement
-                $order->update(['status' => 'supplier_queued']);
+                $order->transitionTo(Order::STATUS_SUPPLIER_QUEUED, notes: "Supplier order queued ({$supplierId})");
 
             } catch (Exception $e) {
                 \Log::error('Dropshipping dispatch error: ' . $e->getMessage());
-                $order->update(['status' => 'supplier_failed']);
+                $order->transitionTo(Order::STATUS_SUPPLIER_FAILED, notes: 'Dropshipping dispatch error: ' . $e->getMessage());
 
                 Notification::route('mail', config('mail.from.address'))
                     ->notify(new \App\Notifications\SupplierFailureNotification("Error queuing dropshipping order for order {$order->id}: " . $e->getMessage()));
