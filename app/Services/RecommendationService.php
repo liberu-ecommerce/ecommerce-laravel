@@ -4,9 +4,6 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Product;
-use App\Models\Order;
-use App\Models\Rating;
-use App\Models\BrowsingHistory;
 
 class RecommendationService
 {
@@ -27,19 +24,26 @@ class RecommendationService
         // Recommend based on highly rated products
         $recommendedProducts = $recommendedProducts->merge($this->getHighlyRatedProducts($ratedProducts));
 
-        // Remove duplicates and products already purchased or browsed
-        $recommendedProducts = $recommendedProducts->unique('id')
-            ->diff($purchasedProducts)
-            ->diff($browsedProducts)
-            ->sortByDesc('rating')
-            ->take($limit);
+        // Remove duplicates and products already purchased or browsed.
+        // NB: this is a base Collection of models, so exclude by id — a
+        // Collection::diff() here would string-cast the models and fatal.
+        $excludeIds = $purchasedProducts->pluck('id')
+            ->merge($browsedProducts->pluck('id'))
+            ->unique();
 
-        return $recommendedProducts;
+        return $recommendedProducts->unique('id')
+            ->reject(fn ($product) => $excludeIds->contains($product->id))
+            ->sortByDesc('rating')
+            ->take($limit)
+            ->values();
     }
 
     private function getPurchasedProducts(User $user)
     {
-        return $user->orders()->with('products')->get()->pluck('products')->flatten()->unique('id');
+        // Order has no `products` relation; go through its line items.
+        return $user->orders()->with('items.product')->get()
+            ->pluck('items')->flatten()
+            ->pluck('product')->filter()->unique('id');
     }
 
     private function getBrowsedProducts(User $user)
@@ -54,15 +58,24 @@ class RecommendationService
 
     private function getRelatedProducts($products)
     {
-        return Product::whereHas('categories', function ($query) use ($products) {
-            $query->whereIn('id', $products->pluck('categories.*.id')->flatten());
-        })->get();
+        // Product belongs to a single category (category_id), not a `categories`
+        // relation. Recommend same-category products, excluding the seeds.
+        $categoryIds = $products->pluck('category_id')->filter()->unique();
+
+        if ($categoryIds->isEmpty()) {
+            return collect();
+        }
+
+        return Product::whereIn('category_id', $categoryIds)
+            ->whereNotIn('id', $products->pluck('id')->filter())
+            ->get();
     }
 
     private function getHighlyRatedProducts($products)
     {
+        // Product exposes `rating()` (ProductRating), which has a `rating` column.
         return Product::whereIn('id', $products->pluck('id'))
-            ->withAvg('ratings as rating', 'rating')
+            ->withAvg('rating as rating', 'rating')
             ->orderByDesc('rating')
             ->take(10)
             ->get();

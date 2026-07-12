@@ -41,15 +41,17 @@ class InventoryLevel extends Model
         return $this->belongsTo(InventoryLocation::class);
     }
 
-    public function adjustQuantity(int $quantity, string $reason = null): void
+    public function adjustQuantity(int $quantity, ?string $reason = null): void
     {
         $this->available += $quantity;
         $this->on_hand += $quantity;
         $this->save();
 
-        // Log the adjustment
+        // Log the adjustment. inventory_item_id is NOT NULL in the schema, so it
+        // must be set here or every adjustment insert fatals.
         InventoryAdjustment::create([
             'inventory_level_id' => $this->id,
+            'inventory_item_id' => $this->inventory_item_id,
             'quantity_delta' => $quantity,
             'reason' => $reason,
             'available_after' => $this->available,

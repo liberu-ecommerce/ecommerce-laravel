@@ -92,6 +92,23 @@ class ABTestModelTest extends TestCase
         $this->assertEquals($user->id, $assignment->user_id);
     }
 
+    public function test_assign_variant_is_stable_per_user_across_sessions(): void
+    {
+        $test = $this->makeTest();
+        $user = User::factory()->create();
+
+        // Same user, two different sessions (e.g. new device / cleared cookies)
+        $first = $test->assignVariant($user->id, 'session_one');
+        $second = $test->assignVariant($user->id, 'session_two');
+
+        $this->assertEquals($first->id, $second->id);
+        $this->assertEquals($first->variant_name, $second->variant_name);
+        $this->assertEquals(
+            1,
+            ABTestAssignment::where('test_id', $test->id)->where('user_id', $user->id)->count()
+        );
+    }
+
     public function test_get_conversion_rates_returns_stats_per_variant(): void
     {
         $test = $this->makeTest();

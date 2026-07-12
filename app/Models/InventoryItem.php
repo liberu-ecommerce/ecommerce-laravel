@@ -80,7 +80,7 @@ class InventoryItem extends Model
                     ->value('available') ?? 0;
     }
 
-    public function adjustInventory(InventoryLocation $location, int $quantity, string $reason = null): void
+    public function adjustInventory(InventoryLocation $location, int $quantity, ?string $reason = null): void
     {
         $level = $this->inventoryLevels()->firstOrCreate([
             'location_id' => $location->id,

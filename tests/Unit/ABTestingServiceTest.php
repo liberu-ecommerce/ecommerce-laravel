@@ -4,10 +4,9 @@ namespace Tests\Unit;
 
 use App\Models\ABTest;
 use App\Models\ABTestAssignment;
+use App\Models\User;
 use App\Services\ABTestingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Session;
 use Tests\TestCase;
 
 class ABTestingServiceTest extends TestCase
@@ -127,6 +126,26 @@ class ABTestingServiceTest extends TestCase
         } else {
             $this->markTestSkipped('No assignment created (session ID mismatch)');
         }
+    }
+
+    public function test_track_conversion_finds_assignment_by_user_across_sessions(): void
+    {
+        $test = $this->makeActiveTest();
+        $user = User::factory()->create();
+
+        // User assigned under one session id...
+        $test->assignVariant($user->id, 'assigned_session');
+
+        // ...converts later when the active session id differs, but user is known.
+        $this->service->trackConversion('button_test', 42.00, $user->id);
+
+        $assignment = ABTestAssignment::where('test_id', $test->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $this->assertNotNull($assignment);
+        $this->assertTrue($assignment->fresh()->converted);
+        $this->assertEquals(42.00, $assignment->fresh()->conversion_value);
     }
 
     public function test_create_test_creates_draft_test(): void

@@ -101,4 +101,23 @@ class InventoryAdjustmentModelTest extends TestCase
 
         $this->assertIsInt($adj->fresh()->quantity_delta);
     }
+
+    public function test_adjust_quantity_updates_level_and_logs_adjustment(): void
+    {
+        $item = $this->makeInventoryItem();
+        $level = $this->makeLevel($item); // available 100
+
+        $level->adjustQuantity(10, 'restock');
+
+        $level->refresh();
+        $this->assertSame(110, $level->available);
+        $this->assertSame(10, $level->on_hand);
+
+        $adj = InventoryAdjustment::latest('id')->first();
+        $this->assertNotNull($adj);
+        // inventory_item_id is NOT NULL in the schema; adjustQuantity must set it.
+        $this->assertSame($item->id, $adj->inventory_item_id);
+        $this->assertSame(10, $adj->quantity_delta);
+        $this->assertSame(110, $adj->available_after);
+    }
 }
