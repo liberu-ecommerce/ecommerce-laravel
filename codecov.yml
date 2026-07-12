@@ -1,0 +1,20 @@
+# Coverage gate. tests.yml already uploads coverage.xml; this makes it enforce a
+# floor instead of being purely informational.
+coverage:
+  status:
+    project:
+      default:
+        # Overall coverage may not regress vs the base branch (small noise allowed).
+        target: auto
+        threshold: 0.5%
+        informational: false
+    patch:
+      default:
+        # New / changed lines in a PR should be reasonably covered.
+        target: 70%
+        threshold: 5%
+        informational: false
+
+comment:
+  layout: "reach, diff, files"
+  require_changes: true

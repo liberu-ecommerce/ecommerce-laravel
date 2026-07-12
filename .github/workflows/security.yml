@@ -1,4 +1,4 @@
-name: Security & Code Quality
+name: Security
 
 on:
   push:
@@ -13,88 +13,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  phpcpd:
-    name: PHP Copy/Paste Detection
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.5'
-          tools: phpcpd
-
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Run phpcpd
-        run: phpcpd app/ --min-lines=5 --min-tokens=70 || true
-
-  php-insights:
-    name: PHP Insights
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: liberu_ecommerce_testing
-          MYSQL_USER: liberu
-          MYSQL_PASSWORD: secret
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.5'
-          extensions: pdo_mysql
-
-      - name: Get composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Copy environment file
-        run: cp .env.testing .env
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Generate application key
-        run: php artisan key:generate
-
-      - name: Run PHP Insights
-        run: php artisan insights --min-quality=90 --min-complexity=90 --min-architecture=80 --min-style=90 --no-interaction
-
+  # Removed the php-insights and phpcpd jobs: phpinsights is not a project
+  # dependency (the job errored on every run) and its quality thresholds don't
+  # reflect the codebase, and sebastian/phpcpd is abandoned and doesn't install
+  # on PHP 8.5. Reinstate as require-dev tools with realistic thresholds if the
+  # team wants them gating.
   security:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
