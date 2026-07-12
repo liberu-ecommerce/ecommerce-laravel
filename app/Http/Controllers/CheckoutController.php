@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -16,11 +17,16 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
 use App\Models\Product;
+use App\Notifications\OrderConfirmationNotification;
 use App\Services\TaxService;
 use App\Services\CouponService;
+use Exception;
 
 class CheckoutController extends Controller
 {
+    /** Sentinel thrown inside the reservation transaction to roll it back on insufficient stock. */
+    private const OUT_OF_STOCK = 'OUT_OF_STOCK';
+
     protected $shippingService;
     protected $taxService;
     protected $couponService;
@@ -124,46 +130,86 @@ class CheckoutController extends Controller
 
         $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
 
-        // Create order
-        $order = Order::create([
-            'customer_email' => $request->email,
-            'shipping_address' => $request->shipping_address,
-            'shipping_method_id' => $request->shipping_method_id,
-            'payment_method' => $request->payment_method,
-            'total_amount' => $totalAmount,
-            'shipping_cost' => $shippingCost,
-            'tax_amount' => $taxAmount,
-            'discount_amount' => $discountAmount,
-            'coupon_code' => $couponCode,
-            'status' => 'pending',
-            'is_dropshipped' => $request->has('dropship'),
-            'recipient_name' => $request->recipient_name,
-            'recipient_email' => $request->recipient_email,
-            'gift_message' => $request->gift_message,
-        ]);
+        // Create the order and RESERVE stock atomically, before charging.
+        // If any line can't be reserved (e.g. a concurrent buyer took the last
+        // unit), the whole transaction rolls back and no payment is taken — this
+        // is what prevents charging a customer for stock we can't fulfil.
+        $order = null;
+        try {
+            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $discountAmount, $couponCode) {
+                $order = Order::create([
+                    'customer_email' => $request->email,
+                    'shipping_address' => $request->shipping_address,
+                    'shipping_method_id' => $request->shipping_method_id,
+                    'payment_method' => $request->payment_method,
+                    'total_amount' => $totalAmount,
+                    'shipping_cost' => $shippingCost,
+                    'tax_amount' => $taxAmount,
+                    'discount_amount' => $discountAmount,
+                    'coupon_code' => $couponCode,
+                    'status' => 'pending',
+                    'is_dropshipped' => $request->has('dropship'),
+                    'recipient_name' => $request->recipient_name,
+                    'recipient_email' => $request->recipient_email,
+                    'gift_message' => $request->gift_message,
+                ]);
 
-        // Create order items
-        foreach ($cart as $productId => $item) {
-            $order->items()->create([
-                'product_id' => $productId,
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-            ]);
+                foreach ($cart as $productId => $item) {
+                    $order->items()->create([
+                        'product_id' => $productId,
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                    ]);
+
+                    $before = Product::where('id', $productId)->value('inventory_count');
+
+                    // Atomic, guarded decrement: only succeeds while enough stock remains.
+                    $affected = Product::where('id', $productId)
+                        ->where('inventory_count', '>=', $item['quantity'])
+                        ->decrement('inventory_count', $item['quantity']);
+
+                    if ($affected === 0) {
+                        // Not enough stock (or product gone) — abort the whole order.
+                        throw new \RuntimeException(self::OUT_OF_STOCK);
+                    }
+
+                    InventoryLog::create([
+                        'product_id' => $productId,
+                        'quantity_change' => -$item['quantity'],
+                        'old_quantity' => $before,
+                        'new_quantity' => $before - $item['quantity'],
+                        'reason' => 'order',
+                        'reference_id' => $order->id,
+                        'reference_type' => Order::class,
+                    ]);
+                }
+            });
+        } catch (\RuntimeException $e) {
+            if ($e->getMessage() === self::OUT_OF_STOCK) {
+                return redirect()->back()
+                    ->with('error', 'Some items in your cart are no longer available in the requested quantity.');
+            }
+            throw $e;
         }
 
-        // Process payment based on selected method
+        /** @var Order $order */
+
+        // Charge payment. Stock is already reserved, so we never charge for stock
+        // we can't fulfil. If the charge fails, release the reservation.
         if ($totalAmount > 0) {
             if ($request->payment_method === 'stripe' && $request->has('stripeToken')) {
                 $paymentResult = $this->processStripePayment($order, $request->stripeToken);
             } else if ($request->payment_method === 'paypal' && $request->has('paypal_payment_id')) {
                 $paymentResult = $this->processPayPalPayment($order, $request->paypal_payment_id);
             } else {
+                $this->releaseInventory($order, $cart);
                 $order->update(['status' => 'failed']);
                 return redirect()->back()
                     ->with('error', 'Invalid payment information. Please try again.');
             }
 
             if (!$paymentResult['success']) {
+                $this->releaseInventory($order, $cart);
                 $order->update(['status' => 'failed']);
                 return redirect()->back()
                     ->with('error', 'Payment failed: ' . ($paymentResult['error'] ?? 'Please try again.'));
@@ -204,13 +250,13 @@ class CheckoutController extends Controller
         // Generate download links for downloadable products
         foreach ($cart as $productId => $item) {
             if ($item['is_downloadable']) {
-                $product = Product::with('productCategory')->find($productId);
+                $product = Product::with('category')->find($productId);
                 $orderItem = $order->items()->where('product_id', $productId)->first();
-                
+
                 if ($orderItem && $product) {
                     // Generate secure download link with expiration (30 days)
                     $token = Str::random(64);
-                    $categoryId = $product->productCategory ? $product->productCategory->id : 'general';
+                    $categoryId = $product->category ? $product->category->id : 'general';
                     $downloadLink = route('download.serve-file', [
                         'category' => $categoryId,
                         'product' => $product->id,
@@ -224,38 +270,6 @@ class CheckoutController extends Controller
                     ]);
                 }
             }
-        }
-        
-        // Update inventory after successful payment (with atomic operations)
-        foreach ($cart as $productId => $item) {
-            $product = Product::find($productId);
-            $oldInventory = $product->inventory_count;
-            
-            // Atomic decrement with check to prevent negative inventory
-            $affected = Product::where('id', $productId)
-                ->where('inventory_count', '>=', $item['quantity'])
-                ->decrement('inventory_count', $item['quantity']);
-            
-            if ($affected === 0) {
-                // Inventory insufficient - this shouldn't happen as we checked earlier
-                // Log the issue but don't fail the order
-                \Log::warning("Inventory insufficient for product {$productId} during order {$order->id}");
-                continue;
-            }
-            
-            // Reload to get the new inventory count
-            $product->refresh();
-            
-            // Log inventory change
-            InventoryLog::create([
-                'product_id' => $productId,
-                'quantity_change' => -$item['quantity'],
-                'old_quantity' => $oldInventory,
-                'new_quantity' => $product->inventory_count,
-                'reason' => 'order',
-                'reference_id' => $order->id,
-                'reference_type' => 'App\Models\Order',
-            ]);
         }
 
         // Clear cart and coupon
@@ -291,6 +305,32 @@ class CheckoutController extends Controller
             'order_id' => $order->id,
             'customer_email' => $order->customer_email
         ]);
+    }
+
+    /**
+     * Return reserved stock to inventory when a payment fails after the order was
+     * created. Keeps an audit row so the reserve/release pair is traceable.
+     */
+    private function releaseInventory($order, array $cart): void
+    {
+        foreach ($cart as $productId => $item) {
+            $before = Product::where('id', $productId)->value('inventory_count');
+            if ($before === null) {
+                continue;
+            }
+
+            Product::where('id', $productId)->increment('inventory_count', $item['quantity']);
+
+            InventoryLog::create([
+                'product_id' => $productId,
+                'quantity_change' => $item['quantity'],
+                'old_quantity' => $before,
+                'new_quantity' => $before + $item['quantity'],
+                'reason' => 'payment_failed_release',
+                'reference_id' => $order->id,
+                'reference_type' => Order::class,
+            ]);
+        }
     }
 
     private function hasPhysicalProducts($cart)
