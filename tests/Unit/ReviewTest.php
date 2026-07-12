@@ -3,14 +3,39 @@
 namespace Tests\Unit;
 
 use App\Models\Product;
+use App\Models\ProductReview;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ReviewTest extends TestCase
 {
     use RefreshDatabase;
+
+    // Locks the product_reviews schema drift fix: the model writes these columns.
+    public function testProductReviewTableHasVoteAndVerifiedColumns(): void
+    {
+        foreach (['is_verified_purchase', 'helpful_votes', 'unhelpful_votes'] as $col) {
+            $this->assertTrue(
+                Schema::hasColumn('product_reviews', $col),
+                "product_reviews is missing the {$col} column the model writes"
+            );
+        }
+    }
+
+    public function testProductReviewHelpfulnessScore(): void
+    {
+        $review = new ProductReview(['helpful_votes' => 3, 'unhelpful_votes' => 1]);
+        $this->assertEquals(75.0, $review->getHelpfulnessScore());
+    }
+
+    public function testProductReviewHelpfulnessScoreWithNoVotes(): void
+    {
+        $review = new ProductReview(['helpful_votes' => 0, 'unhelpful_votes' => 0]);
+        $this->assertEquals(0, $review->getHelpfulnessScore());
+    }
 
     public function testReviewCanBeApproved()
     {

@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\ReviewController;
 use App\Http\Requests\ReviewRequest;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Mockery;
 use Tests\TestCase;
 
 class ReviewControllerTest extends TestCase
@@ -116,5 +114,21 @@ class ReviewControllerTest extends TestCase
         $response = $this->postJson('/reviews/9999/vote', ['vote' => 'helpful']);
 
         $response->assertStatus(404);
+    }
+
+    public function test_store_rejects_duplicate_review_from_same_user(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+        $payload = [
+            'product_id' => $product->id,
+            'rating' => 5,
+            'review' => 'Great product!',
+        ];
+
+        $this->actingAs($user)->postJson('/reviews', $payload)->assertStatus(201);
+        $this->actingAs($user)->postJson('/reviews', $payload)->assertStatus(409);
+
+        $this->assertEquals(1, Review::where('user_id', $user->id)->where('product_id', $product->id)->count());
     }
 }

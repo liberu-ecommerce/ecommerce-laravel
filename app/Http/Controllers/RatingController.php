@@ -11,6 +11,14 @@ class RatingController extends Controller
 {
     public function store(RatingRequest $request)
     {
+        $alreadyRated = Rating::where('user_id', Auth::id())
+            ->where('product_id', $request->product_id)
+            ->exists();
+
+        if ($alreadyRated) {
+            return response()->json(['message' => 'You have already rated this product'], 409);
+        }
+
         $rating = new Rating();
         $rating->user_id = Auth::id();
         $rating->product_id = $request->product_id;
@@ -35,8 +43,9 @@ class RatingController extends Controller
             'price' => $ratings->avg('price_rating'),
         ];
 
-        // TODO: implement the method in the product model
-        $overallAverage = 0;
+        // Composite score = mean of the available category averages (null when no ratings).
+        $present = array_filter($averageRatings, fn ($v) => ! is_null($v));
+        $overallAverage = count($present) ? round(array_sum($present) / count($present), 2) : null;
 
         return response()->json([
             'averageRatings' => $averageRatings,
