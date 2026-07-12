@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\PaymentGateways\StripeGateway;
 use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -121,5 +122,33 @@ class CheckoutInventoryTest extends TestCase
         $this->assertSame('failed', $order->status);
         // Reserved stock must be released back when the charge fails.
         $this->assertSame(5, $product->fresh()->inventory_count, 'Inventory was lost on a failed payment');
+    }
+
+    public function test_authenticated_checkout_links_the_order_to_the_user(): void
+    {
+        Notification::fake();
+        $this->bindGateway(fn () => ['success' => true, 'transaction_id' => 'ch_1']);
+
+        $user = User::factory()->create();
+        $product = Product::factory()->create(['inventory_count' => 5, 'is_downloadable' => true]);
+
+        $this->actingAs($user)
+            ->withSession(['cart' => $this->cartFor($product, 1)])
+            ->post(route('checkout.process'), $this->payload());
+
+        $this->assertSame($user->id, Order::first()->user_id);
+    }
+
+    public function test_guest_checkout_leaves_the_order_user_id_null(): void
+    {
+        Notification::fake();
+        $this->bindGateway(fn () => ['success' => true, 'transaction_id' => 'ch_1']);
+
+        $product = Product::factory()->create(['inventory_count' => 5, 'is_downloadable' => true]);
+
+        $this->withSession(['cart' => $this->cartFor($product, 1)])
+            ->post(route('checkout.process'), $this->payload());
+
+        $this->assertNull(Order::first()->user_id);
     }
 }

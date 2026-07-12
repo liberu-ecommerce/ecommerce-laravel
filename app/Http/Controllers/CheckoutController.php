@@ -136,6 +136,7 @@ class CheckoutController extends Controller
         try {
             DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $discountAmount, $couponCode) {
                 $order = Order::create([
+                    'user_id' => auth()->id(),
                     'customer_email' => $request->email,
                     'shipping_address' => $request->shipping_address,
                     'shipping_method_id' => $request->shipping_method_id,

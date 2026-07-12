@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DownloadableProduct;
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -64,7 +65,7 @@ class DownloadController extends Controller
             ->whereHas('items', function ($query) use ($downloadableProduct) {
                 $query->where('product_id', $downloadableProduct->product_id);
             })
-            ->where('status', 'completed')
+            ->whereIn('status', [Order::STATUS_PAID, Order::STATUS_COMPLETED])
             ->exists();
     }
 }

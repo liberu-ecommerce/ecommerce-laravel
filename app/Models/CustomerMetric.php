@@ -50,12 +50,14 @@ class CustomerMetric extends Model
     public function recalculate(): void
     {
         $user = $this->user;
-        $orders = $user->orders()->where('status', 'completed')->get();
+        $orders = $user->orders()
+            ->whereIn('status', [Order::STATUS_PAID, Order::STATUS_COMPLETED])
+            ->get();
 
         $this->update([
             'total_orders' => $orders->count(),
-            'lifetime_value' => $orders->sum('total'),
-            'average_order_value' => $orders->avg('total') ?? 0,
+            'lifetime_value' => $orders->sum('total_amount'),
+            'average_order_value' => $orders->avg('total_amount') ?? 0,
             'total_items_purchased' => $orders->sum(function ($order) {
                 return $order->items->sum('quantity');
             }),
