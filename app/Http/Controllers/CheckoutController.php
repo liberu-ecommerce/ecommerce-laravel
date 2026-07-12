@@ -123,9 +123,8 @@ class CheckoutController extends Controller
             $couponCode = $couponData['code'] ?? null;
         }
 
-        // Calculate tax based on shipping address (after discount)
-        $taxableAmount = max(0, $subtotal - $discountAmount);
-        $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address);
+        // Calculate tax on the amount after discount.
+        $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address, $discountAmount);
 
         $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
 
