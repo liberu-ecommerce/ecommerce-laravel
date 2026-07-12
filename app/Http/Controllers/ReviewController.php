@@ -21,6 +21,14 @@ class ReviewController extends Controller
     {
         $validatedData = $request->validated();
 
+        $alreadyReviewed = Review::where('user_id', Auth::id())
+            ->where('product_id', $validatedData['product_id'])
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return response()->json(['message' => 'You have already reviewed this product'], 409);
+        }
+
         $review = new Review();
         $review->user_id = Auth::id();
         $review->product_id = $validatedData['product_id'];
