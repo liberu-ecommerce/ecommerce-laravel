@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductBundle;
 use App\Models\ProductBundleItem;
 use App\Models\ProductCategory;
+use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -121,5 +122,73 @@ class ProductBundleModelTest extends TestCase
         $bundle = $this->makeBundle($product);
 
         $this->assertInstanceOf(Product::class, $bundle->product);
+    }
+
+    public function test_is_in_stock_true_when_variant_item_has_inventory(): void
+    {
+        $mainProduct = $this->makeProduct();
+        $variantProduct = $this->makeProduct();
+        $variant = ProductVariant::create([
+            'product_id' => $variantProduct->id,
+            'sku' => 'STOCK-' . uniqid(),
+            'price' => 10.00,
+            'inventory_quantity' => 5,
+        ]);
+
+        $bundle = $this->makeBundle($mainProduct);
+        ProductBundleItem::create([
+            'bundle_id' => $bundle->id,
+            'product_id' => $variantProduct->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 2,
+            'sort_order' => 1,
+        ]);
+
+        $bundle->load('items.variant', 'items.product');
+
+        // variant stock (5) >= qty (2) -> in stock. Regression: was reading the
+        // non-existent inventory_count column on the variant and always failing.
+        $this->assertTrue($bundle->isInStock());
+    }
+
+    public function test_is_in_stock_false_when_variant_item_out_of_stock(): void
+    {
+        $mainProduct = $this->makeProduct();
+        $variantProduct = $this->makeProduct();
+        $variant = ProductVariant::create([
+            'product_id' => $variantProduct->id,
+            'sku' => 'STOCK-' . uniqid(),
+            'price' => 10.00,
+            'inventory_quantity' => 1,
+        ]);
+
+        $bundle = $this->makeBundle($mainProduct);
+        ProductBundleItem::create([
+            'bundle_id' => $bundle->id,
+            'product_id' => $variantProduct->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 3,
+            'sort_order' => 1,
+        ]);
+
+        $bundle->load('items.variant', 'items.product');
+
+        // variant stock (1) < qty (3) -> out of stock.
+        $this->assertFalse($bundle->isInStock());
+    }
+
+    public function test_bundle_price_floored_at_zero_when_discount_over_100_percent(): void
+    {
+        $mainProduct = $this->makeProduct();
+        $item = $this->makeProduct(40.00);
+
+        $bundle = $this->makeBundle($mainProduct, ['discount_percentage' => 150]);
+        $this->addBundleItem($bundle, $item, 1);
+
+        $bundle->load('items.product');
+
+        // A >100% discount must never produce a negative price.
+        $this->assertEqualsWithDelta(0.0, $bundle->getBundlePrice(), 0.01);
+        $this->assertGreaterThanOrEqual(0.0, $bundle->getBundlePrice());
     }
 }

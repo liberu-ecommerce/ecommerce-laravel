@@ -176,6 +176,28 @@ class DropshippingServiceTest extends TestCase
         });
     }
 
+    public function test_dropxl_payload_falls_back_to_product_id_when_sku_missing()
+    {
+        Http::fake([
+            'https://api.dropxl.example/v1/orders' => Http::response(['reference' => 'DROPXL-9'], 200),
+        ]);
+
+        $this->service->placeOrder('dropxl', [
+            'reference' => 'order-9',
+            'items' => [
+                ['product_id' => 777, 'sku' => null, 'quantity' => 3, 'price' => 12.0],
+            ],
+        ]);
+
+        Http::assertSent(function ($request) {
+            $body = $request->data();
+
+            return $body['items'][0]['sku'] === 777
+                && $body['items'][0]['quantity'] === 3
+                && $body['items'][0]['price'] === 12.0;
+        });
+    }
+
     public function test_place_order_failure_from_supplier()
     {
         Http::fake([

@@ -20,6 +20,9 @@ class DispatchDropshippingOrder implements ShouldQueue
     public $orderId;
     public $supplierId;
 
+    /** Number of times the queued job may be attempted. */
+    public int $tries = 3;
+
     /**
      * Create a new job instance.
      */
@@ -27,9 +30,6 @@ class DispatchDropshippingOrder implements ShouldQueue
     {
         $this->orderId = $orderId;
         $this->supplierId = $supplierId;
-
-        // allow a few retries
-        $this->tries = 3;
     }
 
     /**
@@ -74,16 +74,19 @@ class DispatchDropshippingOrder implements ShouldQueue
             $order->supplier_response = $result['data'] ?? ($result['error'] ?? $result);
 
             if ($result['success']) {
-                $order->status = 'supplier_placed';
+                // Supplier accepted the order; it is now being fulfilled.
+                // 'supplier_placed' was not a real Order status (absent from
+                // Order::TRANSITIONS), so nothing downstream understood it.
+                $order->status = Order::STATUS_PROCESSING;
             } else {
-                $order->status = 'supplier_failed';
+                $order->status = Order::STATUS_SUPPLIER_FAILED;
                 Notification::route('mail', config('mail.from.address'))
                     ->notify(new SupplierFailureNotification("Dropshipping order placement failed for order {$order->id}: " . ($result['message'] ?? 'Unknown')));
             }
 
             $order->save();
         } catch (Exception $e) {
-            $order->status = 'supplier_failed';
+            $order->status = Order::STATUS_SUPPLIER_FAILED;
             $order->supplier_response = ['exception' => $e->getMessage()];
             $order->save();
 

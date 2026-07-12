@@ -16,11 +16,13 @@ class ShippingMethod extends Model
         'weight_rate',
         'max_weight',
         'estimated_delivery_time',
+        'is_active',
     ];
 
     protected $casts = [
         'base_rate' => 'float',
         'weight_rate' => 'float',
         'max_weight' => 'float',
+        'is_active' => 'boolean',
     ];
 }

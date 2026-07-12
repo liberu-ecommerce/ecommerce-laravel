@@ -55,7 +55,7 @@ class ProductBundle extends Model
         $regularPrice = $this->getRegularPrice();
         
         if ($this->discount_percentage > 0) {
-            return $regularPrice * (1 - $this->discount_percentage / 100);
+            return max(0, $regularPrice * (1 - $this->discount_percentage / 100));
         }
         
         if ($this->discount_amount > 0) {
@@ -79,9 +79,11 @@ class ProductBundle extends Model
     public function isInStock(): bool
     {
         foreach ($this->items as $item) {
-            $product = $item->variant ? $item->variant : $item->product;
-            $inventory = $product->inventory_count ?? 0;
-            
+            // Variants track stock in inventory_quantity; products in inventory_count.
+            $inventory = $item->variant
+                ? ($item->variant->inventory_quantity ?? 0)
+                : ($item->product->inventory_count ?? 0);
+
             if ($inventory < $item->quantity) {
                 return false;
             }

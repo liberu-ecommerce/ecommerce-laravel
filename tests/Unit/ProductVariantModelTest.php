@@ -96,6 +96,17 @@ class ProductVariantModelTest extends TestCase
         $this->assertEquals($this->product->id, $variant->product->id);
     }
 
+    public function test_price_stores_decimal_not_integer(): void
+    {
+        // Locks the money column as decimal(10,2): an integer column would
+        // truncate 19.99 -> 19/20 and this round-trip would fail.
+        $variant = $this->makeVariant(['price' => 19.99, 'compare_at_price' => 29.95]);
+
+        $fresh = $variant->fresh();
+        $this->assertEqualsWithDelta(19.99, (float) $fresh->price, 0.001);
+        $this->assertEqualsWithDelta(29.95, (float) $fresh->compare_at_price, 0.001);
+    }
+
     public function test_casts_are_correct(): void
     {
         $variant = $this->makeVariant([

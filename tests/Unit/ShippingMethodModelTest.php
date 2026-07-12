@@ -53,6 +53,15 @@ class ShippingMethodModelTest extends TestCase
         $this->assertEquals(100.0, $method->fresh()->max_weight);
     }
 
+    public function test_is_active_is_mass_assignable_and_cast_to_bool(): void
+    {
+        $method = $this->makeShipping(['is_active' => false]);
+
+        $fresh = $method->fresh();
+        $this->assertIsBool($fresh->is_active);
+        $this->assertFalse($fresh->is_active);
+    }
+
     public function test_multiple_shipping_methods_can_coexist(): void
     {
         $this->makeShipping(['name' => 'Standard', 'base_rate' => 5.99]);
