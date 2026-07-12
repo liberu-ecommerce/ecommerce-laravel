@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use App\Factories\PaymentGatewayFactory;
 use App\Models\Product;
 use App\Notifications\OrderConfirmationNotification;
-use App\Services\TaxService;
+use App\Services\TaxCalculator;
 use App\Services\CouponService;
 use Exception;
 
@@ -27,13 +27,13 @@ class CheckoutController extends Controller
     private const OUT_OF_STOCK = 'OUT_OF_STOCK';
 
     protected $shippingService;
-    protected $taxService;
+    protected $taxCalculator;
     protected $couponService;
 
-    public function __construct(ShippingService $shippingService, TaxService $taxService, CouponService $couponService)
+    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CouponService $couponService)
     {
         $this->shippingService = $shippingService;
-        $this->taxService = $taxService;
+        $this->taxCalculator = $taxCalculator;
         $this->couponService = $couponService;
     }
 
@@ -73,6 +73,11 @@ class CheckoutController extends Controller
             'has_physical_products' => 'sometimes|in:0,1',
             'shipping_address' => 'required_if:has_physical_products,1|string',
             'shipping_method_id' => 'required_if:has_physical_products,1|exists:shipping_methods,id',
+            // Structured address drives tax (country) and is required for physical orders.
+            'country' => 'required_if:has_physical_products,1|nullable|string|size:2',
+            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
             'payment_method' => 'required|string',
             'recipient_name' => 'required_if:dropship,on|string',
             'recipient_email' => 'required_if:dropship,on|email',
@@ -123,8 +128,31 @@ class CheckoutController extends Controller
             $couponCode = $couponData['code'] ?? null;
         }
 
-        // Calculate tax on the amount after discount.
-        $taxAmount = $this->taxService->calculateTaxForCart($cart, $request->shipping_address, $discountAmount);
+        // Calculate tax with the structured shipping address, honouring per-product
+        // tax class + exemptions and returning a tax_lines breakdown. Any cart
+        // discount is distributed pro-rata so tax lands on the post-discount amount.
+        $taxAddress = [
+            'country' => $request->input('country'),
+            'state' => $request->input('state'),
+            'city' => $request->input('city'),
+            'postal_code' => $request->input('postal_code'),
+        ];
+        $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discountAmount) / $subtotal : 1;
+        $taxItems = [];
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            if (! $product) {
+                continue;
+            }
+            $taxItems[] = [
+                'product' => $product,
+                'quantity' => $item['quantity'],
+                'price' => $item['price'] * $discountFactor,
+            ];
+        }
+        $taxResult = $this->taxCalculator->calculateCartTax($taxItems, $taxAddress, $shippingCost);
+        $taxAmount = $taxResult['total'];
+        $taxLines = $taxResult['lines'];
 
         $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
 
@@ -134,7 +162,7 @@ class CheckoutController extends Controller
         // is what prevents charging a customer for stock we can't fulfil.
         $order = null;
         try {
-            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $discountAmount, $couponCode) {
+            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode) {
                 $order = Order::create([
                     'user_id' => auth()->id(),
                     'customer_email' => $request->email,
@@ -144,6 +172,7 @@ class CheckoutController extends Controller
                     'total_amount' => $totalAmount,
                     'shipping_cost' => $shippingCost,
                     'tax_amount' => $taxAmount,
+                    'tax_lines' => $taxLines,
                     'discount_amount' => $discountAmount,
                     'coupon_code' => $couponCode,
                     'status' => 'pending',
