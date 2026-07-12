@@ -9,8 +9,8 @@ class ShippingService
 {
     public function getAvailableShippingMethods($cart = null, $address = null)
     {
-        // Get all shipping methods
-        $availableMethods = ShippingMethod::all();
+        // Only offer active methods; a deactivated method must never be selectable.
+        $availableMethods = ShippingMethod::where('is_active', true)->get();
 
         if (!$cart || !$address) {
             return $availableMethods;
@@ -29,7 +29,8 @@ class ShippingService
         $weightRate = $this->calculateWeightRate($method, $cart);
         $distanceRate = $this->calculateDistanceRate($method, $address);
 
-        return $baseRate + $weightRate + $distanceRate;
+        // Round to cents: float weight math otherwise leaks e.g. 0.30000000000000004.
+        return round($baseRate + $weightRate + $distanceRate, 2);
     }
 
     public function verifyAddress($address)
@@ -55,7 +56,9 @@ class ShippingService
         $totalWeight = $this->calculateTotalWeight($cart);
         $maxWeight = $method->max_weight;
 
-        return $totalWeight <= $maxWeight;
+        // Null max_weight = no weight limit. Without this guard, `$w <= null`
+        // evaluates as `$w <= 0` in PHP, wrongly rejecting unlimited methods.
+        return $maxWeight === null || $totalWeight <= $maxWeight;
     }
 
     private function calculateWeightRate($method, $cart)
@@ -74,7 +77,9 @@ class ShippingService
     private function calculateTotalWeight($cart)
     {
         return array_sum(array_map(function ($item) {
-            return $item['weight'] * $item['quantity'];
+            // ponytail: session cart items carry no 'weight' yet (wiring gap in
+            // Cart/CheckoutController) — treat missing weight as 0, don't fatal.
+            return ($item['weight'] ?? 0) * $item['quantity'];
         }, $cart));
     }
 
