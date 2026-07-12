@@ -72,4 +72,18 @@ class OrderUserLinkageTest extends TestCase
         $this->assertSame(2, $metric->fresh()->total_orders);
         $this->assertEquals(150.0, (float) $metric->fresh()->lifetime_value);
     }
+
+    public function test_customer_metric_days_since_last_purchase_is_not_negative(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+        $order = $this->paidOrderFor($user, $product, 100);
+        $order->forceFill(['created_at' => now()->subDays(5)])->save();
+
+        $metric = CustomerMetric::create(['user_id' => $user->id]);
+        $metric->recalculate();
+
+        // Carbon 3's now()->diffInDays($past) is negative; days elapsed must be >= 0.
+        $this->assertGreaterThanOrEqual(0, (int) $metric->fresh()->days_since_last_purchase);
+    }
 }
