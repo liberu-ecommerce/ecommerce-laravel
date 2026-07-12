@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PaymentGatewayService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,26 +55,52 @@ class Refund extends Model
             return false;
         }
 
+        $order = $this->order;
+
+        // Void the payment with the gateway FIRST. If it has a charge to refund and
+        // the gateway declines, nothing changes — no restock, no state move.
+        $result = [];
+        if ($order->transaction_id) {
+            $result = app(PaymentGatewayService::class)->refundPayment(
+                $order->payment_method,
+                $order->transaction_id,
+                (float) $this->amount,
+            );
+
+            if (! ($result['success'] ?? false)) {
+                return false;
+            }
+        }
+
         $this->update([
             'status' => 'processed',
             'processed_by' => $userId,
             'processed_at' => now(),
+            'transaction_id' => $result['refund_id'] ?? $this->transaction_id,
         ]);
 
-        // Update order refund totals
-        $this->order->increment('refund_total', $this->amount);
-        $this->order->update([
-            'partially_refunded' => $this->order->refund_total < $this->order->total,
-            'fully_refunded' => $this->order->refund_total >= $this->order->total,
-        ]);
-
-        // Restock items if needed
+        // Restock refunded items if requested.
         if ($this->restock_items) {
             foreach ($this->items as $item) {
-                if ($item->restock) {
+                if ($item->restock && $item->orderItem && $item->orderItem->product) {
                     $item->orderItem->product->increment('inventory_count', $item->quantity);
                 }
             }
+        }
+
+        // Update refund totals + move the order through the state machine.
+        $order->increment('refund_total', $this->amount);
+        $order->refresh();
+
+        $fully = (float) $order->refund_total >= (float) $order->total_amount;
+        $order->update([
+            'partially_refunded' => ! $fully,
+            'fully_refunded' => $fully,
+        ]);
+
+        $target = $fully ? Order::STATUS_REFUNDED : Order::STATUS_PARTIALLY_REFUNDED;
+        if ($order->status !== $target && in_array($target, Order::TRANSITIONS[$order->status] ?? [], true)) {
+            $order->transitionTo($target, $userId, 'Refund processed');
         }
 
         return true;

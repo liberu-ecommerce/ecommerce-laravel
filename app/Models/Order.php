@@ -74,6 +74,10 @@ class Order extends Model
         'supplier_order_reference',
         'supplier_tracking_number',
         'supplier_response',
+        'transaction_id',
+        'refund_total',
+        'partially_refunded',
+        'fully_refunded',
     ];
 
     protected $casts = [
@@ -83,6 +87,9 @@ class Order extends Model
         'tax_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'refund_total' => 'decimal:2',
+        'partially_refunded' => 'boolean',
+        'fully_refunded' => 'boolean',
     ];
 
     public function customer()
