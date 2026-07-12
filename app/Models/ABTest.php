@@ -42,10 +42,17 @@ class ABTest extends Model
      */
     public function assignVariant(?int $userId, string $sessionId): ABTestAssignment
     {
-        // Check if already assigned
-        $existing = $this->assignments()
-            ->where('session_id', $sessionId)
-            ->first();
+        // Stable assignment: a known user keeps the same variant across sessions
+        // (new device, cleared cookies). Guests fall back to their session id.
+        // When a user is known we also match their prior guest row on this
+        // session to avoid a duplicate (test_id, session_id) insert.
+        $existing = $userId !== null
+            ? $this->assignments()
+                ->where(fn ($q) => $q->where('user_id', $userId)->orWhere('session_id', $sessionId))
+                ->first()
+            : $this->assignments()
+                ->where('session_id', $sessionId)
+                ->first();
 
         if ($existing) {
             return $existing;

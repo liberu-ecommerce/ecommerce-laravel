@@ -44,12 +44,27 @@ class ProductRecommendationService
             return $this->getTrendingProducts($limit);
         }
 
-        // Get recommended products based on what user viewed
+        // Don't recommend products the user already bought.
+        $purchasedProductIds = ProductInteraction::where('user_id', $userId)
+            ->byType('purchase')
+            ->pluck('product_id')
+            ->unique();
+
+        // Highest score first, then dedup by product and cap at $limit
+        // (a product can be recommended by several viewed products).
         return ProductRecommendation::whereIn('product_id', $viewedProductIds)
+            ->when(
+                $purchasedProductIds->isNotEmpty(),
+                fn ($q) => $q->whereNotIn('recommended_product_id', $purchasedProductIds)
+            )
             ->with('recommendedProduct')
-            ->topRecommendations($limit)
+            ->orderByDesc('score')
             ->get()
-            ->pluck('recommendedProduct');
+            ->pluck('recommendedProduct')
+            ->filter()
+            ->unique('id')
+            ->take($limit)
+            ->values();
     }
 
     /**
@@ -68,9 +83,13 @@ class ProductRecommendationService
 
         return ProductRecommendation::whereIn('product_id', $viewedProductIds)
             ->with('recommendedProduct')
-            ->topRecommendations($limit)
+            ->orderByDesc('score')
             ->get()
-            ->pluck('recommendedProduct');
+            ->pluck('recommendedProduct')
+            ->filter()
+            ->unique('id')
+            ->take($limit)
+            ->values();
     }
 
     /**

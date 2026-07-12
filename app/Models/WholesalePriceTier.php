@@ -66,8 +66,25 @@ class WholesalePriceTier extends Model
             $query->where('wholesale_group_id', $wholesaleGroupId);
         }
 
-        $tier = $query->orderBy('min_quantity', 'desc')->first();
+        $tiers = $query->get();
 
-        return $tier ? (float) $tier->price : null;
+        if ($tiers->isEmpty()) {
+            return null;
+        }
+
+        // Percentage tiers price off the product's retail price; load it once only if needed.
+        $basePrice = $tiers->contains(fn ($t) => $t->discount_percentage !== null)
+            ? Product::find($productId)?->price
+            : null;
+
+        // Overlapping ranges can both qualify — charge the cheapest effective price, not
+        // whichever tier happens to have the highest min_quantity.
+        return $tiers->map(function ($tier) use ($basePrice) {
+            if ($tier->discount_percentage !== null && $basePrice !== null) {
+                return round((float) $basePrice * (1 - (float) $tier->discount_percentage / 100), 2);
+            }
+
+            return (float) $tier->price;
+        })->min();
     }
 }
