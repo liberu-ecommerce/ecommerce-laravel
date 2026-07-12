@@ -45,7 +45,7 @@ class GiftRegistryItem extends Model
 
     public function purchases(): HasMany
     {
-        return $this->hasMany(GiftRegistryPurchase::class);
+        return $this->hasMany(GiftRegistryPurchase::class, 'registry_item_id');
     }
 
     /**
@@ -69,9 +69,17 @@ class GiftRegistryItem extends Model
      */
     public function markPurchased(int $quantity, int $orderId, ?string $purchaserName = null, ?string $purchaserEmail = null, bool $anonymous = false): GiftRegistryPurchase
     {
-        $this->increment('quantity_purchased', $quantity);
+        if ($quantity < 1) {
+            throw new \InvalidArgumentException('Purchase quantity must be at least 1.');
+        }
 
-        return $this->purchases()->create([
+        $remaining = $this->getRemainingQuantity();
+        if ($quantity > $remaining) {
+            throw new \InvalidArgumentException("Cannot purchase {$quantity}; only {$remaining} remaining for this item.");
+        }
+
+        // Record the purchase first: a failed insert must not bump the count.
+        $purchase = $this->purchases()->create([
             'order_id' => $orderId,
             'quantity' => $quantity,
             'purchaser_name' => $purchaserName,
@@ -79,5 +87,9 @@ class GiftRegistryItem extends Model
             'anonymous' => $anonymous,
             'purchased_at' => now(),
         ]);
+
+        $this->increment('quantity_purchased', $quantity);
+
+        return $purchase;
     }
 }

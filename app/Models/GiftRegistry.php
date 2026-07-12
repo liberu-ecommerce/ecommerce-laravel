@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Str;
 
 class GiftRegistry extends Model
@@ -59,7 +60,7 @@ class GiftRegistry extends Model
         return $this->hasMany(GiftRegistryItem::class, 'registry_id');
     }
 
-    public function purchases(): HasMany
+    public function purchases(): HasManyThrough
     {
         return $this->hasManyThrough(
             GiftRegistryPurchase::class,

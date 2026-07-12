@@ -31,7 +31,7 @@ class GiftRegistryPurchase extends Model
 
     public function registryItem(): BelongsTo
     {
-        return $this->belongsTo(GiftRegistryItem::class);
+        return $this->belongsTo(GiftRegistryItem::class, 'registry_item_id');
     }
 
     public function order(): BelongsTo

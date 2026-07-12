@@ -29,6 +29,7 @@ class AbandonedCart extends Model
         'customer_locale',
         'billing_address',
         'shipping_address',
+        'recovery_order_id',
     ];
 
     protected $casts = [
@@ -49,7 +50,7 @@ class AbandonedCart extends Model
 
     public function recoveryEmails(): HasMany
     {
-        return $this->hasMany(AbandonedCartEmail::class);
+        return $this->hasMany(CartRecoveryAttempt::class);
     }
 
     public function isRecovered(): bool
@@ -72,7 +73,7 @@ class AbandonedCart extends Model
         return $this->recovery_email_count < 3;
     }
 
-    public function markAsRecovered(Order $order = null): void
+    public function markAsRecovered(?Order $order = null): void
     {
         $this->recovered_at = now();
         if ($order) {

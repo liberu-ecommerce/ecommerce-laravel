@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use App\Models\GiftRegistry;
 use App\Models\GiftRegistryItem;
+use App\Models\GiftRegistryPurchase;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +14,105 @@ use Tests\TestCase;
 class GiftRegistryTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function makeOrder(): Order
+    {
+        return Order::create([
+            'customer_email' => 'buyer@example.com',
+            'total_amount' => 100,
+            'status' => 'pending',
+        ]);
+    }
+
+    private function makeItem(int $requested = 3): GiftRegistryItem
+    {
+        $registry = GiftRegistry::factory()->create();
+        $product = Product::factory()->create();
+
+        return $registry->items()->create([
+            'product_id' => $product->id,
+            'quantity_requested' => $requested,
+            'quantity_purchased' => 0,
+        ]);
+    }
+
+    public function test_mark_purchased_records_purchase_and_updates_count()
+    {
+        $item = $this->makeItem(3);
+        $order = $this->makeOrder();
+
+        $purchase = $item->markPurchased(2, $order->id, 'Alice', 'alice@example.com');
+
+        $this->assertInstanceOf(GiftRegistryPurchase::class, $purchase);
+        $this->assertDatabaseHas('gift_registry_purchases', [
+            'registry_item_id' => $item->id,
+            'order_id' => $order->id,
+            'quantity' => 2,
+            'purchaser_name' => 'Alice',
+        ]);
+
+        $item->refresh();
+        $this->assertEquals(2, $item->quantity_purchased);
+        $this->assertEquals(1, $item->getRemainingQuantity());
+        $this->assertFalse($item->isFullyPurchased());
+    }
+
+    public function test_purchases_relation_and_inverse_resolve()
+    {
+        $item = $this->makeItem(3);
+        $order = $this->makeOrder();
+
+        $purchase = $item->markPurchased(1, $order->id);
+
+        $this->assertCount(1, $item->purchases()->get());
+        $this->assertEquals($item->id, $purchase->registryItem->id);
+    }
+
+    public function test_registry_purchases_through_relation()
+    {
+        $item = $this->makeItem(3);
+        $order = $this->makeOrder();
+
+        $item->markPurchased(1, $order->id);
+
+        $this->assertCount(1, $item->registry->purchases()->get());
+    }
+
+    public function test_mark_purchased_rejects_over_purchase()
+    {
+        $item = $this->makeItem(1);
+        $order = $this->makeOrder();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        try {
+            $item->markPurchased(2, $order->id);
+        } finally {
+            $this->assertEquals(0, $item->fresh()->quantity_purchased);
+            $this->assertEquals(0, GiftRegistryPurchase::count());
+        }
+    }
+
+    public function test_mark_purchased_rejects_non_positive_quantity()
+    {
+        $item = $this->makeItem(3);
+        $order = $this->makeOrder();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $item->markPurchased(0, $order->id);
+    }
+
+    public function test_mark_purchased_to_capacity_marks_fully_purchased()
+    {
+        $item = $this->makeItem(2);
+        $order = $this->makeOrder();
+
+        $item->markPurchased(2, $order->id);
+        $item->refresh();
+
+        $this->assertTrue($item->isFullyPurchased());
+        $this->assertEquals(0, $item->getRemainingQuantity());
+    }
 
     public function test_gift_registry_can_be_created()
     {

@@ -69,10 +69,16 @@ class Currency extends Model
      */
     public function convertToBase(float $amount): float
     {
-        if ($this->exchange_rate === 0.0 || $this->exchange_rate < 0.000001) {
+        // exchange_rate is a decimal-cast string; cast to float so 0 / tiny / negative all guard.
+        if ((float) $this->exchange_rate < 0.000001) {
             return 0;
         }
-        return round($amount / $this->exchange_rate, 2);
+
+        // Result is expressed in the base currency, so round to the base currency's precision
+        // (mirrors convertFromBase rounding to this currency's decimal_places). Fall back to 2.
+        $baseDecimals = static::getDefault()->decimal_places ?? 2;
+
+        return round($amount / $this->exchange_rate, $baseDecimals);
     }
 
     /**
