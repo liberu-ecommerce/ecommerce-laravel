@@ -76,7 +76,7 @@ class CheckoutInventoryTest extends TestCase
     public function test_successful_checkout_marks_order_paid_and_decrements_inventory(): void
     {
         Notification::fake();
-        $this->bindGateway(fn () => ['success' => true]);
+        $this->bindGateway(fn () => ['success' => true, 'transaction_id' => 'ch_persist']);
 
         $product = Product::factory()->create(['inventory_count' => 5, 'is_downloadable' => true]);
 
@@ -87,6 +87,8 @@ class CheckoutInventoryTest extends TestCase
         $this->assertNotNull($order, 'Order was not created');
         $this->assertSame('paid', $order->status);
         $this->assertSame(4, $product->fresh()->inventory_count);
+        // The gateway charge id must be persisted so a later refund has something to void.
+        $this->assertSame('ch_persist', $order->transaction_id);
     }
 
     public function test_inventory_is_reserved_before_payment_is_charged(): void

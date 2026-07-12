@@ -215,6 +215,11 @@ class CheckoutController extends Controller
             }
         }
 
+        // Persist the gateway charge id so a later refund has something to void.
+        if (isset($paymentResult['transaction_id'])) {
+            $order->update(['transaction_id' => $paymentResult['transaction_id']]);
+        }
+
         $order->transitionTo(Order::STATUS_PAID, notes: 'Payment captured');
 
         // Send order confirmation email
