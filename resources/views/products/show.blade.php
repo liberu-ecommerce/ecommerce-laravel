@@ -18,7 +18,7 @@
                     <br>
                     @if($product->isFree())
                         <p><strong>Price:</strong> Free</p>
-                        <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-2">Download Now</a>
+                        <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-success mt-2">Download Now</a>
                     @elseif($product->isDonationBased())
                         <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                             @csrf
@@ -35,7 +35,7 @@
                             <button type="submit" class="btn btn-success mt-2">Support & Download</button>
                         </form>
                         @if($product->minimum_price <= 0)
-                            <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-link">Download without donating</a>
+                            <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-link">Download without donating</a>
                         @endif
                     @else
                         <p><strong>Price:</strong> ${{ number_format($product->displayPrice(), 2) }}@if(config('ecommerce.display_prices_with_tax')) <small>(inc. tax)</small>@endif</p>
@@ -116,7 +116,7 @@
 </div>
 
 @if(isset($product->downloadable) && $product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
-    <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-success mt-3">Download</a>
+    <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-success mt-3">Download</a>
 @endif
 
 
