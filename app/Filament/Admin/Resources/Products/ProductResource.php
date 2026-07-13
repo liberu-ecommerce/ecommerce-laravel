@@ -2,46 +2,39 @@
 
 namespace App\Filament\Admin\Resources\Products;
 
-use Filament\Schemas\Schema;
-use Filament\Forms\Components\Textarea;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\FileUpload;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Actions\EditAction;
-use Filament\Actions\Action;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\BulkAction;
-use App\Filament\Admin\Resources\Products\Pages\ListProducts;
 use App\Filament\Admin\Resources\Products\Pages\CreateProduct;
 use App\Filament\Admin\Resources\Products\Pages\EditProduct;
-use App\Filament\Admin\Resources\ProductResource\Pages;
-use App\Models\InventoryLog;
+use App\Filament\Admin\Resources\Products\Pages\ListProducts;
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\ProductTag;
-use Filament\Notifications\Notification;
-use Filament\Forms;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
-use League\Csv\Writer;
-use Filament\Forms\Components\Toggle;
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use League\Csv\Writer;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-circle-stack';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-circle-stack';
 
     protected static ?int $navigationSort = 2;
 
@@ -187,23 +180,15 @@ class ProductResource extends Resource
                             ->default('purchase'),
                     ])
                     ->action(function (Product $record, array $data): void {
-                        DB::transaction(function () use ($record, $data): void {
-                            $record->increment('inventory_count', $data['quantity']);
-
-                            InventoryLog::create([
-                                'product_id' => $record->id,
-                                'quantity_change' => $data['quantity'],
-                                'reason' => $data['reason'],
-                            ]);
-                        });
+                        $record->adjustInventory((int) $data['quantity'], $data['reason']);
                     }),
                 Action::make('adjustInventory')
                     ->label('Adjust Inventory')
                     ->icon('heroicon-o-adjustments-horizontal')
                     ->action(function (Product $record, array $data): void {
-                        $newInventory = $record->inventory_count + $data['adjustment'];
-
-                        if ($newInventory < 0) {
+                        // Atomic guarded adjust — see Product::adjustInventory. Returns
+                        // false when a decrease would take the count below zero.
+                        if (! $record->adjustInventory((int) $data['adjustment'], $data['reason'])) {
                             Notification::make()
                                 ->title('Inventory cannot go below zero.')
                                 ->danger()
@@ -212,15 +197,10 @@ class ProductResource extends Resource
                             return;
                         }
 
-                        DB::transaction(function () use ($record, $data, $newInventory): void {
-                            $record->update(['inventory_count' => $newInventory]);
-
-                            InventoryLog::create([
-                                'product_id' => $record->id,
-                                'quantity_change' => $data['adjustment'],
-                                'reason' => $data['reason'],
-                            ]);
-                        });
+                        Notification::make()
+                            ->title('Inventory adjusted.')
+                            ->success()
+                            ->send();
                     })
                     ->schema([
                         TextInput::make('adjustment')
@@ -261,9 +241,9 @@ class ProductResource extends Resource
     protected static function export(Collection $records)
     {
         $csv = Writer::createFromString('');
-        
+
         $csv->insertOne(['Name', 'SKU', 'Category', 'Price', 'Inventory Count', 'Low Stock Threshold', 'Status']);
-        
+
         foreach ($records as $record) {
             $csv->insertOne([
                 $record->name,
@@ -275,11 +255,11 @@ class ProductResource extends Resource
                 $record->inventory_count > $record->low_stock_threshold ? 'In Stock' : ($record->inventory_count > 0 ? 'Low Stock' : 'Out of Stock'),
             ]);
         }
-        
-        $filename = 'inventory_report_' . date('Y-m-d') . '.csv';
-        $path = storage_path('app/public/' . $filename);
+
+        $filename = 'inventory_report_'.date('Y-m-d').'.csv';
+        $path = storage_path('app/public/'.$filename);
         file_put_contents($path, $csv->getContent());
-        
+
         return response()->download($path)->deleteFileAfterSend();
     }
 }

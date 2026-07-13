@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -380,5 +381,41 @@ class Product extends Model implements Orderable
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * Atomically adjust stock by $delta (positive to add, negative to remove) and
+     * record a reconcilable old/new InventoryLog row. A decrease is a guarded atomic
+     * decrement — it only succeeds while enough stock remains, so concurrent
+     * adjustments (or an adjustment racing a checkout decrement) can neither lose an
+     * update nor drive the count negative. Returns false if the decrease was refused.
+     */
+    public function adjustInventory(int $delta, string $reason): bool
+    {
+        return (bool) DB::transaction(function () use ($delta, $reason) {
+            if ($delta < 0) {
+                $affected = static::whereKey($this->getKey())
+                    ->where('inventory_count', '>=', abs($delta))
+                    ->decrement('inventory_count', abs($delta));
+
+                if ($affected === 0) {
+                    return false;
+                }
+            } else {
+                $this->increment('inventory_count', $delta);
+            }
+
+            $this->refresh();
+
+            InventoryLog::create([
+                'product_id' => $this->id,
+                'quantity_change' => $delta,
+                'old_quantity' => $this->inventory_count - $delta,
+                'new_quantity' => $this->inventory_count,
+                'reason' => $reason,
+            ]);
+
+            return true;
+        });
     }
 }
