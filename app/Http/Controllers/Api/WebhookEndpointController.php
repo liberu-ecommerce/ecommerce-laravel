@@ -65,6 +65,19 @@ class WebhookEndpointController extends Controller
         return response()->json(['message' => 'Webhook endpoint deleted.']);
     }
 
+    /** Delivery attempt log for an endpoint — newest first, optionally filtered by ?success=0|1. */
+    public function deliveries(Request $request, WebhookEndpoint $webhookEndpoint): JsonResponse
+    {
+        $this->authorizeStaff($request);
+
+        $deliveries = $webhookEndpoint->deliveries()
+            ->when($request->has('success'), fn ($q) => $q->where('success', $request->boolean('success')))
+            ->latest()
+            ->paginate(25);
+
+        return response()->json($deliveries);
+    }
+
     private function authorizeStaff(Request $request): void
     {
         abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
