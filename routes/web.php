@@ -129,14 +129,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/subscription/cancel', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel');
 });
 
-Route::post('/paypal/payment', [PaypalPaymentController::class, 'createOneTimePayment'])->name('paypal.payment.create');
-
-// PayPal subscription mutations act on a caller-supplied subscriptionId — require
-// auth so an anonymous request can't update/cancel someone else's subscription.
+// PayPal one-time payment + subscription mutations act on caller-supplied ids
+// (a PayPal order id to capture / a subscriptionId) against the merchant's live
+// PayPal credentials — require auth so an anonymous request can't trigger a capture
+// or update/cancel someone else's subscription.
 // ponytail: real per-user ownership scoping must come when the PayPal integration is
 // actually built; SubscriptionService is a stub today with no persisted
 // subscription↔user link to check against.
 Route::middleware('auth')->group(function () {
+    Route::post('/paypal/payment', [PaypalPaymentController::class, 'createOneTimePayment'])->name('paypal.payment.create');
     Route::post('/paypal/subscription', [PaypalPaymentController::class, 'createSubscription'])->name('paypal.subscription.create');
     Route::patch('/paypal/subscription/update', [PaypalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
     Route::delete('/paypal/subscription/cancel', [PaypalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
