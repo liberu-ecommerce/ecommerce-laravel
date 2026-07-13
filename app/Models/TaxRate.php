@@ -70,44 +70,29 @@ class TaxRate extends Model
             $query->where('tax_class_id', $taxClassId);
         }
 
-        // Match specific location first, then fall back to broader areas
-        $rates = collect();
+        // A rate applies when each of its non-null location columns matches the
+        // address — a null column is a wildcard ("applies everywhere at this level").
+        // (Laravel turns where('state', null) into whereNull, so a null address field
+        // only matches wildcard rates, never a location-specific one.)
+        $candidates = $query
+            ->where(fn ($q) => $q->whereNull('state')->orWhere('state', $state))
+            ->where(fn ($q) => $q->whereNull('city')->orWhere('city', $city))
+            ->where(fn ($q) => $q->whereNull('zip_code')->orWhere('zip_code', $zipCode))
+            ->orderBy('priority', 'desc')
+            ->get();
 
-        // Try exact match
-        if ($zipCode || $city || $state) {
-            $exactMatch = (clone $query);
-            if ($zipCode) {
-                $exactMatch->where('zip_code', $zipCode);
-            }
-            if ($city) {
-                $exactMatch->where('city', $city);
-            }
-            if ($state) {
-                $exactMatch->where('state', $state);
-            }
-            $rates = $exactMatch->orderBy('priority', 'desc')->get();
+        if ($candidates->isEmpty()) {
+            return $candidates;
         }
 
-        // Fall back to state level if no exact match
-        if ($rates->isEmpty() && $state) {
-            $rates = (clone $query)
-                ->where('state', $state)
-                ->whereNull('city')
-                ->whereNull('zip_code')
-                ->orderBy('priority', 'desc')
-                ->get();
-        }
+        // Most specific wins: a ZIP/city rate beats a state rate beats a country rate.
+        // The old exact->state->country tiers made a partially-specified rate (e.g.
+        // state + city but no ZIP) unreachable, silently falling through to a coarser one.
+        $specificity = fn (TaxRate $rate): int => (int) ($rate->zip_code !== null)
+            + (int) ($rate->city !== null)
+            + (int) ($rate->state !== null);
+        $mostSpecific = $candidates->max($specificity);
 
-        // Fall back to country level
-        if ($rates->isEmpty()) {
-            $rates = (clone $query)
-                ->whereNull('state')
-                ->whereNull('city')
-                ->whereNull('zip_code')
-                ->orderBy('priority', 'desc')
-                ->get();
-        }
-
-        return $rates;
+        return $candidates->filter(fn (TaxRate $rate): bool => $specificity($rate) === $mostSpecific)->values();
     }
 }
