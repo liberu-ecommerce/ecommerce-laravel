@@ -156,9 +156,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/invoices/{id}', [InvoiceController::class, 'show'])->name('invoices.show');
 });
 
-Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
-Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->name('site_settings.edit');
-Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->name('site_settings.update');
+// Site settings are store-wide config, admin-only (auth here, role checked in the controller)
+Route::middleware('auth')->group(function () {
+    Route::get('/site-settings', [SiteSettingController::class, 'index'])->name('site_settings.index');
+    Route::get('/site-settings/{id}/edit', [SiteSettingController::class, 'edit'])->name('site_settings.edit');
+    Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->name('site_settings.update');
+});
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
