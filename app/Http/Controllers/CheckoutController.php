@@ -273,6 +273,11 @@ class CheckoutController extends Controller
 
         $order->transitionTo(Order::STATUS_PAID, notes: 'Payment captured');
 
+        // Authorize the (possibly guest) buyer to view this order's confirmation page.
+        // showConfirmation checks this session list so the confirmation is not an open
+        // IDOR — both the normal and the dropship-error redirect below run after this.
+        Session::push('recent_order_ids', $order->id);
+
         // Send order confirmation email
         Notification::route('mail', $order->customer_email)
             ->notify(new OrderConfirmationNotification($order));
@@ -333,8 +338,16 @@ class CheckoutController extends Controller
             ->with('success', 'Order placed successfully!');
     }
 
-    public function showConfirmation(Order $order)
+    public function showConfirmation(Request $request, Order $order)
     {
+        // The confirmation page exposes full order PII, so it must not be an open
+        // IDOR. Allow the order's owner, or a (possibly guest) buyer who placed it
+        // this session — nobody else can enumerate arbitrary order ids.
+        $ownsOrder = $order->user_id !== null && $request->user()?->id === $order->user_id;
+        $justPlaced = in_array($order->id, Session::get('recent_order_ids', []), true);
+
+        abort_unless($ownsOrder || $justPlaced, 403);
+
         return view('checkout.confirmation', [
             'order' => $order,
         ]);

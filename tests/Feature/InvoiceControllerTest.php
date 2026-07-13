@@ -31,7 +31,9 @@ class InvoiceControllerTest extends TestCase
             'state' => 'IL',
             'postal_code' => '60601',
         ]);
+
         return Order::create([
+            'user_id' => $user->id,
             'customer_id' => $customer->id,
             'customer_email' => $user->email,
             'total_amount' => 150.00,
@@ -112,7 +114,7 @@ class InvoiceControllerTest extends TestCase
         $order = $this->makeOrder($user);
         $this->makeInvoice($order);
 
-        $response = $this->actingAs($user)->get('/invoices?date=' . today()->toDateString());
+        $response = $this->actingAs($user)->get('/invoices?date='.today()->toDateString());
 
         $response->assertStatus(200);
         $response->assertViewHas('invoices');

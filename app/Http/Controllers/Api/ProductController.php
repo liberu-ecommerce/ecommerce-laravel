@@ -93,6 +93,8 @@ class ProductController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -136,6 +138,8 @@ class ProductController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $product = Product::find($id);
 
         if (! $product) {
@@ -186,8 +190,10 @@ class ProductController extends Controller
     /**
      * Soft delete the specified product.
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $product = Product::find($id);
 
         if (! $product) {

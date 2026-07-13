@@ -7,6 +7,7 @@ use App\Models\ProductCollection;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class CollectionControllerTest extends TestCase
@@ -18,7 +19,9 @@ class CollectionControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
+        // Collection write endpoints are admin-gated; these tests act as an admin.
+        Role::findOrCreate('super_admin', 'web');
+        $this->user = User::factory()->create()->assignRole('super_admin');
         Sanctum::actingAs($this->user);
     }
 
@@ -42,7 +45,7 @@ class CollectionControllerTest extends TestCase
             ->assertJsonStructure([
                 'data',
                 'links',
-                'meta'
+                'meta',
             ])
             ->assertJsonCount(10, 'data');
     }
@@ -60,10 +63,10 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'success' => true,
-                'message' => 'Collection created successfully'
+                'message' => 'Collection created successfully',
             ])
             ->assertJsonStructure([
-                'data' => ['id', 'name', 'slug', 'description', 'price']
+                'data' => ['id', 'name', 'slug', 'description', 'price'],
             ]);
 
         $this->assertDatabaseHas('collections', [
@@ -100,7 +103,7 @@ class CollectionControllerTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJson([
-                'success' => false
+                'success' => false,
             ])
             ->assertJsonValidationErrors(['name']);
     }
@@ -121,14 +124,14 @@ class CollectionControllerTest extends TestCase
                 'data' => [
                     'id' => $collection->id,
                     'name' => 'Test Collection',
-                ]
+                ],
             ])
             ->assertJsonStructure([
                 'data' => [
                     'id',
                     'name',
-                    'products'
-                ]
+                    'products',
+                ],
             ])
             ->assertJsonCount(3, 'data.products');
     }
@@ -140,7 +143,7 @@ class CollectionControllerTest extends TestCase
             'slug' => 'test-collection',
         ]);
 
-        $response = $this->getJson("/api/collections/test-collection");
+        $response = $this->getJson('/api/collections/test-collection');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -148,7 +151,7 @@ class CollectionControllerTest extends TestCase
                 'data' => [
                     'id' => $collection->id,
                     'slug' => 'test-collection',
-                ]
+                ],
             ]);
     }
 
@@ -159,7 +162,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ]);
     }
 
@@ -183,7 +186,7 @@ class CollectionControllerTest extends TestCase
                 'data' => [
                     'name' => 'Updated Name',
                     'description' => 'Updated description',
-                ]
+                ],
             ]);
 
         $this->assertDatabaseHas('collections', [
@@ -201,7 +204,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ]);
     }
 
@@ -266,7 +269,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ]);
     }
 
@@ -307,7 +310,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ]);
     }
 
@@ -320,7 +323,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Collection deleted successfully'
+                'message' => 'Collection deleted successfully',
             ]);
 
         $this->assertSoftDeleted('collections', [
@@ -335,7 +338,7 @@ class CollectionControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ]);
     }
 }
