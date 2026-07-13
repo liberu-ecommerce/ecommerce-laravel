@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 class PaypalPaymentController extends Controller
 {
     private $paymentGatewayService;
+
     private $subscriptionService;
 
     public function __construct(PaymentGatewayService $paymentGatewayService, SubscriptionService $subscriptionService)
@@ -19,11 +20,13 @@ class PaypalPaymentController extends Controller
 
     public function createOneTimePayment(Request $request)
     {
-        $paymentMethodId = $request->input('paymentMethodId');
-        $amount = $request->input('amount');
+        $validated = $request->validate([
+            'paymentMethodId' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+        ]);
 
-        $result = $this->paymentGatewayService->processPayment('paypal', (float) $amount, [
-            'payment_id' => $paymentMethodId,
+        $result = $this->paymentGatewayService->processPayment('paypal', (float) $validated['amount'], [
+            'payment_id' => $validated['paymentMethodId'],
         ]);
 
         return response()->json($result);
