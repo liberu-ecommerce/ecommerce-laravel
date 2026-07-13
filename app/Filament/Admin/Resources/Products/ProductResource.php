@@ -116,6 +116,12 @@ class ProductResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->label('Low Stock Threshold'),
+                        TextInput::make('weight')
+                            ->numeric()
+                            ->minValue(0)
+                            ->default(0)
+                            ->suffix('kg')
+                            ->helperText('Used by weight-based shipping methods.'),
                     ]),
 
                 Section::make('Downloadable Product')

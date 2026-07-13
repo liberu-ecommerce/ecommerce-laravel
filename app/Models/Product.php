@@ -35,6 +35,7 @@ class Product extends Model implements Orderable
         'featured_image',
         'inventory_count',
         'low_stock_threshold',
+        'weight',
         'meta_title',
         'meta_description',
         'meta_keywords',
@@ -51,6 +52,7 @@ class Product extends Model implements Orderable
     protected $casts = [
         'is_downloadable' => 'boolean',
         'price' => 'decimal:2',
+        'weight' => 'decimal:2',
         'suggested_price' => 'decimal:2',
         'minimum_price' => 'decimal:2',
     ];
