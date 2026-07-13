@@ -34,6 +34,9 @@ class ProductRating extends Model
     {
         return ($this->overall_rating + $this->quality_rating + $this->value_rating + $this->price_rating) / 4;
     }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
 }
-
-

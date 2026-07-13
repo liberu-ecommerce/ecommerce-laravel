@@ -25,16 +25,16 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
     use HasApiTokens;
-
     use HasFactory;
     use HasProfilePhoto {
         HasProfilePhoto::profilePhotoUrl as getPhotoUrl;
     }
+
     // use HasConnectedAccounts;
     use HasRoles;
     use HasTeams;
-
     use Notifiable;
+
     // use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
 
@@ -112,12 +112,16 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
      */
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->ownedTeams;
+        // Every team the user can act in — owned + membership. Using only
+        // ownedTeams (as before) hid shared/member teams from the tenant switcher.
+        return $this->allTeams();
     }
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->teams->contains($tenant);
+        // belongsToTeam covers ownership AND membership; the previous
+        // teams-only check locked a team's own owner out of their tenant.
+        return $this->belongsToTeam($tenant);
     }
 
     public function canAccessFilament(): bool

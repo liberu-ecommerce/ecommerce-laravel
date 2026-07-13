@@ -42,6 +42,12 @@ class ProductReview extends Model
     public function getHelpfulnessScore()
     {
         $total_votes = $this->helpful_votes + $this->unhelpful_votes;
+
         return $total_votes > 0 ? ($this->helpful_votes / $total_votes) * 100 : 0;
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

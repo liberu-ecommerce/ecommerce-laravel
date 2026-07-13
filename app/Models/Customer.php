@@ -47,8 +47,8 @@ class Customer extends Model
     public function groups()
     {
         return $this->belongsToMany(CustomerGroup::class, 'customer_group_memberships')
-                    ->withPivot(['joined_at', 'expires_at'])
-                    ->withTimestamps();
+            ->withPivot(['joined_at', 'expires_at'])
+            ->withTimestamps();
     }
 
     public function abandonedCarts()
@@ -69,9 +69,9 @@ class Customer extends Model
     public function getActiveGroupsAttribute()
     {
         return $this->groups()
-                    ->wherePivot('expires_at', '>', now())
-                    ->orWherePivotNull('expires_at')
-                    ->get();
+            ->wherePivot('expires_at', '>', now())
+            ->orWherePivotNull('expires_at')
+            ->get();
     }
 
     public function getTotalSpentAttribute(): float
@@ -92,5 +92,10 @@ class Customer extends Model
     public function isVip(): bool
     {
         return $this->total_spent >= 1000 || $this->order_count >= 10;
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

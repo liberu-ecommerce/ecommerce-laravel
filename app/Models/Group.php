@@ -15,4 +15,9 @@ class Group extends Model
         'name',
         'discount',
     ];
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
 }
