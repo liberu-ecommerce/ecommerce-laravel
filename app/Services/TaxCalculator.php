@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\TaxRate;
 use App\Models\Product;
+use App\Models\TaxRate;
 
 class TaxCalculator
 {
@@ -20,7 +20,7 @@ class TaxCalculator
         $city = $shippingAddress['city'] ?? null;
         $zipCode = $shippingAddress['postal_code'] ?? null;
 
-        if (!$country) {
+        if (! $country) {
             return ['total' => 0, 'lines' => []];
         }
 
@@ -30,12 +30,12 @@ class TaxCalculator
             $quantity = $item['quantity'] ?? 1;
             $price = $item['price'] ?? 0;
 
-            if (!$product || !($product instanceof Product)) {
+            if (! $product || ! ($product instanceof Product)) {
                 continue;
             }
 
             // Skip if product is not taxable
-            if (!($product->tax_status ?? true)) {
+            if (! ($product->tax_status ?? true)) {
                 continue;
             }
 
@@ -51,7 +51,7 @@ class TaxCalculator
 
                 // Group by rate for tax lines
                 $rateKey = $rate->id;
-                if (!isset($taxLines[$rateKey])) {
+                if (! isset($taxLines[$rateKey])) {
                     $taxLines[$rateKey] = [
                         'label' => $rate->name,
                         'rate' => $rate->rate,
@@ -73,9 +73,9 @@ class TaxCalculator
                 $totalTax += $taxAmount;
 
                 $rateKey = $rate->id;
-                if (!isset($taxLines[$rateKey])) {
+                if (! isset($taxLines[$rateKey])) {
                     $taxLines[$rateKey] = [
-                        'label' => $rate->name . ' (Shipping)',
+                        'label' => $rate->name.' (Shipping)',
                         'rate' => $rate->rate,
                         'amount' => 0,
                         'compound' => $rate->compound,
@@ -96,7 +96,7 @@ class TaxCalculator
      */
     public function calculateProductTax(Product $product, float $price, array $location): float
     {
-        if (!($product->tax_status ?? true)) {
+        if (! ($product->tax_status ?? true)) {
             return 0;
         }
 
@@ -122,6 +122,7 @@ class TaxCalculator
     public function getPriceWithTax(float $price, Product $product, array $location): float
     {
         $tax = $this->calculateProductTax($product, $price, $location);
+
         return round($price + $tax, 2);
     }
 
@@ -131,5 +132,29 @@ class TaxCalculator
     public function shouldDisplayPricesWithTax(): bool
     {
         return config('ecommerce.display_prices_with_tax', false);
+    }
+
+    /**
+     * The price to show on catalogue/cart pages: bare when the store displays
+     * tax-exclusive prices, otherwise tax-inclusive using the store's own
+     * location (the visitor's address isn't known before checkout).
+     */
+    public function displayPrice(Product $product): float
+    {
+        $price = (float) $product->price;
+
+        if (! $this->shouldDisplayPricesWithTax()) {
+            return $price;
+        }
+
+        return $this->getPriceWithTax($price, $product, $this->storeLocation());
+    }
+
+    private function storeLocation(): array
+    {
+        return [
+            'country' => config('ecommerce.store_country', 'US'),
+            'state' => config('ecommerce.store_state'),
+        ];
     }
 }
