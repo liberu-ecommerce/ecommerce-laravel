@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountDataExportController;
+use App\Http\Controllers\AccountErasureController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
@@ -99,6 +100,9 @@ Route::middleware('auth')->group(function () {
 
     // GDPR right-of-access: download all of your own personal data as JSON.
     Route::get('/account/data-export', AccountDataExportController::class)->name('account.data-export');
+
+    // GDPR right-to-erasure: anonymise your account (orders retained, PII scrubbed).
+    Route::delete('/account', AccountErasureController::class)->name('account.erase');
 });
 
 Route::middleware('auth')->prefix('payment_methods')->group(function () {
