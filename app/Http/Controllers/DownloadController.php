@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DownloadableProduct;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -35,12 +36,54 @@ class DownloadController extends Controller
         $downloadableProduct = DownloadableProduct::where('product_id', $product)
             ->firstOrFail();
 
-        if (! $downloadableProduct->isDownloadable() || ! $this->authorizeDownload($request->user(), $downloadableProduct)) {
-            abort(403, 'Download limit reached or not authorized.');
+        // Free products carry no purchase — serve without per-order limits.
+        if ($downloadableProduct->product->isFree()) {
+            return $this->streamFile($downloadableProduct);
         }
 
-        $downloadableProduct->incrementDownloadCount();
+        // Paid products are gated PER PURCHASE: each buyer's own order line item
+        // carries its download window (30-day expiry) and its own counter, so one
+        // buyer can't exhaust the allowance for everyone (the product-global
+        // download_limit is the per-purchase cap, not a shared pool).
+        $item = $this->resolvePurchasedItem($request->user(), $product, $request->query('token'));
 
+        if (! $item || ! $item->isDownloadValid()) {
+            abort(403, 'This download link is invalid or has expired.');
+        }
+
+        $limit = $downloadableProduct->download_limit;
+        if ($limit !== null && $item->download_count >= $limit) {
+            abort(403, 'Download limit reached for this purchase.');
+        }
+
+        $item->increment('download_count');
+
+        return $this->streamFile($downloadableProduct);
+    }
+
+    /**
+     * The authenticated user's purchased line item for this product, from a paid
+     * order. A token (from the emailed link) pins a specific purchase; otherwise
+     * the most recent one is used.
+     */
+    private function resolvePurchasedItem($user, $productId, ?string $token): ?OrderItem
+    {
+        if (! $user) {
+            return null;
+        }
+
+        return OrderItem::where('product_id', $productId)
+            ->whereHas('order', function ($query) use ($user) {
+                $query->where('user_id', $user->id)
+                    ->whereIn('status', [Order::STATUS_PAID, Order::STATUS_COMPLETED]);
+            })
+            ->when($token, fn ($query) => $query->where('download_link', $token))
+            ->latest()
+            ->first();
+    }
+
+    private function streamFile(DownloadableProduct $downloadableProduct)
+    {
         return Storage::disk('local')->download(
             $downloadableProduct->file_url,
             null,
