@@ -9,7 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 
 class DispatchOutboundWebhook implements ShouldQueue
 {
@@ -17,35 +16,18 @@ class DispatchOutboundWebhook implements ShouldQueue
 
     public function __construct(public int $orderId, public string $event) {}
 
+    /**
+     * Fan out one independent delivery job per subscribed active endpoint, so a
+     * slow or failing receiver retries on its own without affecting the others.
+     */
     public function handle(): void
     {
-        $order = Order::find($this->orderId);
-        if (! $order) {
+        if (! Order::whereKey($this->orderId)->exists()) {
             return;
         }
 
-        $body = json_encode([
-            'event' => $this->event,
-            'data' => [
-                'id' => $order->id,
-                'status' => $order->status,
-                'total_amount' => (float) $order->total_amount,
-                'refund_total' => (float) $order->refund_total,
-                'customer_email' => $order->customer_email,
-            ],
-        ]);
-
-        foreach (WebhookEndpoint::where('is_active', true)->get() as $endpoint) {
-            if (! $endpoint->subscribesTo($this->event)) {
-                continue;
-            }
-
-            // HMAC-SHA256 over the raw body with the endpoint's secret — the same
-            // scheme we verify on inbound Stripe webhooks.
-            Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'X-Webhook-Signature' => hash_hmac('sha256', $body, $endpoint->secret),
-            ])->timeout(10)->withBody($body, 'application/json')->post($endpoint->url);
-        }
+        WebhookEndpoint::where('is_active', true)->get()
+            ->filter(fn (WebhookEndpoint $endpoint) => $endpoint->subscribesTo($this->event))
+            ->each(fn (WebhookEndpoint $endpoint) => SendWebhookDelivery::dispatch($endpoint->id, $this->orderId, $this->event));
     }
 }
