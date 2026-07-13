@@ -20,7 +20,8 @@ use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\StripePaymentController;
-use App\Http\Controllers\SubscriptionController; // New controller for cart
+use App\Http\Controllers\StripeWebhookController; // New controller for cart
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -104,6 +105,9 @@ Route::middleware('auth')->prefix('payment_methods')->group(function () {
     Route::delete('/destroy/{id}', [PaymentMethodController::class, 'deletePaymentMethod'])->name('payment_methods.destroy');
     Route::post('/set_default/{id}', [PaymentMethodController::class, 'setDefaultPaymentMethod'])->name('payment_methods.setDefault');
 });
+
+// Stripe webhook — unauthenticated + CSRF-exempt (verified by signature in the controller)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 Route::post('/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('payment.create');
 Route::post('/stripe/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('stripe.payment.create');
