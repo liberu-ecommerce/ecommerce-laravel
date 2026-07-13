@@ -2,28 +2,34 @@
 
 namespace Tests\Feature;
 
-use App\Http\Requests\ReviewRequest;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ReviewControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function testStore()
+    private function admin(): User
+    {
+        Role::findOrCreate('super_admin', 'web');
+
+        return User::factory()->create()->assignRole('super_admin');
+    }
+
+    public function test_store()
     {
         $user = User::factory()->create();
         $product = Product::factory()->create();
 
         $response = $this->actingAs($user)
             ->post(route('reviews.store'), [
-                "product_id" => $product->id,
-                "rating" => 5,
-                "review" => 'Great product!',
+                'product_id' => $product->id,
+                'rating' => 5,
+                'review' => 'Great product!',
             ]);
 
         $response->assertStatus(201);
@@ -36,7 +42,7 @@ class ReviewControllerTest extends TestCase
         ]);
     }
 
-    public function testApprove()
+    public function test_approve()
     {
 
         $review = Review::factory()->create([
@@ -45,7 +51,7 @@ class ReviewControllerTest extends TestCase
             'approved' => false,
         ]);
 
-        $this->post(route('reviews.approve', ["id" => $review->id]));
+        $this->actingAs($this->admin())->post(route('reviews.approve', ['id' => $review->id]));
 
         $this->assertDatabaseHas('reviews', [
             'id' => $review->id,
@@ -55,7 +61,7 @@ class ReviewControllerTest extends TestCase
 
     public function test_approve_returns_404_for_missing_review(): void
     {
-        $response = $this->postJson('/reviews/approve/9999');
+        $response = $this->actingAs($this->admin())->postJson('/reviews/approve/9999');
 
         $response->assertStatus(404);
     }
@@ -84,7 +90,7 @@ class ReviewControllerTest extends TestCase
     {
         $review = Review::factory()->create(['helpful_votes' => 0]);
 
-        $response = $this->postJson("/reviews/{$review->id}/vote", ['vote' => 'helpful']);
+        $response = $this->actingAs(User::factory()->create())->postJson("/reviews/{$review->id}/vote", ['vote' => 'helpful']);
 
         $response->assertStatus(200);
         $this->assertEquals(1, $review->fresh()->helpful_votes);
@@ -94,7 +100,7 @@ class ReviewControllerTest extends TestCase
     {
         $review = Review::factory()->create(['unhelpful_votes' => 0]);
 
-        $response = $this->postJson("/reviews/{$review->id}/vote", ['vote' => 'unhelpful']);
+        $response = $this->actingAs(User::factory()->create())->postJson("/reviews/{$review->id}/vote", ['vote' => 'unhelpful']);
 
         $response->assertStatus(200);
         $this->assertEquals(1, $review->fresh()->unhelpful_votes);
@@ -104,14 +110,14 @@ class ReviewControllerTest extends TestCase
     {
         $review = Review::factory()->create();
 
-        $response = $this->postJson("/reviews/{$review->id}/vote", ['vote' => 'bogus']);
+        $response = $this->actingAs(User::factory()->create())->postJson("/reviews/{$review->id}/vote", ['vote' => 'bogus']);
 
         $response->assertStatus(400);
     }
 
     public function test_vote_returns_404_for_missing_review(): void
     {
-        $response = $this->postJson('/reviews/9999/vote', ['vote' => 'helpful']);
+        $response = $this->actingAs(User::factory()->create())->postJson('/reviews/9999/vote', ['vote' => 'helpful']);
 
         $response->assertStatus(404);
     }
