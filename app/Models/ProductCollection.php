@@ -15,7 +15,7 @@ class ProductCollection extends Model implements Orderable
     use IsTenantModel;
     use SoftDeletes;
 
-    protected $table = "collections";
+    protected $table = 'collections';
 
     protected $fillable = [
         'name',
@@ -38,5 +38,10 @@ class ProductCollection extends Model implements Orderable
     {
         return $this->belongsToMany(Product::class, 'collection_items', 'collection_id')
             ->withPivot('quantity');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
     }
 }

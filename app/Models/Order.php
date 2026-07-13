@@ -176,4 +176,9 @@ class Order extends Model
             DispatchOutboundWebhook::dispatch($this->id, 'order.'.$status);
         }
     }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
 }

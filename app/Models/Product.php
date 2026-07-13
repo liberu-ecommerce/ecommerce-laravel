@@ -376,4 +376,9 @@ class Product extends Model implements Orderable
     {
         return $this->review()->count();
     }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class);
+    }
 }
