@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class WebhookEndpoint extends Model
 {
@@ -20,5 +21,10 @@ class WebhookEndpoint extends Model
     public function subscribesTo(string $event): bool
     {
         return in_array($event, (array) $this->events, true);
+    }
+
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(WebhookDelivery::class);
     }
 }
