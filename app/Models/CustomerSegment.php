@@ -99,7 +99,12 @@ class CustomerSegment extends Model
             'has_purchased_product' => $query->whereHas('orders.items', function ($q) use ($value) {
                 $q->where('product_id', $value);
             }),
-            'in_customer_group' => $query->where('customer_group_id', $value),
+            // A user is "in" a customer group when their identity-linked Customer
+            // belongs to it (User -> customer -> customer_group_memberships). The old
+            // where('customer_group_id') hit a nonexistent users column.
+            'in_customer_group' => $query->whereHas('customer.groups', function ($q) use ($value) {
+                $q->where('customer_groups.id', $value);
+            }),
             // Fail closed: an unrecognised field must not silently drop the filter
             // (which would match EVERY user under match_type=all) — match no one.
             default => $query->whereRaw('1 = 0'),
