@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\DropshippingController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderRefundController;
+use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReturnRequestController;
 use Illuminate\Http\Request;
@@ -49,6 +50,8 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::post('/{order}/refund', [OrderRefundController::class, 'store']);
     // Customer requests a return for their own order.
     Route::post('/{order}/returns', [ReturnRequestController::class, 'store']);
+    // Staff-only (role checked in the controller): advance the order's fulfilment status.
+    Route::post('/{order}/status', [OrderStatusController::class, 'update']);
 });
 
 // Returns: customers read their own, staff read/act on all (roles checked in the controller).
