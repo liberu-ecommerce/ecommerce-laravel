@@ -82,11 +82,13 @@ Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('
 Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
 Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
 
-// Shipping routes
-Route::get('/shipping', [ShippingController::class, 'index'])->name('shipping.index');
-Route::post('/shipping', [ShippingController::class, 'store'])->name('shipping.store');
-Route::put('/shipping/{shippingMethod}', [ShippingController::class, 'update'])->name('shipping.update');
-Route::delete('/shipping/{shippingMethod}', [ShippingController::class, 'destroy'])->name('shipping.destroy');
+// Shipping routes — store-wide config, admin-only (auth here, role checked in the controller)
+Route::middleware('auth')->group(function () {
+    Route::get('/shipping', [ShippingController::class, 'index'])->name('shipping.index');
+    Route::post('/shipping', [ShippingController::class, 'store'])->name('shipping.store');
+    Route::put('/shipping/{shippingMethod}', [ShippingController::class, 'update'])->name('shipping.update');
+    Route::delete('/shipping/{shippingMethod}', [ShippingController::class, 'destroy'])->name('shipping.destroy');
+});
 
 // Order history routes
 Route::middleware('auth')->group(function () {

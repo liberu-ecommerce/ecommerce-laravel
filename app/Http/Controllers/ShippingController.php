@@ -7,14 +7,28 @@ use Illuminate\Http\Request;
 
 class ShippingController extends Controller
 {
+    /**
+     * Shipping methods are store-wide checkout config — restrict every action to
+     * staff (the `auth` middleware on the routes already blocks guests).
+     */
+    private function ensureAdmin(): void
+    {
+        abort_unless(auth()->user()?->hasRole(['super_admin', 'admin']), 403);
+    }
+
     public function index()
     {
+        $this->ensureAdmin();
+
         $shippingMethods = ShippingMethod::all();
+
         return view('shipping.index', compact('shippingMethods'));
     }
 
     public function store(Request $request)
     {
+        $this->ensureAdmin();
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -25,7 +39,7 @@ class ShippingController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validatedData['is_active'] = $request->has('is_active');
+        $validatedData['is_active'] = $request->boolean('is_active');
 
         ShippingMethod::create($validatedData);
 
@@ -34,6 +48,8 @@ class ShippingController extends Controller
 
     public function update(Request $request, ShippingMethod $shippingMethod)
     {
+        $this->ensureAdmin();
+
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -44,7 +60,7 @@ class ShippingController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validatedData['is_active'] = $request->has('is_active');
+        $validatedData['is_active'] = $request->boolean('is_active');
 
         $shippingMethod->update($validatedData);
 
@@ -53,6 +69,8 @@ class ShippingController extends Controller
 
     public function destroy(ShippingMethod $shippingMethod)
     {
+        $this->ensureAdmin();
+
         $shippingMethod->delete();
 
         return redirect()->route('shipping.index')->with('success', 'Shipping method deleted successfully.');
