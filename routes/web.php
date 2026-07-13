@@ -1,29 +1,30 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Frontend\ProductController;
-use App\Http\Controllers\Frontend\ProductCategoryController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DownloadController;
+use App\Http\Controllers\Frontend\ProductCategoryController;
 use App\Http\Controllers\Frontend\ProductCollectionController;
+use App\Http\Controllers\Frontend\ProductController;
 use App\Http\Controllers\Frontend\ProductTagController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaypalPaymentController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SiteSettingController;
 use App\Http\Controllers\StripePaymentController;
-use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SubscriptionController; // New controller for cart
 use App\Http\Controllers\WishlistController;
-use App\Http\Controllers\CartController; // New controller for cart
-use App\Http\Controllers\ChatController;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\InventoryController;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use JoelButcher\Socialstream\Socialstream;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,8 +41,9 @@ use App\Http\Controllers\InventoryController;
 Route::get('/health', function () {
     try {
         DB::connection()->getPdo();
+
         return response()->json(['status' => 'ok', 'db' => 'connected'], 200);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response()->json(['status' => 'degraded', 'db' => 'unavailable'], 503);
     }
 })->name('health');
@@ -59,6 +61,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+Route::post('/products/{product}/notify-me', [ProductController::class, 'notifyMe'])->name('products.notify-me');
 
 // Category routes
 Route::get('/categories', [ProductCategoryController::class, 'index'])->name('categories.index');
@@ -92,7 +95,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('payment_methods')->group(function () {
-    Route::get('/', [PaymentMethodController::class,'index'])->name('payment_methods.index');
+    Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');
     Route::post('/store', [PaymentMethodController::class, 'addPaymentMethod'])->name('payment_methods.store');
     Route::get('/edit/{id}', [PaymentMethodController::class, 'editPaymentMethod'])->name('payment_methods.edit');
     Route::post('/update/{id}', [PaymentMethodController::class, 'editPaymentMethod'])->name('payment_methods.update');
@@ -112,9 +115,9 @@ Route::patch('/subscription/change', [SubscriptionController::class, 'changePlan
 Route::delete('/subscription/cancel', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel');
 
 Route::post('/paypal/payment', [PaypalPaymentController::class, 'createOneTimePayment'])->name('paypal.payment.create');
-Route::post('/paypal/subscription', [PayPalPaymentController::class, 'createSubscription'])->name('paypal.subscription.create');
-Route::patch('/paypal/subscription/update', [PayPalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
-Route::delete('/paypal/subscription/cancel', [PayPalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
+Route::post('/paypal/subscription', [PaypalPaymentController::class, 'createSubscription'])->name('paypal.subscription.create');
+Route::patch('/paypal/subscription/update', [PaypalPaymentController::class, 'updateSubscription'])->name('paypal.subscription.update');
+Route::delete('/paypal/subscription/cancel', [PaypalPaymentController::class, 'cancelSubscription'])->name('paypal.subscription.cancel');
 
 // Cart routes
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -159,7 +162,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.x
 Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory'])->name('inventory.adjust');
 
 // Pages
-// TODO: implement CMS features for page and form editing 
+// TODO: implement CMS features for page and form editing
 Route::view('/contact', 'contact')->name('contact');
 Route::view('/about', 'about')->name('about');
 Route::view('/shop', 'shop')->name('shop');
@@ -176,7 +179,7 @@ Route::prefix('chat')->group(function () {
     Route::get('/{conversationId}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::post('/{conversationId}/close', [ChatController::class, 'close'])->name('chat.close');
     Route::post('/{conversationId}/rating', [ChatController::class, 'submitRating'])->name('chat.rating');
-    
+
     // Agent routes
     Route::middleware(['auth'])->group(function () {
         Route::get('/agent/conversations', [ChatController::class, 'agentConversations'])->name('chat.agent.conversations');
@@ -185,6 +188,6 @@ Route::prefix('chat')->group(function () {
     });
 });
 
-if (class_exists(\JoelButcher\Socialstream\Socialstream::class)) {
+if (class_exists(Socialstream::class)) {
     require __DIR__.'/socialstream.php';
 }

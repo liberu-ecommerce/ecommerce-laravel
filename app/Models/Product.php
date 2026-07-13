@@ -3,14 +3,16 @@
 namespace App\Models;
 
 use App\Interfaces\Orderable;
-use Illuminate\Support\Str;
+use App\Notifications\ProductBackInStockNotification;
 use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Product extends Model implements Orderable
 {
@@ -183,7 +185,7 @@ class Product extends Model implements Orderable
 
         static::updating(function ($product) {
             // Update slug if name changed and slug not manually set
-            if ($product->isDirty('name') && !$product->isDirty('slug')) {
+            if ($product->isDirty('name') && ! $product->isDirty('slug')) {
                 $product->slug = Str::slug($product->name);
             }
         });
@@ -200,6 +202,43 @@ class Product extends Model implements Orderable
                 );
             }
         });
+
+        // Fire back-in-stock notifications when inventory crosses 0 -> positive.
+        // `updated` (not `saved`) so increment()/decrement() — the admin & refund
+        // restock paths — are caught alongside plain save()/update().
+        static::updated(function ($product) {
+            if ($product->wasChanged('inventory_count')
+                && (int) $product->getOriginal('inventory_count') <= 0
+                && $product->inventory_count > 0) {
+                $product->notifyBackInStockSubscribers();
+            }
+        });
+    }
+
+    /**
+     * Email everyone waiting on this product's restock, then mark them notified
+     * so they're told once. Logged-in subscribers go through their User; guests
+     * get an on-demand email.
+     *
+     * ponytail: synchronous loop — fine for typical waitlists; push to a queued
+     * job if a single product ever has thousands of subscribers.
+     */
+    public function notifyBackInStockSubscribers(): void
+    {
+        $pending = StockNotification::getPendingForProduct($this->id)
+            ->where('notification_type', 'back_in_stock');
+
+        foreach ($pending as $subscriber) {
+            $notification = new ProductBackInStockNotification($this, $subscriber->variant);
+
+            if ($subscriber->user_id && $subscriber->user) {
+                $subscriber->user->notify($notification);
+            } elseif ($subscriber->email) {
+                Notification::route('mail', $subscriber->email)->notify($notification);
+            }
+
+            $subscriber->markAsNotified();
+        }
     }
 
     public function scopeWithTag($query, Tag $tag)
@@ -219,8 +258,8 @@ class Product extends Model implements Orderable
     public function scopeSearch($query, $keyword)
     {
         return $query->where(function ($q) use ($keyword) {
-            $q->where('name', 'like', '%' . $keyword . '%')
-                ->orWhere('description', 'like', '%' . $keyword . '%');
+            $q->where('name', 'like', '%'.$keyword.'%')
+                ->orWhere('description', 'like', '%'.$keyword.'%');
         });
     }
 
@@ -259,6 +298,7 @@ class Product extends Model implements Orderable
         if ($this->isFree()) {
             return 0.00;
         }
+
         return $this->price;
     }
 
@@ -292,6 +332,7 @@ class Product extends Model implements Orderable
         if ($this->hasVariants()) {
             return $this->variants()->sum('inventory_quantity');
         }
+
         return $this->inventory_count;
     }
 
@@ -300,6 +341,7 @@ class Product extends Model implements Orderable
         if ($this->hasVariants()) {
             return $this->variants()->min('price') ?? $this->price;
         }
+
         return $this->price;
     }
 
@@ -308,6 +350,7 @@ class Product extends Model implements Orderable
         if ($this->hasVariants()) {
             return $this->variants()->max('price') ?? $this->price;
         }
+
         return $this->price;
     }
 
