@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Models\ShippingMethod;
 use Illuminate\Support\Facades\Http;
 
@@ -12,7 +13,7 @@ class ShippingService
         // Only offer active methods; a deactivated method must never be selectable.
         $availableMethods = ShippingMethod::where('is_active', true)->get();
 
-        if (!$cart || !$address) {
+        if (! $cart || ! $address) {
             return $availableMethods;
         }
 
@@ -64,6 +65,7 @@ class ShippingService
     private function calculateWeightRate($method, $cart)
     {
         $totalWeight = $this->calculateTotalWeight($cart);
+
         return $totalWeight * $method->weight_rate;
     }
 
@@ -76,11 +78,26 @@ class ShippingService
 
     private function calculateTotalWeight($cart)
     {
-        return array_sum(array_map(function ($item) {
-            // ponytail: session cart items carry no 'weight' yet (wiring gap in
-            // Cart/CheckoutController) — treat missing weight as 0, don't fatal.
-            return ($item['weight'] ?? 0) * $item['quantity'];
-        }, $cart));
+        // The session cart is keyed by product_id and carries no weight, so look the
+        // product weights up (one batched query). An item-carried 'weight', if a
+        // future path adds one, still wins.
+        $lookupIds = [];
+        foreach ($cart as $productId => $item) {
+            if (! isset($item['weight'])) {
+                $lookupIds[] = $productId;
+            }
+        }
+        $weights = empty($lookupIds)
+            ? collect()
+            : Product::whereIn('id', $lookupIds)->pluck('weight', 'id');
+
+        $total = 0.0;
+        foreach ($cart as $productId => $item) {
+            $weight = (float) ($item['weight'] ?? $weights[$productId] ?? 0);
+            $total += $weight * $item['quantity'];
+        }
+
+        return $total;
     }
 
     public function calculateDropShippingCost(ShippingMethod $method, $cart, $address)
