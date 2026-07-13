@@ -14,6 +14,7 @@ class Customer extends Model
     protected $table = 'customers';
 
     protected $fillable = [
+        'user_id',
         'first_name',
         'last_name',
         'email',
@@ -23,6 +24,11 @@ class Customer extends Model
         'state',
         'postal_code',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function orders()
     {

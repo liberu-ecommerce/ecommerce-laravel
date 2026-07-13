@@ -179,6 +179,29 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $this->hasOne(CustomerMetric::class);
     }
 
+    /**
+     * The Customer record for this user — a Customer is the same identity as a User.
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Customer::class);
+    }
+
+    /**
+     * Resolve (creating if needed) this user's Customer record, seeded from the
+     * user's name + email. Idempotent — the customers.user_id link is unique.
+     */
+    public function getOrCreateCustomer(): Customer
+    {
+        $parts = explode(' ', trim((string) $this->name), 2);
+
+        return $this->customer()->firstOrCreate([], [
+            'first_name' => $parts[0] !== '' ? $parts[0] : 'Customer',
+            'last_name' => $parts[1] ?? '',
+            'email' => $this->email,
+        ]);
+    }
+
     public function giftRegistries(): HasMany
     {
         return $this->hasMany(GiftRegistry::class);
