@@ -32,6 +32,7 @@ class OrderHistoryControllerTest extends TestCase
         ]);
 
         return Order::create(array_merge([
+            'user_id' => $user->id,
             'customer_id' => $customer->id,
             'customer_email' => $user->email,
             'total_amount' => 100.00,
@@ -94,14 +95,16 @@ class OrderHistoryControllerTest extends TestCase
         $response->assertStatus(404);
     }
 
-    public function test_show_returns_403_when_order_belongs_to_other_user(): void
+    public function test_show_returns_404_when_order_belongs_to_other_user(): void
     {
         $userA = $this->makeUser();
         $userB = $this->makeUser();
         $order = $this->makeOrder($userA);
 
+        // Scoped to the user's own orders — a foreign order is not found (no
+        // existence-confirming 403).
         $response = $this->actingAs($userB)->get("/orders/{$order->id}");
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 }
