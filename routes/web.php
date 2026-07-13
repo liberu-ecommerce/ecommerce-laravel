@@ -130,14 +130,16 @@ Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear
 Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.apply-coupon');
 Route::delete('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.remove-coupon');
 
-// Ratings and reviews
+// Ratings and reviews — reads are public; writes require login (approve is admin-only, gated in the controller)
 Route::get('/product/{product}/reviews', [ReviewController::class, 'show'])->name('reviews.show');
-Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-Route::post('/reviews/approve/{id}', [ReviewController::class, 'approve'])->name('reviews.approve');
-Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('reviews.vote');
+Route::middleware('auth')->group(function () {
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/reviews/approve/{id}', [ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::post('/reviews/{id}/vote', [ReviewController::class, 'vote'])->name('reviews.vote');
+});
 
 Route::get('/product/{product}/ratings/average', [RatingController::class, 'calculateAverageRating'])->name('ratings.average');
-Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+Route::post('/ratings', [RatingController::class, 'store'])->middleware('auth')->name('ratings.store');
 
 // New comparison routes
 Route::post('/product/{category}/{product}/compare', [ProductController::class, 'addToCompare'])->name('products.addToCompare');

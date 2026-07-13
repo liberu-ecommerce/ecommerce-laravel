@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
-use App\Models\Review;
-use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\ReviewRequest;
 use App\Models\Order;
+use App\Models\Review;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReviewController extends Controller
 {
     /**
      * Handles the request to store a new review.
      *
-     * @param ReviewRequest $request The request object containing review details.
+     * @param  ReviewRequest  $request  The request object containing review details.
      * @return JsonResponse A JSON response indicating success and the saved review.
      */
     public function store(ReviewRequest $request)
@@ -29,7 +29,7 @@ class ReviewController extends Controller
             return response()->json(['message' => 'You have already reviewed this product'], 409);
         }
 
-        $review = new Review();
+        $review = new Review;
         $review->user_id = Auth::id();
         $review->product_id = $validatedData['product_id'];
         $review->rating = $validatedData['rating'];
@@ -51,13 +51,17 @@ class ReviewController extends Controller
 
     public function approve($id)
     {
+        // Publishing a review is moderation — staff only (route is already behind auth).
+        abort_unless(Auth::user()->hasRole(['super_admin', 'admin']), 403);
+
         $review = Review::find($id);
-        if (!$review) {
+        if (! $review) {
             return response()->json(['message' => 'Review not found'], 404);
         }
 
         $review->approved = true;
         $review->save();
+
         return response()->json(['message' => 'Review approved successfully']);
     }
 
@@ -67,13 +71,14 @@ class ReviewController extends Controller
             ->where('approved', true)
             ->with('user')
             ->get();
+
         return response()->json($reviews);
     }
 
     public function vote(Request $request, $id)
     {
         $review = Review::find($id);
-        if (!$review) {
+        if (! $review) {
             return response()->json(['message' => 'Review not found'], 404);
         }
 
@@ -86,8 +91,7 @@ class ReviewController extends Controller
         }
 
         $review->save();
+
         return response()->json(['message' => 'Vote recorded successfully']);
     }
-
-
 }
