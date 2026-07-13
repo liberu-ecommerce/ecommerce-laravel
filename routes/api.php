@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->prefix('webhook-endpoints')->group(function (
     Route::post('/', [WebhookEndpointController::class, 'store']);
     Route::put('/{webhookEndpoint}', [WebhookEndpointController::class, 'update']);
     Route::delete('/{webhookEndpoint}', [WebhookEndpointController::class, 'destroy']);
+    Route::get('/{webhookEndpoint}/deliveries', [WebhookEndpointController::class, 'deliveries']);
 });
 
 // Returns: customers read their own, staff read/act on all (roles checked in the controller).
