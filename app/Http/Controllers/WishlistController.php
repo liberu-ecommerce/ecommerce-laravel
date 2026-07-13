@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Wishlist;
 use App\Models\Product;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Wishlist;
 use Illuminate\Support\Str;
 
 class WishlistController extends Controller
@@ -12,6 +12,7 @@ class WishlistController extends Controller
     public function index()
     {
         $wishlist = auth()->user()->wishlist()->with('product')->get();
+
         return view('wishlist.index', compact('wishlist'));
     }
 
@@ -28,19 +29,26 @@ class WishlistController extends Controller
     public function remove(Product $product)
     {
         auth()->user()->wishlist()->where('product_id', $product->id)->delete();
+
         return redirect()->back()->with('success', 'Product removed from wishlist');
     }
 
     public function share()
     {
-        $shareToken = Str::random(32);
-        auth()->user()->wishlist()->update(['share_token' => $shareToken]);
-        return redirect()->route('wishlist.index')->with('share_url', route('wishlist.shared', $shareToken));
+        // One token per user — the shared link exposes that user's whole wishlist.
+        $user = auth()->user();
+        $user->wishlist_share_token = Str::random(32);
+        $user->save();
+
+        return redirect()->route('wishlist.index')
+            ->with('share_url', route('wishlist.shared', $user->wishlist_share_token));
     }
 
     public function sharedWishlist($shareToken)
     {
-        $wishlist = Wishlist::where('share_token', $shareToken)->with('product')->get();
+        $owner = User::where('wishlist_share_token', $shareToken)->first();
+        $wishlist = $owner ? $owner->wishlist()->with('product')->get() : collect();
+
         return view('wishlist.shared', compact('wishlist'));
     }
 }

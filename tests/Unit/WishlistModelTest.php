@@ -70,18 +70,4 @@ class WishlistModelTest extends TestCase
         $this->assertInstanceOf(Product::class, $item->product);
         $this->assertEquals($product->id, $item->product->id);
     }
-
-    public function test_share_token_can_be_set(): void
-    {
-        $user = User::factory()->create();
-        $product = $this->makeProduct();
-
-        $item = Wishlist::create([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'share_token' => 'unique-share-token-123',
-        ]);
-
-        $this->assertEquals('unique-share-token-123', $item->share_token);
-    }
 }
