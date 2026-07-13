@@ -120,15 +120,30 @@ class CheckoutController extends Controller
                 $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
         }
 
-        // Apply coupon discount if available
+        // Re-validate and RE-COMPUTE the coupon discount against the LIVE cart.
+        // The session only cached a dollar figure captured at apply-time; trusting it
+        // lets a shopper apply a coupon on a large cart, shrink the cart, then check out
+        // with a stale (over-large) discount — driving the total negative into a free
+        // order that skips payment, or under-charging. Recomputing here also drops a
+        // coupon that has since expired, hit its usage limit, or fallen below its
+        // minimum spend, none of which checkout previously re-checked.
+        //
+        // ponytail: this closes the money bug + expiry/min-spend/over-limit TOCTOU. A
+        // simultaneous double-submit of a max_uses=1 coupon can still slip past (both
+        // read the usage count before either order commits); close that with a
+        // lockForUpdate on the coupon row inside the reservation transaction if abuse
+        // shows up — left out here as it's unreachable to unit test and low-severity.
         $discountAmount = 0;
-        $couponId = null;
         $couponCode = null;
         $couponData = Session::get('coupon');
-        if ($couponData) {
-            $discountAmount = $couponData['discount'] ?? 0;
-            $couponId = $couponData['coupon_id'] ?? null;
-            $couponCode = $couponData['code'] ?? null;
+        if ($couponData && ! empty($couponData['code'])) {
+            $result = $this->couponService->validateAndApplyCoupon($couponData['code'], $subtotal);
+            if ($result['valid']) {
+                $discountAmount = $result['discount'];
+                $couponCode = $couponData['code'];
+            } else {
+                Session::forget('coupon');
+            }
         }
 
         // Calculate tax with the structured shipping address, honouring per-product
@@ -157,7 +172,9 @@ class CheckoutController extends Controller
         $taxAmount = $taxResult['total'];
         $taxLines = $taxResult['lines'];
 
-        $totalAmount = $subtotal - $discountAmount + $shippingCost + $taxAmount;
+        // Floor at 0 — a discount can zero an order but must never make it negative
+        // (which would skip payment yet still mark the order paid).
+        $totalAmount = max(0, $subtotal - $discountAmount + $shippingCost + $taxAmount);
 
         // Create the order and RESERVE stock atomically, before charging.
         // If any line can't be reserved (e.g. a concurrent buyer took the last
