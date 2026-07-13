@@ -3,12 +3,24 @@
 namespace Tests\Feature;
 
 use App\Models\ShippingMethod;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ShippingControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Shipping management is admin-only; these exercise controller behaviour,
+        // so authenticate as an admin (authorization itself is covered in
+        // ShippingAdminAuthTest).
+        Role::findOrCreate('super_admin', 'web');
+        $this->actingAs(User::factory()->create()->assignRole('super_admin'));
+    }
 
     private function makeShipping(array $overrides = []): ShippingMethod
     {
