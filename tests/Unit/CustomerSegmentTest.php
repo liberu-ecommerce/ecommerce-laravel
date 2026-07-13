@@ -67,8 +67,8 @@ class CustomerSegmentTest extends TestCase
                 [
                     'field' => 'lifetime_value',
                     'operator' => '>=',
-                    'value' => 1000
-                ]
+                    'value' => 1000,
+                ],
             ],
             'match_type' => 'all',
         ]);
@@ -103,7 +103,7 @@ class CustomerSegmentTest extends TestCase
     {
         $rich = $this->userWithLtv(2000);
         $poor = $this->userWithLtv(5);
-        $mid  = $this->userWithLtv(500);
+        $mid = $this->userWithLtv(500);
 
         $segment = $this->makeSegment([
             ['field' => 'lifetime_value', 'operator' => '>=', 'value' => 1000],
@@ -121,7 +121,7 @@ class CustomerSegmentTest extends TestCase
 
     public function test_match_type_all_requires_every_condition(): void
     {
-        $mid  = $this->userWithLtv(500);
+        $mid = $this->userWithLtv(500);
         $rich = $this->userWithLtv(2000);
         $poor = $this->userWithLtv(5);
 
@@ -141,7 +141,7 @@ class CustomerSegmentTest extends TestCase
     public function test_total_orders_condition_matches_at_boundary_without_fataling(): void
     {
         $twoOrders = $this->userWithOrderCount(2);
-        $oneOrder  = $this->userWithOrderCount(1);
+        $oneOrder = $this->userWithOrderCount(1);
 
         $matched = function (string $operator, int $value): array {
             $segment = $this->makeSegment(
@@ -162,5 +162,71 @@ class CustomerSegmentTest extends TestCase
 
         // The single-order user must never match a >= 2 threshold
         $this->assertNotContains($oneOrder->id, $matched('>=', 2));
+    }
+
+    private function userWithOrdersOn(array $datetimes): User
+    {
+        $user = User::factory()->create();
+        foreach ($datetimes as $dt) {
+            $order = Order::create([
+                'user_id' => $user->id,
+                'customer_email' => uniqid().'@x.com',
+                'total_amount' => 50,
+                'status' => 'paid',
+            ]);
+            // Raw update so we control created_at without the timestamp helpers.
+            Order::whereKey($order->id)->update(['created_at' => $dt]);
+        }
+
+        return $user;
+    }
+
+    public function test_last_order_date_matches_by_most_recent_order_not_any_order(): void
+    {
+        $userOld = $this->userWithOrdersOn(['2024-01-01 00:00:00']);
+        $userMixed = $this->userWithOrdersOn(['2024-01-01 00:00:00', '2026-01-01 00:00:00']);
+
+        $segment = $this->makeSegment(
+            [['field' => 'last_order_date', 'operator' => '<=', 'value' => '2025-01-01 00:00:00']],
+            'all'
+        );
+        $segment->calculateMembers();
+        $ids = $segment->members()->pluck('users.id')->all();
+
+        $this->assertContains($userOld->id, $ids, 'user whose last order is old should match');
+        $this->assertNotContains(
+            $userMixed->id,
+            $ids,
+            'user whose MOST RECENT order is recent must not match — an older order should not count'
+        );
+    }
+
+    public function test_last_order_date_ge_matches_recent_buyers_only(): void
+    {
+        $recent = $this->userWithOrdersOn(['2026-01-01 00:00:00']);
+        $old = $this->userWithOrdersOn(['2024-01-01 00:00:00']);
+
+        $segment = $this->makeSegment(
+            [['field' => 'last_order_date', 'operator' => '>=', 'value' => '2025-01-01 00:00:00']],
+            'all'
+        );
+        $segment->calculateMembers();
+        $ids = $segment->members()->pluck('users.id')->all();
+
+        $this->assertContains($recent->id, $ids);
+        $this->assertNotContains($old->id, $ids);
+    }
+
+    public function test_unknown_condition_field_matches_no_one(): void
+    {
+        $this->userWithLtv(500); // a user who would match a fail-open (empty) filter
+
+        $segment = $this->makeSegment(
+            [['field' => 'bogus_field', 'operator' => '=', 'value' => 1]],
+            'all'
+        );
+        $segment->calculateMembers();
+
+        $this->assertEquals(0, $segment->customer_count);
     }
 }
