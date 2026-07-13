@@ -18,12 +18,12 @@ class CheckoutControllerTest extends TestCase
     {
         $category = ProductCategory::create([
             'name' => 'Checkout Category',
-            'slug' => 'checkout-cat-' . uniqid(),
+            'slug' => 'checkout-cat-'.uniqid(),
         ]);
 
         return Product::create(array_merge([
             'name' => 'Checkout Product',
-            'slug' => 'checkout-prod-' . uniqid(),
+            'slug' => 'checkout-prod-'.uniqid(),
             'price' => 50.00,
             'category_id' => $category->id,
             'inventory_count' => 20,
@@ -126,7 +126,10 @@ class CheckoutControllerTest extends TestCase
             'status' => 'paid',
         ]);
 
-        $response = $this->get(route('checkout.confirmation', ['order' => $order->id]));
+        // A guest is authorized to view the order they just placed via the session
+        // marker the checkout flow sets — the confirmation is no longer an open IDOR.
+        $response = $this->withSession(['recent_order_ids' => [$order->id]])
+            ->get(route('checkout.confirmation', ['order' => $order->id]));
 
         $response->assertStatus(200);
         $response->assertViewHas('order');

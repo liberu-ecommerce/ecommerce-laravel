@@ -16,9 +16,6 @@ class CollectionController extends Controller
 {
     /**
      * Display a listing of collections.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -61,12 +58,11 @@ class CollectionController extends Controller
 
     /**
      * Store a newly created collection.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:collections,slug',
@@ -77,12 +73,12 @@ class CollectionController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         // Auto-generate slug if not provided
         if (empty($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
@@ -93,15 +89,12 @@ class CollectionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Collection created successfully',
-            'data' => $collection
+            'data' => $collection,
         ], 201);
     }
 
     /**
      * Display the specified collection.
-     *
-     * @param string $idOrSlug
-     * @return JsonResponse
      */
     public function show(string $idOrSlug): JsonResponse
     {
@@ -110,34 +103,32 @@ class CollectionController extends Controller
             ? ProductCollection::with('products')->find($idOrSlug)
             : ProductCollection::with('products')->where('slug', $idOrSlug)->first();
 
-        if (!$collection) {
+        if (! $collection) {
             return response()->json([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $collection
+            'data' => $collection,
         ]);
     }
 
     /**
      * Update the specified collection.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function update(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $collection = ProductCollection::find($id);
 
-        if (!$collection) {
+        if (! $collection) {
             return response()->json([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ], 404);
         }
 
@@ -151,14 +142,14 @@ class CollectionController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $data = $validator->validated();
-        
+
         // Auto-generate slug if name is updated but slug is not provided
-        if (isset($data['name']) && !isset($data['slug'])) {
+        if (isset($data['name']) && ! isset($data['slug'])) {
             $data['slug'] = Str::slug($data['name']);
         }
 
@@ -167,25 +158,23 @@ class CollectionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Collection updated successfully',
-            'data' => $collection->fresh()
+            'data' => $collection->fresh(),
         ]);
     }
 
     /**
      * Add products to a collection.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function addProducts(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $collection = ProductCollection::find($id);
 
-        if (!$collection) {
+        if (! $collection) {
             return response()->json([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ], 404);
         }
 
@@ -199,7 +188,7 @@ class CollectionController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -210,7 +199,7 @@ class CollectionController extends Controller
         $syncData = [];
         foreach ($productIds as $index => $productId) {
             $syncData[$productId] = [
-                'quantity' => $quantities[$index] ?? 1
+                'quantity' => $quantities[$index] ?? 1,
             ];
         }
 
@@ -220,25 +209,23 @@ class CollectionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Products added to collection successfully',
-            'data' => $collection->load('products')
+            'data' => $collection->load('products'),
         ]);
     }
 
     /**
      * Remove products from a collection.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function removeProducts(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $collection = ProductCollection::find($id);
 
-        if (!$collection) {
+        if (! $collection) {
             return response()->json([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ], 404);
         }
 
@@ -250,7 +237,7 @@ class CollectionController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -262,24 +249,23 @@ class CollectionController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Products removed from collection successfully',
-            'data' => $collection->load('products')
+            'data' => $collection->load('products'),
         ]);
     }
 
     /**
      * Soft delete the specified collection.
-     *
-     * @param int $id
-     * @return JsonResponse
      */
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
         $collection = ProductCollection::find($id);
 
-        if (!$collection) {
+        if (! $collection) {
             return response()->json([
                 'success' => false,
-                'message' => 'Collection not found'
+                'message' => 'Collection not found',
             ], 404);
         }
 
@@ -287,7 +273,7 @@ class CollectionController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Collection deleted successfully'
+            'message' => 'Collection deleted successfully',
         ]);
     }
 }

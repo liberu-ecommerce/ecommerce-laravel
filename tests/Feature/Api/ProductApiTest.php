@@ -3,9 +3,11 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -17,7 +19,9 @@ class ProductApiTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->user = User::factory()->create();
+        // Product write endpoints are admin-gated; the CRUD tests below act as an admin.
+        Role::findOrCreate('super_admin', 'web');
+        $this->user = User::factory()->create()->assignRole('super_admin');
     }
 
     public function test_unauthenticated_cannot_list_products(): void
@@ -66,7 +70,7 @@ class ProductApiTest extends TestCase
     public function test_can_create_product(): void
     {
         Sanctum::actingAs($this->user);
-        $category = \App\Models\ProductCategory::factory()->create();
+        $category = ProductCategory::factory()->create();
 
         $payload = [
             'name' => 'New Product',
