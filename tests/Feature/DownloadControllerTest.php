@@ -32,7 +32,7 @@ class DownloadControllerTest extends TestCase
     {
         $product = $this->makeProduct();
 
-        $response = $this->get("/download/category/{$product->id}");
+        $response = $this->get(route('download.generate-link', $product->id));
 
         $response->assertRedirect('/login');
     }
@@ -41,7 +41,7 @@ class DownloadControllerTest extends TestCase
     {
         $product = $this->makeProduct();
 
-        $response = $this->get("/download/file/category/{$product->id}");
+        $response = $this->get(route('download.serve-file', $product->id));
 
         $response->assertRedirect('/login');
     }
@@ -52,7 +52,7 @@ class DownloadControllerTest extends TestCase
         $product = $this->makeProduct();
 
         // No DownloadableProduct record = not downloadable
-        $response = $this->actingAs($user)->get("/download/category/{$product->slug}");
+        $response = $this->actingAs($user)->get(route('download.generate-link', $product->id));
 
         $response->assertStatus(404);
     }

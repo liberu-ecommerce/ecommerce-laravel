@@ -6,37 +6,36 @@ use App\Models\DownloadableProduct;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DownloadController extends Controller
 {
-    public function generateSecureLink(Request $request, $productId)
+    public function generateSecureLink(Request $request, $product)
     {
-        $downloadableProduct = DownloadableProduct::where('product_id', $productId)
+        $downloadableProduct = DownloadableProduct::where('product_id', $product)
             ->firstOrFail();
 
-        if (!$downloadableProduct->isDownloadable() || !$this->authorizeDownload($request->user(), $downloadableProduct)) {
+        if (! $downloadableProduct->isDownloadable() || ! $this->authorizeDownload($request->user(), $downloadableProduct)) {
             abort(403, 'Download limit reached or not authorized.');
         }
 
         $temporaryUrl = Storage::disk('local')->temporaryUrl(
-            $downloadableProduct->file_url, 
+            $downloadableProduct->file_url,
             now()->addMinutes(5)
         );
 
         return response()->json([
             'url' => $temporaryUrl,
             'expires_in' => 300, // 5 minutes in seconds
-            'downloads_remaining' => $downloadableProduct->download_limit - $downloadableProduct->downloads_count
+            'downloads_remaining' => $downloadableProduct->download_limit - $downloadableProduct->downloads_count,
         ]);
     }
 
-    public function serveFile(Request $request, $productId)
+    public function serveFile(Request $request, $product)
     {
-        $downloadableProduct = DownloadableProduct::where('product_id', $productId)
+        $downloadableProduct = DownloadableProduct::where('product_id', $product)
             ->firstOrFail();
 
-        if (!$downloadableProduct->isDownloadable() || !$this->authorizeDownload($request->user(), $downloadableProduct)) {
+        if (! $downloadableProduct->isDownloadable() || ! $this->authorizeDownload($request->user(), $downloadableProduct)) {
             abort(403, 'Download limit reached or not authorized.');
         }
 
@@ -56,7 +55,7 @@ class DownloadController extends Controller
             return true;
         }
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 

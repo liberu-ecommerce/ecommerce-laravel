@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Factories\PaymentGatewayFactory;
+use App\Jobs\DispatchDropshippingOrder;
+use App\Models\Coupon;
+use App\Models\InventoryLog;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\ShippingMethod;
+use App\Notifications\OrderConfirmationNotification;
+use App\Notifications\SupplierFailureNotification;
+use App\Services\CouponService;
+use App\Services\ShippingService;
+use App\Services\TaxCalculator;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use App\Models\ShippingMethod;
-use App\Services\ShippingService;
-use App\Models\Order;
-use App\Models\Coupon;
-use App\Models\InventoryLog;
-use App\Models\User;
-use Illuminate\Support\Facades\Notification;
-use App\Factories\PaymentGatewayFactory;
-use App\Models\Product;
-use App\Notifications\OrderConfirmationNotification;
-use App\Services\TaxCalculator;
-use App\Services\CouponService;
-use Exception;
 
 class CheckoutController extends Controller
 {
@@ -27,7 +28,9 @@ class CheckoutController extends Controller
     private const OUT_OF_STOCK = 'OUT_OF_STOCK';
 
     protected $shippingService;
+
     protected $taxCalculator;
+
     protected $couponService;
 
     public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CouponService $couponService)
@@ -90,7 +93,7 @@ class CheckoutController extends Controller
         }
 
         $cart = Session::get('cart', []);
-        
+
         if (empty($cart)) {
             return redirect()->route('products.index')
                 ->with('error', 'Your cart is empty');
@@ -99,13 +102,13 @@ class CheckoutController extends Controller
         // Verify inventory before processing
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
-            if (!$product || $product->inventory_count < $item['quantity']) {
+            if (! $product || $product->inventory_count < $item['quantity']) {
                 return redirect()->back()->with('error', 'Some items in your cart are no longer available in the requested quantity.');
             }
         }
 
         // Calculate total amount
-        $subtotal = collect($cart)->sum(function($item) {
+        $subtotal = collect($cart)->sum(function ($item) {
             return $item['price'] * $item['quantity'];
         });
 
@@ -227,20 +230,22 @@ class CheckoutController extends Controller
         if ($totalAmount > 0) {
             if ($request->payment_method === 'stripe' && $request->has('stripeToken')) {
                 $paymentResult = $this->processStripePayment($order, $request->stripeToken);
-            } else if ($request->payment_method === 'paypal' && $request->has('paypal_payment_id')) {
+            } elseif ($request->payment_method === 'paypal' && $request->has('paypal_payment_id')) {
                 $paymentResult = $this->processPayPalPayment($order, $request->paypal_payment_id);
             } else {
                 $this->releaseInventory($order, $cart);
                 $order->transitionTo(Order::STATUS_FAILED, notes: 'Invalid payment information');
+
                 return redirect()->back()
                     ->with('error', 'Invalid payment information. Please try again.');
             }
 
-            if (!$paymentResult['success']) {
+            if (! $paymentResult['success']) {
                 $this->releaseInventory($order, $cart);
-                $order->transitionTo(Order::STATUS_FAILED, notes: 'Payment failed: ' . ($paymentResult['error'] ?? 'unknown'));
+                $order->transitionTo(Order::STATUS_FAILED, notes: 'Payment failed: '.($paymentResult['error'] ?? 'unknown'));
+
                 return redirect()->back()
-                    ->with('error', 'Payment failed: ' . ($paymentResult['error'] ?? 'Please try again.'));
+                    ->with('error', 'Payment failed: '.($paymentResult['error'] ?? 'Please try again.'));
             }
         }
 
@@ -263,17 +268,17 @@ class CheckoutController extends Controller
                 $order->update(['supplier_id' => $supplierId]);
 
                 // dispatch a job to place the supplier order asynchronously
-                \App\Jobs\DispatchDropshippingOrder::dispatch($order->id, $supplierId);
+                DispatchDropshippingOrder::dispatch($order->id, $supplierId);
 
                 // set temporary status indicating background placement
                 $order->transitionTo(Order::STATUS_SUPPLIER_QUEUED, notes: "Supplier order queued ({$supplierId})");
 
             } catch (Exception $e) {
-                \Log::error('Dropshipping dispatch error: ' . $e->getMessage());
-                $order->transitionTo(Order::STATUS_SUPPLIER_FAILED, notes: 'Dropshipping dispatch error: ' . $e->getMessage());
+                \Log::error('Dropshipping dispatch error: '.$e->getMessage());
+                $order->transitionTo(Order::STATUS_SUPPLIER_FAILED, notes: 'Dropshipping dispatch error: '.$e->getMessage());
 
                 Notification::route('mail', config('mail.from.address'))
-                    ->notify(new \App\Notifications\SupplierFailureNotification("Error queuing dropshipping order for order {$order->id}: " . $e->getMessage()));
+                    ->notify(new SupplierFailureNotification("Error queuing dropshipping order for order {$order->id}: ".$e->getMessage()));
 
                 return redirect()->route('checkout.confirmation', ['order' => $order->id])
                     ->with('warning', 'Order placed but an error occurred while queuing the supplier order. Our team will follow up.');
@@ -289,13 +294,11 @@ class CheckoutController extends Controller
                 if ($orderItem && $product) {
                     // Generate secure download link with expiration (30 days)
                     $token = Str::random(64);
-                    $categoryId = $product->category ? $product->category->id : 'general';
                     $downloadLink = route('download.serve-file', [
-                        'category' => $categoryId,
                         'product' => $product->id,
-                        'token' => $token
+                        'token' => $token,
                     ]);
-                    
+
                     $orderItem->update([
                         'download_link' => $token, // Store token, not full URL
                         'download_expires_at' => now()->addDays(30),
@@ -308,7 +311,7 @@ class CheckoutController extends Controller
         // Clear cart and coupon
         Session::forget('cart');
         Session::forget('coupon');
-        
+
         return redirect()->route('checkout.confirmation', ['order' => $order->id])
             ->with('success', 'Order placed successfully!');
     }
@@ -316,14 +319,14 @@ class CheckoutController extends Controller
     public function showConfirmation(Order $order)
     {
         return view('checkout.confirmation', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
 
     public function guestCheckout(Request $request)
     {
         $cart = Session::get('cart', []);
-        
+
         // Store cart in guest session
         Session::put('guest_cart', $cart);
         Session::put('is_guest', true);
@@ -334,9 +337,10 @@ class CheckoutController extends Controller
     protected function processPayment($order, $paymentMethod)
     {
         $paymentGateway = PaymentGatewayFactory::create($paymentMethod);
+
         return $paymentGateway->processPayment($order->total_amount, [
             'order_id' => $order->id,
-            'customer_email' => $order->customer_email
+            'customer_email' => $order->customer_email,
         ]);
     }
 
@@ -369,30 +373,33 @@ class CheckoutController extends Controller
     private function hasPhysicalProducts($cart)
     {
         foreach ($cart as $item) {
-            if (!$item['is_downloadable']) {
+            if (! $item['is_downloadable']) {
                 return true;
             }
         }
+
         return false;
     }
 
     protected function processStripePayment($order, $stripeToken)
     {
         $paymentGateway = PaymentGatewayFactory::create('stripe');
+
         return $paymentGateway->processPayment($order->total_amount, [
             'order_id' => $order->id,
             'customer_email' => $order->customer_email,
-            'token' => $stripeToken
+            'token' => $stripeToken,
         ]);
     }
 
     protected function processPayPalPayment($order, $paypalPaymentId)
     {
         $paymentGateway = PaymentGatewayFactory::create('paypal');
+
         return $paymentGateway->processPayment($order->total_amount, [
             'order_id' => $order->id,
             'customer_email' => $order->customer_email,
-            'payment_id' => $paypalPaymentId
+            'payment_id' => $paypalPaymentId,
         ]);
     }
 }

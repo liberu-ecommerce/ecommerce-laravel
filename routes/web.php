@@ -144,8 +144,8 @@ Route::delete('/product/{category}/{product}/compare', [ProductController::class
 Route::delete('/products/compare/clear', [ProductController::class, 'clearCompare'])->name('products.clearCompare');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/download/{category}/{product}', [DownloadController::class, 'generateSecureLink'])->name('download.generate-link');
-    Route::get('/download/file/{category}/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
+    Route::get('/download/{product}', [DownloadController::class, 'generateSecureLink'])->name('download.generate-link');
+    Route::get('/download/file/{product}', [DownloadController::class, 'serveFile'])->name('download.serve-file');
 
     // Invoice routes
     Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
