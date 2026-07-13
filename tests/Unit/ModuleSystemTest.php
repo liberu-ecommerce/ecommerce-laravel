@@ -6,10 +6,7 @@ use App\Modules\BaseModule;
 use App\Modules\Contracts\ModuleInterface;
 use App\Modules\Events\ModuleDisabled;
 use App\Modules\Events\ModuleEnabled;
-use App\Modules\Events\ModuleInstalled;
-use App\Modules\Events\ModuleUninstalled;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
@@ -20,7 +17,8 @@ class ModuleSystemTest extends TestCase
 
     private function makeModule(string $name = 'TestModule'): BaseModule
     {
-        return new class($name) extends BaseModule {
+        return new class($name) extends BaseModule
+        {
             private string $moduleName;
 
             public function __construct(string $name)
@@ -39,7 +37,9 @@ class ModuleSystemTest extends TestCase
             }
 
             protected function runMigrations(): void {}
+
             protected function publishAssets(): void {}
+
             protected function removeAssets(): void {}
         };
     }
@@ -133,15 +133,17 @@ class ModuleSystemTest extends TestCase
         $this->assertIsArray($module->getConfig());
     }
 
-    public function test_module_uses_cache_for_enabled_state(): void
+    public function test_module_persists_enabled_state_to_the_database(): void
     {
+        // The modules table is the single source of truth (read by ModuleServiceProvider
+        // to gate registration) — not a cache flag, which drifted and was cache:clear'd.
         $module = $this->makeModule('CacheModule');
         $module->enable();
 
-        $this->assertTrue(Cache::get('module.CacheModule.enabled'));
+        $this->assertDatabaseHas('modules', ['name' => 'CacheModule', 'enabled' => true]);
 
         $module->disable();
 
-        $this->assertFalse(Cache::get('module.CacheModule.enabled'));
+        $this->assertDatabaseHas('modules', ['name' => 'CacheModule', 'enabled' => false]);
     }
 }
