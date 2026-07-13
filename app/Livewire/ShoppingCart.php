@@ -2,10 +2,10 @@
 
 namespace App\Livewire;
 
+use App\Models\Product;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Illuminate\Support\Facades\Session;
-use App\Models\Product;
 
 class ShoppingCart extends Component
 {
@@ -27,29 +27,37 @@ class ShoppingCart extends Component
     }
 
     #[On('addToCart')]
-    public function addToCart(int $productId, string $name, float $price, int $quantity = 1, bool $isDownloadable = false, float $weight = 0): void
+    public function addToCart(int $productId, string $name = '', float $price = 0, int $quantity = 1, bool $isDownloadable = false, float $weight = 0): void
     {
+        // Never trust the dispatched name/price/isDownloadable/weight — the checkout
+        // charges whatever the session cart holds, so a client could set price=0.01,
+        // forge the downloadable flag to skip the stock gate, or send a negative
+        // quantity. Derive everything from the Product and clamp the quantity.
         $product = Product::findOrFail($productId);
+        $quantity = max(1, $quantity);
+        $isDownloadable = (bool) $product->is_downloadable;
 
-        if (!$isDownloadable && $product->inventory_count < $quantity) {
+        if (! $isDownloadable && $product->inventory_count < $quantity) {
             session()->flash('error', 'Not enough inventory available.');
+
             return;
         }
 
         if (isset($this->items[$productId])) {
             $newQuantity = $this->items[$productId]['quantity'] + $quantity;
-            if (!$isDownloadable && $newQuantity > $product->inventory_count) {
+            if (! $isDownloadable && $newQuantity > $product->inventory_count) {
                 session()->flash('error', 'Cannot add more items than available in stock.');
+
                 return;
             }
             $this->items[$productId]['quantity'] = $newQuantity;
         } else {
             $this->items[$productId] = [
-                'name' => $name,
-                'price' => $price,
+                'name' => $product->name,
+                'price' => (float) $product->price,
                 'quantity' => $quantity,
                 'is_downloadable' => $isDownloadable,
-                'weight' => $weight,
+                'weight' => (float) ($product->weight ?? 0),
             ];
         }
 
@@ -61,10 +69,11 @@ class ShoppingCart extends Component
     public function hasPhysicalProducts(): bool
     {
         foreach ($this->items as $item) {
-            if (!$item['is_downloadable']) {
+            if (! $item['is_downloadable']) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -72,23 +81,27 @@ class ShoppingCart extends Component
     {
         if ($quantity < 1) {
             $this->addError('quantity', 'Quantity must be at least 1');
+
             return;
         }
 
-        if (!isset($this->items[$productId])) {
+        if (! isset($this->items[$productId])) {
             $this->addError('product', 'Product not found in cart');
+
             return;
         }
 
         $isDownloadable = $this->items[$productId]['is_downloadable'] ?? false;
-        if (!$isDownloadable) {
+        if (! $isDownloadable) {
             $product = Product::find($productId);
-            if (!$product) {
+            if (! $product) {
                 $this->addError('product', 'Product not found');
+
                 return;
             }
             if ($quantity > $product->inventory_count) {
                 session()->flash('error', 'Requested quantity exceeds available stock.');
+
                 return;
             }
         }
@@ -121,7 +134,7 @@ class ShoppingCart extends Component
     {
         return round(array_reduce(
             $this->items,
-            fn(float $carry, array $item) => $carry + ($item['price'] * $item['quantity']),
+            fn (float $carry, array $item) => $carry + ($item['price'] * $item['quantity']),
             0.0
         ), 2);
     }

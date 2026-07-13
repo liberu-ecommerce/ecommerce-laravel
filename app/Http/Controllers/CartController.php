@@ -21,7 +21,11 @@ class CartController extends Controller
 
     public function add(Request $request, Product $product)
     {
-        $quantity = $request->input('quantity', 1);
+        // Guard the quantity — a negative value passes the `inventory_count < $quantity`
+        // check and, at checkout, drags the total down and INCREMENTS stock via the
+        // atomic decrement. (add() previously skipped the min:1 guard that update() has.)
+        $request->validate(['quantity' => 'nullable|integer|min:1']);
+        $quantity = (int) $request->input('quantity', 1);
 
         if ($product->inventory_count < $quantity) {
             return redirect()->back()->with('error', 'Not enough inventory available.');
