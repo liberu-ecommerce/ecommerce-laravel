@@ -2,112 +2,98 @@
 
 namespace App\Services;
 
-use Exception;
-use PayPal\Api\Agreement;
-use PayPal\Api\Payer;
-use PayPal\Api\PayerInfo;
-use PayPal\Api\Plan;
-use PayPal\Api\ShippingAddress;
-use PayPal\Auth\OAuthTokenCredential;
-use Illuminate\Support\Facades\Config;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use Throwable;
 
+/**
+ * PayPal subscriptions on the maintained srmklive/paypal SDK (Subscriptions v1 REST
+ * API). Replaces the abandoned paypal/rest-api-sdk-php Agreement flow — whose
+ * setupSubscriptionDetails() constructed PayPal\Api\* classes that no longer exist,
+ * so createSubscription() fataled (an uncaught Error) the moment it was called.
+ */
 class SubscriptionService
 {
-    protected $paypalContext;
+    private ?PayPalClient $provider = null;
 
-    public function __construct()
+    /** Inject a preconfigured client (used in tests). */
+    public function setProvider(PayPalClient $provider): void
     {
-        // $this->paypalContext = new ApiContext(new OAuthTokenCredential(
-        //     Config::get('services.paypal.client_id'),
-        //     Config::get('services.paypal.secret')
-        // ));
-        // $this->paypalContext->setConfig(Config::get('services.paypal.settings'));
+        $this->provider = $provider;
     }
 
+    /**
+     * Create a PayPal subscription against an already-provisioned billing plan. The
+     * returned approval_url is where the buyer approves it.
+     */
     public function createSubscription($paymentMethodId, $planId, $userDetails)
     {
         try {
-            $agreement = $this->setupSubscriptionDetails($planId, $userDetails);
-        // return $this->createSubscriptionOnPaypal($agreement);
-            return ['success' => true, 'agreementID' => $agreement->getId()];
-        } catch (Exception $e) {
+            $result = $this->provider()->createSubscription([
+                'plan_id' => $planId,
+                'subscriber' => array_filter([
+                    'email_address' => $userDetails['email'] ?? null,
+                ]),
+                'application_context' => [
+                    'return_url' => url('/paypal/subscription/success'),
+                    'cancel_url' => url('/paypal/subscription/cancel'),
+                ],
+            ]);
+
+            if (! empty($result['id'])) {
+                return [
+                    'success' => true,
+                    'subscription_id' => $result['id'],
+                    'status' => $result['status'] ?? null,
+                    'approval_url' => $this->approvalLink($result),
+                ];
+            }
+
+            return ['success' => false, 'error' => $result['message'] ?? 'PayPal subscription was not created.'];
+        } catch (Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function cancelSubscription($subscriptionId)
+    {
+        try {
+            $this->provider()->cancelSubscription($subscriptionId, 'Cancelled by customer');
+
+            return ['success' => true, 'message' => 'Subscription cancelled successfully'];
+        } catch (Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
     public function updateSubscription($subscriptionId, $planId)
     {
-        // Logic to update subscription's plan on PayPal
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['success' => true, 'message' => 'Subscription updated successfully'];
+        // ponytail: swapping a PayPal subscription's plan needs the
+        // /billing/subscriptions/{id}/revise endpoint, which srmklive does not expose
+        // (its updateSubscription only PATCHes fields). Return an honest failure
+        // instead of the old fake success; wire revise if plan changes are needed.
+        return ['success' => false, 'error' => 'Changing a PayPal subscription plan is not supported.'];
     }
 
-    public function cancelSubscription($subscriptionId)
+    private function provider(): PayPalClient
     {
-        // Logic to cancel subscription on PayPal
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['success' => true, 'message' => 'Subscription cancelled successfully'];
-    }
-
-    private function setupSubscriptionDetails($planId, $userDetails)
-    {
-        $payer = new Payer();
-        $payer->setPaymentMethod('paypal');
-
-        $plan = new Plan();
-        $plan->setId($planId);
-
-        $payerInfo = new PayerInfo();
-        $payerInfo->setEmail($userDetails['email']);
-
-        $shippingAddress = new ShippingAddress();
-        $shippingAddress->setLine1($userDetails['address']['line1'])
-                        ->setCity($userDetails['address']['city'])
-                        ->setState($userDetails['address']['state'])
-                        ->setPostalCode($userDetails['address']['postalCode'])
-                        ->setCountryCode($userDetails['address']['countryCode']);
-
-        $agreement = new Agreement();
-        $agreement->setName('Subscription Agreement')
-                  ->setDescription('Subscription Plan Agreement')
-                  ->setStartDate(gmdate("Y-m-d\TH:i:s\Z", strtotime("+30 days", time())))
-                  ->setPayer($payer)
-                  ->setPlan($plan)
-                  ->setPayerInfo($payerInfo)
-                  ->setShippingAddress($shippingAddress);
-
-        return $agreement;
-    }
-
-    private function createSubscriptionOnPaypal($agreement)
-    {
-        try {
-            $agreement->create($this->paypalContext);
-            return ['success' => true, 'agreementID' => $agreement->getId()];
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+        if ($this->provider === null) {
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $provider->getAccessToken();
+            $this->provider = $provider;
         }
-   
-        // Prepare update details
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['subscriptionId' => $subscriptionId, 'planId' => $planId];
+
+        return $this->provider;
     }
 
-    private function updateSubscriptionOnPaypal($updateDetails)
+    private function approvalLink(array $result): ?string
     {
-        // Perform update on PayPal
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['success' => true, 'message' => 'Subscription updated successfully'];
-    
-        // Prepare cancellation details
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['subscriptionId' => $subscriptionId];
-    }
+        foreach ($result['links'] ?? [] as $link) {
+            if (($link['rel'] ?? null) === 'approve') {
+                return $link['href'] ?? null;
+            }
+        }
 
-    private function cancelSubscriptionOnPaypal($cancellationDetails)
-    {
-        // Perform cancellation on PayPal
-        // This is a placeholder as the actual implementation would depend on PayPal's API and the application's design
-        return ['success' => true, 'message' => 'Subscription cancelled successfully'];
+        return null;
     }
 }
