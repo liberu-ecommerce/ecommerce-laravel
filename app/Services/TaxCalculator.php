@@ -45,22 +45,7 @@ class TaxCalculator
             // Find matching tax rates
             $rates = TaxRate::findMatchingRates($country, $state, $city, $zipCode, $taxClassId);
 
-            foreach ($rates as $rate) {
-                $taxAmount = $rate->calculateTax($itemSubtotal);
-                $totalTax += $taxAmount;
-
-                // Group by rate for tax lines
-                $rateKey = $rate->id;
-                if (! isset($taxLines[$rateKey])) {
-                    $taxLines[$rateKey] = [
-                        'label' => $rate->name,
-                        'rate' => $rate->rate,
-                        'amount' => 0,
-                        'compound' => $rate->compound,
-                    ];
-                }
-                $taxLines[$rateKey]['amount'] += $taxAmount;
-            }
+            $this->applyRates($rates, $itemSubtotal, $totalTax, $taxLines);
         }
 
         // Calculate shipping tax if applicable
@@ -68,27 +53,53 @@ class TaxCalculator
             $shippingRates = TaxRate::findMatchingRates($country, $state, $city, $zipCode)
                 ->where('shipping', true);
 
-            foreach ($shippingRates as $rate) {
-                $taxAmount = $rate->calculateTax($shippingCost);
-                $totalTax += $taxAmount;
-
-                $rateKey = $rate->id;
-                if (! isset($taxLines[$rateKey])) {
-                    $taxLines[$rateKey] = [
-                        'label' => $rate->name.' (Shipping)',
-                        'rate' => $rate->rate,
-                        'amount' => 0,
-                        'compound' => $rate->compound,
-                    ];
-                }
-                $taxLines[$rateKey]['amount'] += $taxAmount;
-            }
+            $this->applyRates($shippingRates, $shippingCost, $totalTax, $taxLines, ' (Shipping)');
         }
 
         return [
             'total' => round($totalTax, 2),
             'lines' => array_values($taxLines),
         ];
+    }
+
+    /**
+     * Apply a set of tax rates to a base amount, honouring compound (tax-on-tax)
+     * rates: simple rates are computed on the base, then compound rates on the base
+     * plus the simple tax. Accumulates into $totalTax and the grouped $taxLines.
+     *
+     * @param  iterable<TaxRate>  $rates
+     */
+    private function applyRates(iterable $rates, float $base, float &$totalTax, array &$taxLines, string $labelSuffix = ''): void
+    {
+        $record = function (TaxRate $rate, float $on) use (&$totalTax, &$taxLines, $labelSuffix): float {
+            $amount = $rate->calculateTax($on);
+            $totalTax += $amount;
+
+            $key = $rate->id;
+            if (! isset($taxLines[$key])) {
+                $taxLines[$key] = [
+                    'label' => $rate->name.$labelSuffix,
+                    'rate' => $rate->rate,
+                    'amount' => 0,
+                    'compound' => $rate->compound,
+                ];
+            }
+            $taxLines[$key]['amount'] += $amount;
+
+            return $amount;
+        };
+
+        $simpleTax = 0.0;
+        foreach ($rates as $rate) {
+            if (! $rate->compound) {
+                $simpleTax += $record($rate, $base);
+            }
+        }
+        foreach ($rates as $rate) {
+            if ($rate->compound) {
+                $record($rate, $base + $simpleTax);
+            }
+        }
     }
 
     /**
