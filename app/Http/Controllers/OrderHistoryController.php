@@ -2,30 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 
 class OrderHistoryController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-        $orders = Order::where('customer_id', $user->id)
-                       ->orderBy('created_at', 'desc')
-                       ->paginate(10);
+        // Order ownership is orders.user_id (set at authenticated checkout), not
+        // customer_id (a FK to the unrelated customers table, never populated) —
+        // scoping on customer_id made this list permanently empty.
+        $orders = Auth::user()->orders()
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view('orders.history', compact('orders'));
     }
 
     public function show($id)
     {
-        $order = Order::findOrFail($id);
-
-        // Ensure the order belongs to the authenticated user
-        if ($order->customer_id !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        // Scope the lookup to the user's own orders: a foreign or guest order is
+        // simply not found (404), which is both the ownership check and the fix
+        // for owners being 403'd off their own orders.
+        $order = Auth::user()->orders()->findOrFail($id);
 
         return view('orders.show', compact('order'));
     }
