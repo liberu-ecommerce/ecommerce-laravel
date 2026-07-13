@@ -17,12 +17,12 @@ class WishlistControllerTest extends TestCase
     {
         $category = ProductCategory::create([
             'name' => 'Wishlist Category',
-            'slug' => 'wish-cat-' . uniqid(),
+            'slug' => 'wish-cat-'.uniqid(),
         ]);
 
         return Product::create(array_merge([
             'name' => 'Wishlist Product',
-            'slug' => 'wish-prod-' . uniqid(),
+            'slug' => 'wish-prod-'.uniqid(),
             'price' => 49.99,
             'category_id' => $category->id,
             'inventory_count' => 10,
@@ -104,24 +104,38 @@ class WishlistControllerTest extends TestCase
         $response = $this->actingAs($user)->post(route('wishlist.share'));
 
         $response->assertRedirect(route('wishlist.index'));
-        $this->assertDatabaseHas('wishlists', [
-            'user_id' => $user->id,
-        ]);
-        $this->assertNotNull(
-            Wishlist::where('user_id', $user->id)->value('share_token')
-        );
+        // The token now lives on the user (one shared link per user), not per row.
+        $this->assertNotNull($user->fresh()->wishlist_share_token);
+    }
+
+    public function test_share_wishlist_with_multiple_items_works_and_shows_all(): void
+    {
+        $user = User::factory()->create();
+        $p1 = $this->makeProduct();
+        $p2 = $this->makeProduct();
+        Wishlist::create(['user_id' => $user->id, 'product_id' => $p1->id]);
+        Wishlist::create(['user_id' => $user->id, 'product_id' => $p2->id]);
+
+        // Previously threw a unique-constraint 500 (same token written to every row).
+        $this->actingAs($user)->post(route('wishlist.share'))
+            ->assertRedirect(route('wishlist.index'));
+
+        $token = $user->fresh()->wishlist_share_token;
+        $this->assertNotNull($token);
+
+        // The shared view exposes the user's WHOLE wishlist, not a single item.
+        $this->get(route('wishlist.shared', $token))
+            ->assertStatus(200)
+            ->assertViewHas('wishlist', fn ($wishlist) => $wishlist->count() === 2);
     }
 
     public function test_shared_wishlist_is_accessible_without_auth(): void
     {
         $user = User::factory()->create();
+        $user->wishlist_share_token = 'public-share-token';
+        $user->save();
         $product = $this->makeProduct();
-
-        Wishlist::create([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'share_token' => 'public-share-token',
-        ]);
+        Wishlist::create(['user_id' => $user->id, 'product_id' => $product->id]);
 
         $response = $this->get(route('wishlist.shared', 'public-share-token'));
 
