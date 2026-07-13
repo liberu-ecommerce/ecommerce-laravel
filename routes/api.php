@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DropshippingController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderRefundController;
@@ -72,6 +73,12 @@ Route::middleware('auth:sanctum')->prefix('returns')->group(function () {
     Route::post('/{returnRequest}/approve', [ReturnRequestController::class, 'approve']);
     Route::post('/{returnRequest}/received', [ReturnRequestController::class, 'markReceived']);
 });
+// Customer profile API (the authenticated user's own customer record).
+Route::middleware('auth:sanctum')->prefix('customer')->group(function () {
+    Route::get('/', [CustomerController::class, 'show']);
+    Route::put('/', [CustomerController::class, 'update']);
+});
+
 // Cart API routes (headless: read/manage the authenticated user's persistent cart).
 Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'index']);
