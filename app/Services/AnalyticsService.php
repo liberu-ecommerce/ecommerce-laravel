@@ -143,7 +143,13 @@ class AnalyticsService
         $customerSegments = DB::query()
             ->fromSub(
                 DB::table('customers')
-                    ->leftJoin('orders', 'customers.id', '=', 'orders.customer_id')
+                    // Count only paid orders — pending/failed/cancelled orders would
+                    // otherwise inflate a customer into a higher segment. Keep it in the
+                    // JOIN (not a WHERE) so customers with no paid orders still show as 'No Orders'.
+                    ->leftJoin('orders', function ($join) {
+                        $join->on('customers.id', '=', 'orders.customer_id')
+                            ->where('orders.payment_status', '=', 'paid');
+                    })
                     ->select(
                         'customers.id',
                         DB::raw("
@@ -195,9 +201,12 @@ class AnalyticsService
      */
     public function getInventoryInsights(): array
     {
-        // Low stock products
-        $lowStockProducts = Product::whereNotNull('low_stock_threshold')
-            ->whereColumn('inventory_count', '<=', 'low_stock_threshold')
+        // Low stock products — the list is capped for display; low_stock_count is the
+        // true total so the dashboard stat doesn't silently plateau at the cap.
+        $lowStockQuery = Product::whereNotNull('low_stock_threshold')
+            ->whereColumn('inventory_count', '<=', 'low_stock_threshold');
+        $lowStockCount = (clone $lowStockQuery)->count();
+        $lowStockProducts = $lowStockQuery
             ->select('id', 'name', 'inventory_count', 'low_stock_threshold')
             ->orderBy('inventory_count')
             ->limit(20)
@@ -229,6 +238,7 @@ class AnalyticsService
 
         return [
             'low_stock_products' => $lowStockProducts,
+            'low_stock_count' => $lowStockCount,
             'out_of_stock_count' => $outOfStockCount,
             'inventory_value' => round($inventoryValue, 2),
             'stock_status' => $stockStatus,
