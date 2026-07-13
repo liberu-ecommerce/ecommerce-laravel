@@ -266,6 +266,32 @@
                             </div>
                         </div>
                     </div>
+                    @else
+                    <!-- Billing Location — a digital-only order still needs a country so it can be taxed. -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100">
+                            <h2 class="text-lg font-semibold text-gray-900">Billing Location</h2>
+                            <p class="text-sm text-gray-500 mt-0.5">Used to calculate tax on your order.</p>
+                        </div>
+                        <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="country" class="block text-sm font-medium text-gray-700 mb-1.5">Country <span class="text-red-500">*</span></label>
+                                <input type="text" id="country" name="country" maxlength="2" required placeholder="ISO code, e.g. US, GB" value="{{ old('country') }}"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('country') border-red-500 @enderror">
+                                @error('country')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label for="state" class="block text-sm font-medium text-gray-700 mb-1.5">State / Province</label>
+                                <input type="text" id="state" name="state" value="{{ old('state') }}"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-1.5">Postal / ZIP code</label>
+                                <input type="text" id="postal_code" name="postal_code" value="{{ old('postal_code') }}"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                    </div>
                     @endif
 
                     @if($total > 0)

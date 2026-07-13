@@ -79,6 +79,7 @@ class CheckoutControllerTest extends TestCase
     {
         $response = $this->post(route('checkout.process'), [
             'email' => 'test@example.com',
+            'country' => 'US',
             'payment_method' => 'cod',
         ]);
 

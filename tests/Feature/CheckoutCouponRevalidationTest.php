@@ -81,6 +81,7 @@ class CheckoutCouponRevalidationTest extends TestCase
             'email' => 'buyer@example.com',
             'has_physical_products' => 0,
             'shipping_address' => '123 Test St, CA 90001',
+            'country' => 'US',
             'payment_method' => 'stripe',
             'stripeToken' => 'tok_test',
         ];

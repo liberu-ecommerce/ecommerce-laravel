@@ -77,7 +77,9 @@ class CheckoutController extends Controller
             'shipping_address' => 'required_if:has_physical_products,1|string',
             'shipping_method_id' => 'required_if:has_physical_products,1|exists:shipping_methods,id',
             // Structured address drives tax (country) and is required for physical orders.
-            'country' => 'required_if:has_physical_products,1|nullable|string|size:2',
+            // Required for every order — a digital-only order still needs the buyer's
+            // country so digital goods are taxed (VAT-on-digital), not just physical ones.
+            'country' => 'required|string|size:2',
             'state' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
