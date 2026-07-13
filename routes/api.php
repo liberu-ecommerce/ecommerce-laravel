@@ -51,8 +51,13 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::post('/{order}/returns', [ReturnRequestController::class, 'store']);
 });
 
-// Return approval (staff-only, role checked in the controller) — spawns the refund.
-Route::middleware('auth:sanctum')->post('/returns/{returnRequest}/approve', [ReturnRequestController::class, 'approve']);
+// Returns: customers read their own, staff read/act on all (roles checked in the controller).
+Route::middleware('auth:sanctum')->prefix('returns')->group(function () {
+    Route::get('/', [ReturnRequestController::class, 'index']);
+    Route::get('/{returnRequest}', [ReturnRequestController::class, 'show']);
+    Route::post('/{returnRequest}/approve', [ReturnRequestController::class, 'approve']);
+    Route::post('/{returnRequest}/received', [ReturnRequestController::class, 'markReceived']);
+});
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
     Route::get('/', [CollectionController::class, 'index']);

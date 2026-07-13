@@ -14,6 +14,47 @@ class ReturnRequestController extends Controller
     private const RETURNABLE = [Order::STATUS_PAID, Order::STATUS_COMPLETED];
 
     /**
+     * List returns. Customers see only their own; staff see all (with an optional
+     * ?status filter for working the queue).
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = ReturnRequest::with(['items', 'order'])->latest();
+
+        if ($request->user()->hasRole(['super_admin', 'admin'])) {
+            $query->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')));
+        } else {
+            $query->where('customer_id', $request->user()->id);
+        }
+
+        return response()->json($query->paginate(15));
+    }
+
+    /**
+     * A single return — the owner's own, or any for staff. A foreign return is
+     * not found (404), so there is no existence leak.
+     */
+    public function show(Request $request, ReturnRequest $returnRequest): JsonResponse
+    {
+        $isStaff = $request->user()->hasRole(['super_admin', 'admin']);
+        abort_unless($isStaff || (int) $returnRequest->customer_id === (int) $request->user()->id, 404);
+
+        return response()->json($returnRequest->load(['items', 'order']));
+    }
+
+    /**
+     * Staff records that the returned goods physically arrived.
+     */
+    public function markReceived(Request $request, ReturnRequest $returnRequest): JsonResponse
+    {
+        abort_unless($request->user()?->hasRole(['super_admin', 'admin']), 403);
+
+        $returnRequest->markAsReceived();
+
+        return response()->json(['message' => 'Return marked as received.', 'return' => $returnRequest->fresh()]);
+    }
+
+    /**
      * A customer requests a return for their own order. Scoped to the
      * authenticated user's orders — a foreign order is not found (404).
      */
