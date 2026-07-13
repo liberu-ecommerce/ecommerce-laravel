@@ -3,22 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\CartService;
 use App\Services\CouponService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
 class CartController extends Controller
 {
+    /** Mirror the session cart to the signed-in user's persistent cart (no-op for guests). */
+    private function persistCart(): void
+    {
+        if (Auth::check()) {
+            app(CartService::class)->persistForUser(Auth::user(), Session::get('cart', []));
+        }
+    }
+
     public function add(Request $request, Product $product)
     {
         $quantity = $request->input('quantity', 1);
-        
+
         if ($product->inventory_count < $quantity) {
             return redirect()->back()->with('error', 'Not enough inventory available.');
         }
 
         $cart = Session::get('cart', []);
-        
+
         if (isset($cart[$product->id])) {
             $cart[$product->id]['quantity'] += $quantity;
         } else {
@@ -31,7 +41,8 @@ class CartController extends Controller
         }
 
         Session::put('cart', $cart);
-        
+        $this->persistCart();
+
         return redirect()->back()->with('success', 'Product added to cart successfully!');
     }
 
@@ -43,19 +54,19 @@ class CartController extends Controller
     public function update(Request $request, $productId)
     {
         $quantity = $request->input('quantity', 1);
-        
+
         if ($quantity < 1) {
             return redirect()->back()->with('error', 'Quantity must be at least 1.');
         }
 
         $cart = Session::get('cart', []);
-        
-        if (!isset($cart[$productId])) {
+
+        if (! isset($cart[$productId])) {
             return redirect()->back()->with('error', 'Product not found in cart.');
         }
 
         $product = Product::find($productId);
-        if (!$product) {
+        if (! $product) {
             return redirect()->back()->with('error', 'Product not found.');
         }
 
@@ -65,20 +76,23 @@ class CartController extends Controller
 
         $cart[$productId]['quantity'] = $quantity;
         Session::put('cart', $cart);
-        
+        $this->persistCart();
+
         return redirect()->back()->with('success', 'Cart updated successfully!');
     }
 
     public function remove($productId)
     {
         $cart = Session::get('cart', []);
-        
+
         if (isset($cart[$productId])) {
             unset($cart[$productId]);
             Session::put('cart', $cart);
+            $this->persistCart();
+
             return redirect()->back()->with('success', 'Product removed from cart successfully!');
         }
-        
+
         return redirect()->back()->with('error', 'Product not found in cart.');
     }
 
@@ -86,6 +100,8 @@ class CartController extends Controller
     {
         Session::forget('cart');
         Session::forget('coupon');
+        $this->persistCart();
+
         return redirect()->back()->with('success', 'Cart cleared successfully!');
     }
 
@@ -112,6 +128,7 @@ class CartController extends Controller
                 'discount' => $result['discount'],
                 'coupon_id' => $result['coupon']->id,
             ]);
+
             return redirect()->back()->with('success', $result['message']);
         }
 
@@ -121,6 +138,7 @@ class CartController extends Controller
     public function removeCoupon()
     {
         Session::forget('coupon');
+
         return redirect()->back()->with('success', 'Coupon removed successfully!');
     }
 }
