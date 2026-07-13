@@ -16,16 +16,16 @@ class InventoryStatsWidget extends BaseWidget
         $insights = $analyticsService->getInventoryInsights();
 
         return [
-            Stat::make('Inventory Value', '$' . number_format($insights['inventory_value'], 2))
+            Stat::make('Inventory Value', '$'.number_format($insights['inventory_value'], 2))
                 ->description('Total value of current inventory')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('success'),
-            
-            Stat::make('Low Stock Items', number_format(count($insights['low_stock_products'])))
+
+            Stat::make('Low Stock Items', number_format($insights['low_stock_count']))
                 ->description('Products below threshold')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color('warning'),
-            
+
             Stat::make('Out of Stock', number_format($insights['out_of_stock_count']))
                 ->description('Products unavailable')
                 ->descriptionIcon('heroicon-m-x-circle')
