@@ -3,12 +3,24 @@
 namespace Tests\Feature;
 
 use App\Models\SiteSetting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class SiteSettingControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Site settings are admin-only; these cover controller behaviour, so
+        // authenticate as an admin (authorization is covered in
+        // SiteSettingSecurityTest).
+        Role::findOrCreate('super_admin', 'web');
+        $this->actingAs(User::factory()->create()->assignRole('super_admin'));
+    }
 
     private function makeSetting(array $overrides = []): SiteSetting
     {
