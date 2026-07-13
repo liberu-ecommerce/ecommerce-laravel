@@ -109,11 +109,9 @@ Route::middleware('auth')->prefix('payment_methods')->group(function () {
 // Stripe webhook — unauthenticated + CSRF-exempt (verified by signature in the controller)
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
-// Stripe payment + subscription mutations act only on the current user
-// ($request->user()), so an anonymous request would deref null and 500. Require auth.
+// Stripe subscription mutations act only on the current user ($request->user()),
+// so an anonymous request would deref null and 500. Require auth.
 Route::middleware('auth')->group(function () {
-    Route::post('/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('payment.create');
-    Route::post('/stripe/payment', [StripePaymentController::class, 'createOneTimePayment'])->name('stripe.payment.create');
     Route::post('/stripe/subscription', [StripePaymentController::class, 'createSubscription'])->name('stripe.subscription.create');
     Route::patch('/stripe/subscription', [StripePaymentController::class, 'updateSubscription'])->name('stripe.subscription.update');
     Route::delete('/stripe/subscription', [StripePaymentController::class, 'cancelSubscription'])->name('stripe.subscription.cancel');
