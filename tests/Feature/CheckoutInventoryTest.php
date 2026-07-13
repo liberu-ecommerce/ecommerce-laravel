@@ -22,7 +22,8 @@ class CheckoutInventoryTest extends TestCase
      */
     private function bindGateway(Closure $result): object
     {
-        $spy = new class($result) implements PaymentGatewayInterface {
+        $spy = new class($result) implements PaymentGatewayInterface
+        {
             public ?int $inventoryAtCharge = null;
 
             public function __construct(private Closure $result) {}
@@ -69,6 +70,7 @@ class CheckoutInventoryTest extends TestCase
             'email' => 'buyer@example.com',
             'has_physical_products' => 0,
             'shipping_address' => '123 Test St, CA 90001',
+            'country' => 'US',
             'payment_method' => 'stripe',
             'stripeToken' => 'tok_test',
         ];
