@@ -7,15 +7,11 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     /**
      * Display a paginated listing of products.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -25,19 +21,16 @@ class ProductController extends Controller
         $query = Product::query();
 
         // Apply search filter if provided
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            // Sanitize search input to prevent SQL injection
-            $search = strip_tags($search);
-            $search = preg_replace('/[^\w\s\-]/', '', $search);
-            
-            if (!empty($search)) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('description', 'like', '%' . $search . '%')
-                        ->orWhere('short_description', 'like', '%' . $search . '%');
-                });
-            }
+        if ($request->filled('search')) {
+            // The value is a bound parameter (injection-safe already); escape only
+            // the LIKE wildcards so a literal % / _ can't match everything.
+            $search = addcslashes(trim($request->input('search')), '%_\\');
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%')
+                    ->orWhere('short_description', 'like', '%'.$search.'%');
+            });
         }
 
         // Apply category filter if provided
@@ -54,12 +47,13 @@ class ProductController extends Controller
             $query->where('price', '<=', $request->input('price_max'));
         }
 
-        // Apply sorting
+        // Apply sorting — whitelist the column AND clamp the direction (orderBy()
+        // throws on anything but asc/desc, which 500'd the endpoint).
         $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
-        
+        $sortOrder = strtolower($request->input('sort_order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
         $allowedSortFields = ['name', 'price', 'created_at', 'updated_at'];
-        if (in_array($sortBy, $allowedSortFields)) {
+        if (in_array($sortBy, $allowedSortFields, true)) {
             $query->orderBy($sortBy, $sortOrder);
         }
 
@@ -70,9 +64,6 @@ class ProductController extends Controller
 
     /**
      * Display the specified product by ID or slug.
-     *
-     * @param string $identifier
-     * @return JsonResponse
      */
     public function show(string $identifier): JsonResponse
     {
@@ -84,7 +75,7 @@ class ProductController extends Controller
                 ->where('slug', $identifier)
                 ->first();
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',
@@ -99,9 +90,6 @@ class ProductController extends Controller
 
     /**
      * Store a newly created product.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -145,16 +133,12 @@ class ProductController extends Controller
 
     /**
      * Update the specified product.
-     *
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $product = Product::find($id);
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',
@@ -201,15 +185,12 @@ class ProductController extends Controller
 
     /**
      * Soft delete the specified product.
-     *
-     * @param int $id
-     * @return JsonResponse
      */
     public function destroy(int $id): JsonResponse
     {
         $product = Product::find($id);
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found',
