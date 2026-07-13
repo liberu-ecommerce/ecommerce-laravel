@@ -4,23 +4,35 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class InventoryControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Stock adjustment is admin-only; these cover controller behaviour, so
+        // authenticate as an admin (authorization is covered in
+        // InventoryAdjustSecurityTest).
+        Role::findOrCreate('super_admin', 'web');
+        $this->actingAs(User::factory()->create()->assignRole('super_admin'));
+    }
+
     private function makeProduct(array $overrides = []): Product
     {
         $category = ProductCategory::create([
             'name' => 'Inventory Category',
-            'slug' => 'inv-cat-' . uniqid(),
+            'slug' => 'inv-cat-'.uniqid(),
         ]);
 
         return Product::create(array_merge([
             'name' => 'Inventory Product',
-            'slug' => 'inv-prod-' . uniqid(),
+            'slug' => 'inv-prod-'.uniqid(),
             'price' => 10.00,
             'category_id' => $category->id,
             'inventory_count' => 10,

@@ -161,7 +161,7 @@ Route::post('/site-settings/{id}', [SiteSettingController::class, 'update'])->na
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.xml');
 
 // Inventory routes
-Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory'])->name('inventory.adjust');
+Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory'])->middleware('auth')->name('inventory.adjust');
 
 // Pages
 // TODO: implement CMS features for page and form editing
