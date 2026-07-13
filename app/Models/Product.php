@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Interfaces\Orderable;
 use App\Notifications\ProductBackInStockNotification;
+use App\Services\TaxCalculator;
 use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -172,6 +173,18 @@ class Product extends Model implements Orderable
     public function isDownloadable(): bool
     {
         return $this->is_downloadable && $this->downloadable()->exists();
+    }
+
+    /**
+     * Catalogue display price — tax-inclusive when the store is configured to
+     * show prices with tax, otherwise the bare price. Delegates to TaxCalculator.
+     *
+     * ponytail: resolves the calculator per call; fine for a product page, batch
+     * it (one rate lookup for the list) if a big catalogue index gets slow.
+     */
+    public function displayPrice(): float
+    {
+        return app(TaxCalculator::class)->displayPrice($this);
     }
 
     protected static function booted(): void

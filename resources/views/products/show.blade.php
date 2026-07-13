@@ -38,7 +38,7 @@
                             <a href="{{ route('download.generate-link', $product->id) }}" class="btn btn-link">Download without donating</a>
                         @endif
                     @else
-                        <p><strong>Price:</strong> ${{ number_format($product->price, 2) }}</p>
+                        <p><strong>Price:</strong> ${{ number_format($product->displayPrice(), 2) }}@if(config('ecommerce.display_prices_with_tax')) <small>(inc. tax)</small>@endif</p>
                         @if($product->inventory_count > 0)
                             <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
                                 @csrf

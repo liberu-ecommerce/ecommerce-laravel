@@ -12,6 +12,11 @@ return [
 
     'display_prices_with_tax' => env('TAX_DISPLAY_PRICES_WITH_TAX', false),
 
+    // Store's own location — the rate used when showing tax-inclusive prices to a
+    // visitor whose address is not yet known (product/cart pages).
+    'store_country' => env('STORE_COUNTRY', 'US'),
+    'store_state' => env('STORE_STATE'),
+
     /*
     |--------------------------------------------------------------------------
     | Currency Settings
