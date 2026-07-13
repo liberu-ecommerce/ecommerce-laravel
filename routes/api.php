@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\DropshippingController;
 use App\Http\Controllers\Api\OrderController;
@@ -71,6 +72,15 @@ Route::middleware('auth:sanctum')->prefix('returns')->group(function () {
     Route::post('/{returnRequest}/approve', [ReturnRequestController::class, 'approve']);
     Route::post('/{returnRequest}/received', [ReturnRequestController::class, 'markReceived']);
 });
+// Cart API routes (headless: read/manage the authenticated user's persistent cart).
+Route::middleware('auth:sanctum')->prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index']);
+    Route::post('/', [CartController::class, 'store']);
+    Route::put('/{product}', [CartController::class, 'update']);
+    Route::delete('/{product}', [CartController::class, 'destroy']);
+    Route::delete('/', [CartController::class, 'clear']);
+});
+
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
     Route::get('/', [CollectionController::class, 'index']);
