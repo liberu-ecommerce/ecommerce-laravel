@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasDefaultTenant;
 use Filament\Models\Contracts\HasTenants;
@@ -14,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -22,24 +22,26 @@ use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements HasDefaultTenant, HasTenants, FilamentUser
+class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
     use HasApiTokens;
-    // use HasConnectedAccounts;
-    use HasRoles;
+
     use HasFactory;
     use HasProfilePhoto {
         HasProfilePhoto::profilePhotoUrl as getPhotoUrl;
     }
+    // use HasConnectedAccounts;
+    use HasRoles;
+    use HasTeams;
+
     use Notifiable;
     // use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
-    use HasTeams;
 
     public function canAccessPanel(Panel $panel): bool
     {
         $user = auth()->user();
-        if ($panel->getId() === "admin" && !$user->hasRole('super_admin')) {
+        if ($panel->getId() === 'admin' && ! $user->hasRole('super_admin')) {
             return false;
         }
 
@@ -154,6 +156,11 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
         return $this->hasMany(Order::class);
     }
 
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
     public function customerSegments(): BelongsToMany
     {
         return $this->belongsToMany(CustomerSegment::class, 'customer_segment_members', 'user_id', 'segment_id')
@@ -161,7 +168,7 @@ class User extends Authenticatable implements HasDefaultTenant, HasTenants, Fila
             ->withTimestamps();
     }
 
-    public function customerMetric(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function customerMetric(): HasOne
     {
         return $this->hasOne(CustomerMetric::class);
     }

@@ -94,7 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
 });
 
-Route::prefix('payment_methods')->group(function () {
+Route::middleware('auth')->prefix('payment_methods')->group(function () {
     Route::get('/', [PaymentMethodController::class, 'index'])->name('payment_methods.index');
     Route::post('/store', [PaymentMethodController::class, 'addPaymentMethod'])->name('payment_methods.store');
     Route::get('/edit/{id}', [PaymentMethodController::class, 'editPaymentMethod'])->name('payment_methods.edit');

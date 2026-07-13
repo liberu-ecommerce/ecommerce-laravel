@@ -11,12 +11,12 @@ class PaymentMethodControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_add_payment_method_creates_record(): void
+    public function test_add_payment_method_creates_record_for_the_authenticated_user(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
 
-        $response = $this->postJson('/payment_methods/store', [
-            'user_id' => $user->id,
+        // user_id is derived from the session, not the request body.
+        $response = $this->actingAs($user)->postJson('/payment_methods/store', [
             'name' => 'Visa',
             'details' => '****4242',
         ]);
@@ -28,22 +28,11 @@ class PaymentMethodControllerTest extends TestCase
         ]);
     }
 
-    public function test_add_payment_method_requires_user_id(): void
-    {
-        $response = $this->postJson('/payment_methods/store', [
-            'name' => 'Visa',
-            'details' => '****4242',
-        ]);
-
-        $response->assertStatus(422);
-    }
-
     public function test_add_payment_method_requires_name(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
 
-        $response = $this->postJson('/payment_methods/store', [
-            'user_id' => $user->id,
+        $response = $this->actingAs($user)->postJson('/payment_methods/store', [
             'details' => '****4242',
         ]);
 
@@ -54,15 +43,14 @@ class PaymentMethodControllerTest extends TestCase
     {
         $user = User::factory()->withPersonalTeam()->create();
 
-        $response = $this->postJson('/payment_methods/store', [
-            'user_id' => $user->id,
+        $response = $this->actingAs($user)->postJson('/payment_methods/store', [
             'name' => 'Visa',
         ]);
 
         $response->assertStatus(422);
     }
 
-    public function test_edit_payment_method_updates_record(): void
+    public function test_edit_payment_method_updates_own_record(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
         $pm = PaymentMethod::create([
@@ -71,7 +59,7 @@ class PaymentMethodControllerTest extends TestCase
             'details' => '****0000',
         ]);
 
-        $response = $this->postJson("/payment_methods/update/{$pm->id}", [
+        $response = $this->actingAs($user)->postJson("/payment_methods/update/{$pm->id}", [
             'name' => 'New Name',
         ]);
 
@@ -81,14 +69,16 @@ class PaymentMethodControllerTest extends TestCase
 
     public function test_edit_payment_method_returns_404_when_not_found(): void
     {
-        $response = $this->postJson('/payment_methods/update/9999', [
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->postJson('/payment_methods/update/9999', [
             'name' => 'New Name',
         ]);
 
         $response->assertStatus(404);
     }
 
-    public function test_delete_payment_method_removes_record(): void
+    public function test_delete_payment_method_removes_own_record(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
         $pm = PaymentMethod::create([
@@ -97,7 +87,7 @@ class PaymentMethodControllerTest extends TestCase
             'details' => '****1111',
         ]);
 
-        $response = $this->deleteJson("/payment_methods/destroy/{$pm->id}");
+        $response = $this->actingAs($user)->deleteJson("/payment_methods/destroy/{$pm->id}");
 
         $response->assertStatus(200);
         $this->assertNull(PaymentMethod::find($pm->id));
@@ -105,7 +95,9 @@ class PaymentMethodControllerTest extends TestCase
 
     public function test_delete_payment_method_returns_404_when_not_found(): void
     {
-        $response = $this->deleteJson('/payment_methods/destroy/9999');
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->deleteJson('/payment_methods/destroy/9999');
 
         $response->assertStatus(404);
     }
