@@ -62,7 +62,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
-Route::post('/products/{product}/notify-me', [ProductController::class, 'notifyMe'])->name('products.notify-me');
+Route::post('/products/{product}/notify-me', [ProductController::class, 'notifyMe'])->name('products.notify-me')->middleware('throttle:10,1');
 
 // Category routes
 Route::get('/categories', [ProductCategoryController::class, 'index'])->name('categories.index');
@@ -148,7 +148,9 @@ Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.a
 Route::put('/cart/update/{productId}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
-Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.apply-coupon');
+// Throttled: distinguishable valid/invalid responses make this brute-forceable to
+// enumerate discount codes; cap attempts per IP.
+Route::post('/cart/apply-coupon', [CartController::class, 'applyCoupon'])->name('cart.apply-coupon')->middleware('throttle:10,1');
 Route::delete('/cart/remove-coupon', [CartController::class, 'removeCoupon'])->name('cart.remove-coupon');
 
 // Ratings and reviews — reads are public; writes require login (approve is admin-only, gated in the controller)
@@ -201,12 +203,14 @@ Route::view('/account', 'account')->middleware('auth')->name('account');
 
 // Chat routes
 Route::prefix('chat')->group(function () {
-    Route::post('/start', [ChatController::class, 'start'])->name('chat.start');
+    // Public chat: unauthenticated. Throttle the writes so a guest can't loop
+    // start->message to flood the conversation/message tables + the agent queue.
+    Route::post('/start', [ChatController::class, 'start'])->name('chat.start')->middleware('throttle:15,1');
     Route::get('/session/{sessionId}', [ChatController::class, 'getBySession'])->name('chat.session');
-    Route::post('/{conversationId}/message', [ChatController::class, 'sendMessage'])->name('chat.message');
+    Route::post('/{conversationId}/message', [ChatController::class, 'sendMessage'])->name('chat.message')->middleware('throttle:30,1');
     Route::get('/{conversationId}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
-    Route::post('/{conversationId}/close', [ChatController::class, 'close'])->name('chat.close');
-    Route::post('/{conversationId}/rating', [ChatController::class, 'submitRating'])->name('chat.rating');
+    Route::post('/{conversationId}/close', [ChatController::class, 'close'])->name('chat.close')->middleware('throttle:15,1');
+    Route::post('/{conversationId}/rating', [ChatController::class, 'submitRating'])->name('chat.rating')->middleware('throttle:15,1');
 
     // Agent routes
     Route::middleware(['auth'])->group(function () {
