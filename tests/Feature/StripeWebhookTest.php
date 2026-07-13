@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
+use App\Notifications\OrderConfirmationNotification;
+use App\Notifications\OrderRefundedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
@@ -116,5 +118,51 @@ class StripeWebhookTest extends TestCase
         $this->postWebhook(['type' => 'customer.created', 'data' => ['object' => ['id' => 'cus_1', 'object' => 'customer']]])
             ->assertStatus(200)
             ->assertJsonPath('received', true);
+    }
+
+    public function test_dashboard_refund_emails_the_customer(): void
+    {
+        $this->order(Order::STATUS_PAID, total: 100);
+
+        $this->postWebhook(['type' => 'charge.refunded', 'data' => ['object' => $this->charge(['amount_refunded' => 10000])]])
+            ->assertStatus(200);
+
+        Notification::assertSentOnDemand(
+            OrderRefundedNotification::class,
+            fn ($n, $channels, $notifiable) => $notifiable->routes['mail'] === 'buyer@example.com'
+                && (float) $n->refundAmount === 100.0
+        );
+    }
+
+    public function test_refund_replay_does_not_double_notify(): void
+    {
+        $this->order(Order::STATUS_PAID, total: 100);
+        $event = ['type' => 'charge.refunded', 'data' => ['object' => $this->charge(['amount_refunded' => 10000])]];
+
+        $this->postWebhook($event)->assertStatus(200);
+        $this->postWebhook($event)->assertStatus(200); // replay — order already refunded
+
+        Notification::assertSentOnDemandTimes(OrderRefundedNotification::class, 1);
+    }
+
+    public function test_async_capture_of_a_pending_order_sends_confirmation(): void
+    {
+        $this->order(Order::STATUS_PENDING);
+
+        $this->postWebhook(['type' => 'charge.succeeded', 'data' => ['object' => $this->charge()]])
+            ->assertStatus(200);
+
+        Notification::assertSentOnDemand(OrderConfirmationNotification::class);
+    }
+
+    public function test_charge_succeeded_on_already_paid_order_sends_no_confirmation(): void
+    {
+        // The synchronous checkout already emailed; the webhook must not double-send.
+        $this->order(Order::STATUS_PAID);
+
+        $this->postWebhook(['type' => 'charge.succeeded', 'data' => ['object' => $this->charge()]])
+            ->assertStatus(200);
+
+        Notification::assertNothingSent();
     }
 }

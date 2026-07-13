@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Notifications\OrderConfirmationNotification;
+use App\Notifications\OrderRefundedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -47,7 +50,14 @@ class StripeWebhookController extends Controller
 
     private function markPaid($charge): void
     {
-        $this->transition($this->orderForCharge($charge), Order::STATUS_PAID, 'Stripe webhook: charge.succeeded');
+        $order = $this->orderForCharge($charge);
+
+        // Only when the webhook itself moves the order to paid (an async capture
+        // the synchronous checkout didn't already confirm) do we email — otherwise
+        // we'd double-send the confirmation the checkout already sent.
+        if ($this->transition($order, Order::STATUS_PAID, 'Stripe webhook: charge.succeeded')) {
+            Notification::route('mail', $order->customer_email)->notify(new OrderConfirmationNotification($order));
+        }
     }
 
     private function markFailed($charge): void
@@ -74,18 +84,30 @@ class StripeWebhookController extends Controller
             'partially_refunded' => ! $fully && $refunded > 0,
         ]);
 
-        $this->transition($order, $fully ? Order::STATUS_REFUNDED : Order::STATUS_PARTIALLY_REFUNDED, 'Stripe webhook: charge.refunded');
+        $target = $fully ? Order::STATUS_REFUNDED : Order::STATUS_PARTIALLY_REFUNDED;
+
+        // Notify only when this is a newly-recognised refund (e.g. issued from the
+        // Stripe dashboard). An in-app refund already emailed and already moved the
+        // order, so the transition is skipped here and no second email is sent.
+        if ($this->transition($order, $target, 'Stripe webhook: charge.refunded')) {
+            Notification::route('mail', $order->customer_email)->notify(new OrderRefundedNotification($order, $refunded));
+        }
     }
 
     /**
      * Move the order through the state machine only if the transition is legal —
      * webhooks are at-least-once and may arrive for an order already in the target
      * (or a later) state, so an illegal transition is silently skipped, never thrown.
+     * Returns whether the transition actually happened.
      */
-    private function transition(?Order $order, string $status, string $notes): void
+    private function transition(?Order $order, string $status, string $notes): bool
     {
         if ($order && in_array($status, Order::TRANSITIONS[$order->status] ?? [], true)) {
             $order->transitionTo($status, notes: $notes);
+
+            return true;
         }
+
+        return false;
     }
 }
