@@ -2,105 +2,91 @@
 
 namespace App\Services\PaymentGateways;
 
-use Exception;
 use App\Interfaces\PaymentGatewayInterface;
-use PayPal\Rest\ApiContext;
-use PayPal\Auth\OAuthTokenCredential;
-use PayPal\Api\Amount;
-use PayPal\Api\Payer;
-use PayPal\Api\Payment;
-use PayPal\Api\RedirectUrls;
-use PayPal\Api\Transaction;
-use PayPal\Api\RefundRequest;
-use Illuminate\Support\Facades\Config;
+use Srmklive\PayPal\Services\PayPal as PayPalClient;
+use Throwable;
 
+/**
+ * PayPal gateway on the maintained srmklive/paypal SDK (PayPal Orders v2 REST API).
+ * Replaces the abandoned paypal/rest-api-sdk-php (PayPal\Api\*, v1) the class used to
+ * construct in its ctor — which fataled on instantiation once that package was gone.
+ */
 class PayPalGateway implements PaymentGatewayInterface
 {
-    private $apiContext;
+    private ?PayPalClient $provider = null;
 
-    public function __construct()
+    /** Inject a preconfigured client (used in tests). */
+    public function setProvider(PayPalClient $provider): void
     {
-        $this->apiContext = new ApiContext(
-            new OAuthTokenCredential(
-                Config::get('services.paypal.client_id'),
-                Config::get('services.paypal.secret')
-            )
-        );
-        $this->apiContext->setConfig(Config::get('services.paypal.settings'));
+        $this->provider = $provider;
     }
 
+    /**
+     * Capture a PayPal order the buyer already created + approved client-side. The
+     * order id arrives as $paymentDetails['payment_id'] (see CheckoutController).
+     */
     public function processPayment(float $amount, array $paymentDetails): array
     {
-        $payer = new Payer();
-        $payer->setPaymentMethod('paypal');
-
-        $amountDetails = new Amount();
-        $amountDetails->setTotal($amount)
-                      ->setCurrency('USD');
-
-        $transaction = new Transaction();
-        $transaction->setAmount($amountDetails)
-                    ->setDescription('Payment transaction');
-
-        $redirectUrls = new RedirectUrls();
-        $redirectUrls->setReturnUrl(url('/payment/success'))
-                     ->setCancelUrl(url('/payment/cancel'));
-
-        $payment = new Payment();
-        $payment->setIntent('sale')
-                ->setPayer($payer)
-                ->setTransactions([$transaction])
-                ->setRedirectUrls($redirectUrls);
+        $orderId = $paymentDetails['payment_id'] ?? null;
+        if (empty($orderId)) {
+            return ['success' => false, 'error' => 'Missing PayPal order id.'];
+        }
 
         try {
-            $payment->create($this->apiContext);
-            return ['success' => true, 'payment_id' => $payment->getId(), 'approval_url' => $payment->getApprovalLink()];
-        } catch (Exception $e) {
+            $result = $this->provider()->capturePaymentOrder($orderId);
+
+            if (($result['status'] ?? null) === 'COMPLETED') {
+                return [
+                    'success' => true,
+                    'transaction_id' => $this->captureId($result) ?? $orderId,
+                    'status' => 'COMPLETED',
+                ];
+            }
+
+            return ['success' => false, 'error' => 'PayPal capture not completed', 'status' => $result['status'] ?? 'unknown'];
+        } catch (Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function refundPayment(string $transactionId, float $amount): array
+    {
+        try {
+            $result = $this->provider()->refundCapturedPayment($transactionId, $transactionId, $amount, 'Order refund');
+
+            if (($result['status'] ?? null) === 'COMPLETED') {
+                return ['success' => true, 'refund_id' => $result['id'] ?? null, 'status' => 'COMPLETED'];
+            }
+
+            return ['success' => false, 'error' => 'Refund not completed', 'status' => $result['status'] ?? 'unknown'];
+        } catch (Throwable $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 
     public function processSubscription(string $planId, array $subscriptionDetails): array
     {
-        // Implement PayPal subscription logic here
-        // This is a placeholder implementation
-        return ['success' => true, 'subscription_id' => 'paypal_sub_' . uniqid()];
+        // ponytail: real PayPal subscriptions need a billing plan provisioned via the
+        // Subscriptions API first; not wired. Return an honest failure rather than the
+        // fake uniqid() "success" the old stub returned.
+        return ['success' => false, 'error' => 'PayPal subscriptions are not implemented.'];
     }
 
-    public function refundPayment(string $transactionId, float $amount): array
+    private function provider(): PayPalClient
     {
-        try {
-            // Retrieve the sale transaction
-            $sale = \PayPal\Api\Sale::get($transactionId, $this->apiContext);
-            
-            // Create refund object
-            $refund = new \PayPal\Api\RefundRequest();
-            $refundAmount = new Amount();
-            $refundAmount->setCurrency('USD')
-                        ->setTotal($amount);
-            $refund->setAmount($refundAmount);
-            
-            // Execute the refund
-            $refundedSale = $sale->refundSale($refund, $this->apiContext);
-            
-            if ($refundedSale->getState() === 'completed') {
-                return [
-                    'success' => true,
-                    'refund_id' => $refundedSale->getId(),
-                    'status' => $refundedSale->getState()
-                ];
-            }
-            
-            return [
-                'success' => false,
-                'error' => 'Refund not completed',
-                'status' => $refundedSale->getState()
-            ];
-        } catch (Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
+        if ($this->provider === null) {
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $provider->getAccessToken();
+            $this->provider = $provider;
         }
+
+        return $this->provider;
+    }
+
+    /** Pull the capture id out of the Orders-v2 capture response. */
+    private function captureId(array $result): ?string
+    {
+        return $result['purchase_units'][0]['payments']['captures'][0]['id'] ?? null;
     }
 }
