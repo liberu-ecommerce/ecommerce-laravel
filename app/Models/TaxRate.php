@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -54,7 +55,14 @@ class TaxRate extends Model
         ?string $city = null,
         ?string $zipCode = null,
         ?int $taxClassId = null
-    ): \Illuminate\Database\Eloquent\Collection {
+    ): Collection {
+        // A product with no tax class must not be taxed by EVERY class's rate summed.
+        // Fall back to the default (first active) tax class so exactly one class
+        // applies. (Assign products a tax class to control which one.)
+        if ($taxClassId === null) {
+            $taxClassId = TaxClass::where('is_active', true)->orderBy('id')->value('id');
+        }
+
         $query = static::where('is_active', true)
             ->where('country', $country);
 
@@ -64,13 +72,19 @@ class TaxRate extends Model
 
         // Match specific location first, then fall back to broader areas
         $rates = collect();
-        
+
         // Try exact match
         if ($zipCode || $city || $state) {
             $exactMatch = (clone $query);
-            if ($zipCode) $exactMatch->where('zip_code', $zipCode);
-            if ($city) $exactMatch->where('city', $city);
-            if ($state) $exactMatch->where('state', $state);
+            if ($zipCode) {
+                $exactMatch->where('zip_code', $zipCode);
+            }
+            if ($city) {
+                $exactMatch->where('city', $city);
+            }
+            if ($state) {
+                $exactMatch->where('state', $state);
+            }
             $rates = $exactMatch->orderBy('priority', 'desc')->get();
         }
 
