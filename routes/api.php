@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\DropshippingController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\DropshippingController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CollectionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,11 @@ Route::middleware('auth:sanctum')->prefix('products')->group(function () {
     Route::put('/{id}', [ProductController::class, 'update']);
     Route::patch('/{id}', [ProductController::class, 'update']);
     Route::delete('/{id}', [ProductController::class, 'destroy']);
+});
+// Order API routes (customer-facing: read-only, scoped to the authenticated user)
+Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']);
+    Route::get('/{id}', [OrderController::class, 'show']);
 });
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
