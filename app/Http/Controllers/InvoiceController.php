@@ -11,22 +11,7 @@ class InvoiceController extends Controller
 {
     public function createInvoiceForOrder(int $orderId): Invoice
     {
-        $order = Order::findOrFail($orderId);
-        $invoice = Invoice::create([
-            'order_id' => $order->id,
-            'invoice_date' => now(),
-            'total_amount' => $order->total,
-            'coupon_id' => $order->coupon_id,
-            'discount_amount' => $order->discount_amount,
-        ]);
-        foreach ($order->products as $product) {
-            $invoice->products()->attach($product->id, [
-                'quantity' => $product->pivot->quantity,
-                'price' => $product->price,
-            ]);
-        }
-
-        return $invoice;
+        return Invoice::generateForOrder(Order::findOrFail($orderId));
     }
 
     public function index(Request $request): View
