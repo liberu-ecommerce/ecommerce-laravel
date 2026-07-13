@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\OrderRefundController;
 use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReturnRequestController;
+use App\Http\Controllers\Api\WebhookEndpointController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -52,6 +53,14 @@ Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::post('/{order}/returns', [ReturnRequestController::class, 'store']);
     // Staff-only (role checked in the controller): advance the order's fulfilment status.
     Route::post('/{order}/status', [OrderStatusController::class, 'update']);
+});
+
+// Outbound webhook endpoints — staff-managed integration config (role checked in the controller).
+Route::middleware('auth:sanctum')->prefix('webhook-endpoints')->group(function () {
+    Route::get('/', [WebhookEndpointController::class, 'index']);
+    Route::post('/', [WebhookEndpointController::class, 'store']);
+    Route::put('/{webhookEndpoint}', [WebhookEndpointController::class, 'update']);
+    Route::delete('/{webhookEndpoint}', [WebhookEndpointController::class, 'destroy']);
 });
 
 // Returns: customers read their own, staff read/act on all (roles checked in the controller).
