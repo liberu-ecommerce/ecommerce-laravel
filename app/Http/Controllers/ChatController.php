@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChatConversation;
 use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,21 @@ class ChatController extends Controller
     }
 
     /**
+     * A conversation is addressable by its sequential id, so the customer-facing
+     * endpoints must prove ownership: either the caller is an agent, or the
+     * conversation's (unguessable) session_id was bound to this browser session
+     * when the chat was started. Otherwise a stranger could enumerate ids and read
+     * everyone's chat history + PII.
+     */
+    private function authorizeConversationAccess(ChatConversation $conversation): void
+    {
+        $isAgent = Auth::check() && Auth::user()->hasRole(['super_admin', 'admin']);
+        $ownsSession = in_array($conversation->session_id, session('chat_conversations', []), true);
+
+        abort_unless($isAgent || $ownsSession, 403);
+    }
+
+    /**
      * Start a new chat conversation.
      */
     public function start(Request $request)
@@ -26,6 +42,10 @@ class ChatController extends Controller
         ]);
 
         $conversation = $this->chatService->createConversation($validated);
+
+        // Bind this conversation to the browser session so its later message/read
+        // calls (addressed by sequential id) can be authorized.
+        session()->push('chat_conversations', $conversation->session_id);
 
         return response()->json([
             'success' => true,
@@ -41,6 +61,12 @@ class ChatController extends Controller
         $validated = $request->validate([
             'message' => 'required|string|max:5000',
         ]);
+
+        $conversation = ChatConversation::find($conversationId);
+        if (! $conversation) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $this->authorizeConversationAccess($conversation);
 
         $message = $this->chatService->addMessage($conversationId, [
             'message' => $validated['message'],
@@ -60,9 +86,11 @@ class ChatController extends Controller
     {
         $conversation = $this->chatService->getConversation($conversationId);
 
-        if (!$conversation) {
+        if (! $conversation) {
             return response()->json(['error' => 'Conversation not found'], 404);
         }
+
+        $this->authorizeConversationAccess($conversation);
 
         // Mark messages as read
         $readerType = Auth::check() && Auth::user()->hasRole(['super_admin', 'admin']) ? 'agent' : 'customer';
@@ -92,6 +120,12 @@ class ChatController extends Controller
      */
     public function close($conversationId)
     {
+        $conversation = ChatConversation::find($conversationId);
+        if (! $conversation) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $this->authorizeConversationAccess($conversation);
+
         $conversation = $this->chatService->closeConversation($conversationId);
 
         return response()->json([
@@ -110,6 +144,12 @@ class ChatController extends Controller
             'feedback' => 'nullable|string|max:1000',
         ]);
 
+        $conversation = ChatConversation::find($conversationId);
+        if (! $conversation) {
+            return response()->json(['error' => 'Conversation not found'], 404);
+        }
+        $this->authorizeConversationAccess($conversation);
+
         $this->chatService->addSatisfactionRating(
             $conversationId,
             $validated['rating'],
@@ -127,7 +167,7 @@ class ChatController extends Controller
      */
     public function agentConversations()
     {
-        if (!Auth::check() || !Auth::user()->hasRole(['super_admin', 'admin'])) {
+        if (! Auth::check() || ! Auth::user()->hasRole(['super_admin', 'admin'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -144,7 +184,7 @@ class ChatController extends Controller
      */
     public function assignAgent(Request $request, $conversationId)
     {
-        if (!Auth::check() || !Auth::user()->hasRole(['super_admin', 'admin'])) {
+        if (! Auth::check() || ! Auth::user()->hasRole(['super_admin', 'admin'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -161,7 +201,7 @@ class ChatController extends Controller
      */
     public function nextQueued()
     {
-        if (!Auth::check() || !Auth::user()->hasRole(['super_admin', 'admin'])) {
+        if (! Auth::check() || ! Auth::user()->hasRole(['super_admin', 'admin'])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
