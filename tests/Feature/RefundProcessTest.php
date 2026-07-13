@@ -9,15 +9,23 @@ use App\Models\Refund;
 use App\Services\PaymentGateways\StripeGateway;
 use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class RefundProcessTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Notification::fake();
+    }
+
     private function bindGateway(Closure $refundResult): object
     {
-        $spy = new class($refundResult) implements PaymentGatewayInterface {
+        $spy = new class($refundResult) implements PaymentGatewayInterface
+        {
             public array $refundCalls = [];
 
             public function __construct(private Closure $refundResult) {}
