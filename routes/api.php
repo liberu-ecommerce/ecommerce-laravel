@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\DropshippingController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderRefundController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,8 @@ Route::middleware('auth:sanctum')->prefix('products')->group(function () {
 Route::middleware('auth:sanctum')->prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index']);
     Route::get('/{id}', [OrderController::class, 'show']);
+    // Staff-only (role checked in the controller): initiate a refund on an order.
+    Route::post('/{order}/refund', [OrderRefundController::class, 'store']);
 });
 // Collection API routes
 Route::middleware('auth:sanctum')->prefix('collections')->group(function () {
