@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\BrowsingHistory;
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\BrowsingHistory;
+use App\Models\StockNotification;
 use App\Services\RecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -22,6 +22,39 @@ class ProductController extends Controller
     public function __construct(RecommendationService $recommendationService)
     {
         $this->recommendationService = $recommendationService;
+    }
+
+    /**
+     * Register interest in an out-of-stock product. Guests supply an email;
+     * authenticated users are linked by id. Duplicate pending subscriptions are
+     * collapsed so a shopper is only emailed once per restock.
+     */
+    public function notifyMe(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'email' => 'required_without:user_id|nullable|email',
+        ]);
+
+        $email = $request->user()?->email ?? ($validated['email'] ?? null);
+
+        if (! $email) {
+            return response()->json(['success' => false, 'message' => 'An email address is required.'], 422);
+        }
+
+        StockNotification::firstOrCreate(
+            [
+                'product_id' => $product->id,
+                'email' => $email,
+                'notification_type' => 'back_in_stock',
+                'notified' => false,
+            ],
+            ['user_id' => $request->user()?->id]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'You will be notified when this product is back in stock.',
+        ]);
     }
 
     public function index(Request $request)
@@ -39,9 +72,9 @@ class ProductController extends Controller
         if ($request->filled('keyword') || $request->filled('search')) {
             $keyword = $request->input('keyword') ?? $request->input('search');
             $query->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('description', 'like', '%' . $keyword . '%')
-                    ->orWhere('short_description', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('description', 'like', '%'.$keyword.'%')
+                    ->orWhere('short_description', 'like', '%'.$keyword.'%');
             });
         }
 
@@ -62,9 +95,9 @@ class ProductController extends Controller
 
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
-                $q->where('name', 'like', '%' . $keyword . '%')
-                    ->orWhere('description', 'like', '%' . $keyword . '%')
-                    ->orWhere('short_description', 'like', '%' . $keyword . '%');
+                $q->where('name', 'like', '%'.$keyword.'%')
+                    ->orWhere('description', 'like', '%'.$keyword.'%')
+                    ->orWhere('short_description', 'like', '%'.$keyword.'%');
             });
         }
 
@@ -110,7 +143,6 @@ class ProductController extends Controller
 
         return view('products.show', compact('product'));
     }
-
 
     // public function create(Request $request)
     // {
