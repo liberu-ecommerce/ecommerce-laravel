@@ -163,6 +163,16 @@ class Order extends Model
         ]);
 
         $this->fireOutboundWebhooks($status);
+
+        // Generate the invoice once the order is paid (idempotent per order).
+        if ($status === self::STATUS_PAID) {
+            Invoice::generateForOrder($this);
+        }
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
