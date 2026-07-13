@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\AnalyticsEvent;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsService
 {
@@ -19,12 +18,12 @@ class AnalyticsService
         $startDate = $startDate ?? now()->subDays(30);
         $endDate = $endDate ?? now();
 
-        $groupBy = match($period) {
+        $groupBy = match ($period) {
             'hourly' => "DATE_FORMAT(order_date, '%Y-%m-%d %H:00:00')",
-            'daily' => "DATE(order_date)",
-            'weekly' => "YEARWEEK(order_date, 1)",
+            'daily' => 'DATE(order_date)',
+            'weekly' => 'YEARWEEK(order_date, 1)',
             'monthly' => "DATE_FORMAT(order_date, '%Y-%m')",
-            default => "DATE(order_date)"
+            default => 'DATE(order_date)'
         };
 
         $sales = Order::whereBetween('order_date', [$startDate, $endDate])
@@ -32,8 +31,10 @@ class AnalyticsService
             ->select(
                 DB::raw("{$groupBy} as period"),
                 DB::raw('COUNT(*) as order_count'),
-                DB::raw('SUM(total_amount) as total_revenue'),
-                DB::raw('AVG(total_amount) as avg_order_value')
+                // Net of refunds: refunded orders keep payment_status='paid' and track
+                // the returned money in refund_total, so gross would overstate revenue.
+                DB::raw('SUM(total_amount - COALESCE(refund_total, 0)) as total_revenue'),
+                DB::raw('AVG(total_amount - COALESCE(refund_total, 0)) as avg_order_value')
             )
             ->groupBy('period')
             ->orderBy('period')
@@ -53,7 +54,8 @@ class AnalyticsService
         $orders = Order::whereBetween('order_date', [$startDate, $endDate])
             ->where('payment_status', 'paid');
 
-        $totalRevenue = $orders->sum('total_amount');
+        // Net of refunds — see the note in getSalesTrends.
+        $totalRevenue = (float) $orders->sum(DB::raw('total_amount - COALESCE(refund_total, 0)'));
         $orderCount = $orders->count();
         $avgOrderValue = $orderCount > 0 ? $totalRevenue / $orderCount : 0;
 
@@ -64,16 +66,16 @@ class AnalyticsService
 
         $previousOrders = Order::whereBetween('order_date', [$previousStartDate, $previousEndDate])
             ->where('payment_status', 'paid');
-        
-        $previousRevenue = $previousOrders->sum('total_amount');
+
+        $previousRevenue = (float) $previousOrders->sum(DB::raw('total_amount - COALESCE(refund_total, 0)'));
         $previousOrderCount = $previousOrders->count();
 
-        $revenueGrowth = $previousRevenue > 0 
-            ? (($totalRevenue - $previousRevenue) / $previousRevenue) * 100 
+        $revenueGrowth = $previousRevenue > 0
+            ? (($totalRevenue - $previousRevenue) / $previousRevenue) * 100
             : 0;
-        
-        $orderGrowth = $previousOrderCount > 0 
-            ? (($orderCount - $previousOrderCount) / $previousOrderCount) * 100 
+
+        $orderGrowth = $previousOrderCount > 0
+            ? (($orderCount - $previousOrderCount) / $previousOrderCount) * 100
             : 0;
 
         return [
@@ -118,7 +120,7 @@ class AnalyticsService
     public function getCustomerDemographics(): array
     {
         $totalCustomers = Customer::count();
-        
+
         // Customers by location (city)
         $byCity = Customer::select('city', DB::raw('COUNT(*) as count'))
             ->whereNotNull('city')
@@ -163,13 +165,14 @@ class AnalyticsService
 
         // Top customers by revenue
         $topCustomers = Customer::select(
-                'customers.id',
-                'customers.first_name',
-                'customers.last_name',
-                'customers.email',
-                DB::raw('COUNT(orders.id) as order_count'),
-                DB::raw('SUM(orders.total_amount) as lifetime_value')
-            )
+            'customers.id',
+            'customers.first_name',
+            'customers.last_name',
+            'customers.email',
+            DB::raw('COUNT(orders.id) as order_count'),
+            // Net of refunds — refunded orders stay payment_status='paid'.
+            DB::raw('SUM(orders.total_amount - COALESCE(orders.refund_total, 0)) as lifetime_value')
+        )
             ->join('orders', 'customers.id', '=', 'orders.customer_id')
             ->where('orders.payment_status', 'paid')
             ->groupBy('customers.id', 'customers.first_name', 'customers.last_name', 'customers.email')
@@ -217,7 +220,7 @@ class AnalyticsService
                 ->where('inventory_count', '>', 0)
                 ->count(),
             'in_stock' => Product::where('inventory_count', '>', 0)
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->whereNull('low_stock_threshold')
                         ->orWhereColumn('inventory_count', '>', 'low_stock_threshold');
                 })
@@ -245,8 +248,8 @@ class AnalyticsService
                 return [
                     'id' => $order->id,
                     'order_date' => $order->order_date,
-                    'customer_name' => $order->customer 
-                        ? $order->customer->first_name . ' ' . $order->customer->last_name 
+                    'customer_name' => $order->customer
+                        ? $order->customer->first_name.' '.$order->customer->last_name
                         : 'Guest',
                     'total_amount' => $order->total_amount,
                     'payment_status' => $order->payment_status,
