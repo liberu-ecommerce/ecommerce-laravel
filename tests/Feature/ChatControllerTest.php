@@ -61,9 +61,10 @@ class ChatControllerTest extends TestCase
     {
         $conversation = $this->chatService->createConversation(['session_id' => 'sess_msg_test']);
 
-        $response = $this->postJson(route('chat.message', $conversation->id), [
-            'message' => 'Hello, I need help!',
-        ]);
+        $response = $this->withSession(['chat_conversations' => ['sess_msg_test']])
+            ->postJson(route('chat.message', $conversation->id), [
+                'message' => 'Hello, I need help!',
+            ]);
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
@@ -83,7 +84,8 @@ class ChatControllerTest extends TestCase
     {
         $conversation = $this->chatService->createConversation(['session_id' => 'sess_msgs']);
 
-        $response = $this->get(route('chat.messages', $conversation->id));
+        $response = $this->withSession(['chat_conversations' => ['sess_msgs']])
+            ->get(route('chat.messages', $conversation->id));
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
@@ -100,7 +102,8 @@ class ChatControllerTest extends TestCase
     {
         $conversation = $this->chatService->createConversation(['session_id' => 'sess_close_test']);
 
-        $response = $this->postJson(route('chat.close', $conversation->id));
+        $response = $this->withSession(['chat_conversations' => ['sess_close_test']])
+            ->postJson(route('chat.close', $conversation->id));
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
@@ -111,10 +114,11 @@ class ChatControllerTest extends TestCase
     {
         $conversation = $this->chatService->createConversation(['session_id' => 'sess_rating_test']);
 
-        $response = $this->postJson(route('chat.rating', $conversation->id), [
-            'rating' => 5,
-            'feedback' => 'Excellent!',
-        ]);
+        $response = $this->withSession(['chat_conversations' => ['sess_rating_test']])
+            ->postJson(route('chat.rating', $conversation->id), [
+                'rating' => 5,
+                'feedback' => 'Excellent!',
+            ]);
 
         $response->assertStatus(200);
         $response->assertJsonPath('success', true);
