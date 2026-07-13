@@ -14,14 +14,23 @@ class Order extends Model
     use IsTenantModel;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_PAID = 'paid';
+
     public const STATUS_FAILED = 'failed';
+
     public const STATUS_PROCESSING = 'processing';
+
     public const STATUS_SUPPLIER_QUEUED = 'supplier_queued';
+
     public const STATUS_SUPPLIER_FAILED = 'supplier_failed';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
+
     public const STATUS_REFUNDED = 'refunded';
+
     public const STATUS_PARTIALLY_REFUNDED = 'partially_refunded';
 
     /**
@@ -127,7 +136,23 @@ class Order extends Model
             throw new InvalidOrderTransitionException($from, $status);
         }
 
-        $this->update(['status' => $status]);
+        $attributes = ['status' => $status];
+
+        // Keep the separate payment_status column in sync — analytics, customer LTV,
+        // invoices and the admin sales widgets all filter on payment_status='paid',
+        // and every payment-affecting transition routes through here. Refund states
+        // deliberately leave it 'paid' (the payment did happen; refund_total tracks
+        // the money returned).
+        $paymentStatus = match ($status) {
+            self::STATUS_PAID => 'paid',
+            self::STATUS_FAILED => 'failed',
+            default => null,
+        };
+        if ($paymentStatus !== null) {
+            $attributes['payment_status'] = $paymentStatus;
+        }
+
+        $this->update($attributes);
 
         $this->statusHistory()->create([
             'from_status' => $from,
