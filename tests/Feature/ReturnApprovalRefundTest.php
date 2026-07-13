@@ -11,11 +11,18 @@ use App\Models\User;
 use App\Services\PaymentGateways\StripeGateway;
 use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class ReturnApprovalRefundTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Notification::fake();
+    }
 
     private function bindGateway(Closure $refundResult): object
     {

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Notifications\OrderRefundedNotification;
 use App\Services\PaymentGatewayService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Notification;
 
 class Refund extends Model
 {
@@ -103,6 +105,23 @@ class Refund extends Model
             $order->transitionTo($target, $userId, 'Refund processed');
         }
 
+        $this->notifyCustomer($order);
+
         return true;
+    }
+
+    /**
+     * Tell the customer the refund went through. Logged-in customers get the
+     * mail + database (bell) notification; guests get an on-demand email.
+     */
+    private function notifyCustomer(Order $order): void
+    {
+        $notification = new OrderRefundedNotification($order, (float) $this->amount);
+
+        if ($order->user_id && $user = User::find($order->user_id)) {
+            $user->notify($notification);
+        } elseif ($order->customer_email) {
+            Notification::route('mail', $order->customer_email)->notify($notification);
+        }
     }
 }
