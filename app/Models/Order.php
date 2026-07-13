@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Exceptions\InvalidOrderTransitionException;
+use App\Jobs\DispatchOutboundWebhook;
 use App\Traits\IsTenantModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -160,5 +161,19 @@ class Order extends Model
             'changed_by' => $changedBy,
             'notes' => $notes,
         ]);
+
+        $this->fireOutboundWebhooks($status);
+    }
+
+    /**
+     * Notify subscribed external systems of the lifecycle event (order.paid,
+     * order.refunded, …). Guarded by a cheap existence check so the hot path and
+     * the test suite incur no queued job when no endpoints are configured.
+     */
+    private function fireOutboundWebhooks(string $status): void
+    {
+        if (WebhookEndpoint::where('is_active', true)->exists()) {
+            DispatchOutboundWebhook::dispatch($this->id, 'order.'.$status);
+        }
     }
 }
