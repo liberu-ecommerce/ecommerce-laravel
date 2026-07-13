@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountDataExportController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CheckoutController;
@@ -95,6 +96,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/orders', [OrderHistoryController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}', [OrderHistoryController::class, 'show'])->name('orders.show');
+
+    // GDPR right-of-access: download all of your own personal data as JSON.
+    Route::get('/account/data-export', AccountDataExportController::class)->name('account.data-export');
 });
 
 Route::middleware('auth')->prefix('payment_methods')->group(function () {
