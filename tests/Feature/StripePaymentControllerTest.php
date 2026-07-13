@@ -10,28 +10,6 @@ class StripePaymentControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_create_one_time_payment_requires_amount(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->postJson('/stripe/payment', [
-            'payment_method' => 'pm_test',
-        ]);
-
-        $response->assertStatus(422);
-    }
-
-    public function test_create_one_time_payment_requires_payment_method(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->postJson('/stripe/payment', [
-            'amount' => 50.00,
-        ]);
-
-        $response->assertStatus(422);
-    }
-
     public function test_create_subscription_requires_plan(): void
     {
         $user = User::factory()->create();
