@@ -120,32 +120,6 @@
 @endif
 
 
-@isset($product->inventoryLogs)
-<div class="card mt-4">
-    <div class="card-header">Inventory Logs</div>
-    <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Quantity Change</th>
-                    <th>Reason</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($product->inventoryLogs as $log)
-                    <tr>
-                        <td>{{ $log->created_at->format('Y-m-d H:i:s') }}</td>
-                        <td>{{ $log->quantity_change }}</td>
-                        <td>{{ $log->reason }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
-@endisset
-
 <script type="application/ld+json">
 {!! json_encode([
     '@context' => 'https://schema.org/',
@@ -172,7 +146,7 @@
             'name' => config('app.name'),
         ],
     ],
-], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT) !!}
+], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_PRETTY_PRINT) !!}
 </script>
     
 @endsection
