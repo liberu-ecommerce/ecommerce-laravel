@@ -2,11 +2,14 @@
 
 namespace App\GraphQL;
 
+use App\Exceptions\CheckoutException;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCollection;
+use App\Services\HeadlessCheckoutService;
 use GraphQL\Error\Error;
+use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema;
@@ -85,6 +88,11 @@ class StorefrontSchema
                     'type' => Type::nonNull(Type::boolean()),
                     'args' => ['productId' => Type::nonNull(Type::int())],
                     'resolve' => fn ($root, array $args, array $context) => $this->removeCartItem($args, $context),
+                ],
+                'checkout' => [
+                    'type' => Type::nonNull($order),
+                    'args' => ['input' => Type::nonNull($this->checkoutInputType())],
+                    'resolve' => fn ($root, array $args, array $context) => $this->checkout($args['input'], $context),
                 ],
             ],
         ]);
@@ -166,6 +174,8 @@ class StorefrontSchema
                 'totalAmount' => ['type' => Type::nonNull(Type::float()), 'resolve' => fn (Order $o) => (float) $o->total_amount],
                 'taxAmount' => ['type' => Type::float(), 'resolve' => fn (Order $o) => (float) $o->tax_amount],
                 'shippingCost' => ['type' => Type::float(), 'resolve' => fn (Order $o) => (float) $o->shipping_cost],
+                'shippingCarrier' => ['type' => Type::string(), 'resolve' => fn (Order $o) => $o->shipping_carrier],
+                'shippingService' => ['type' => Type::string(), 'resolve' => fn (Order $o) => $o->shipping_service],
                 'billingCountry' => ['type' => Type::string(), 'resolve' => fn (Order $o) => $o->billing_country],
                 'createdAt' => ['type' => Type::string(), 'resolve' => fn (Order $o) => $o->created_at?->toIso8601String()],
             ],
@@ -260,6 +270,35 @@ class StorefrontSchema
         CartItem::where('user_id', $user->id)->where('product_id', $args['productId'])->delete();
 
         return true;
+    }
+
+    private function checkoutInputType(): InputObjectType
+    {
+        return new InputObjectType([
+            'name' => 'CheckoutInput',
+            'fields' => [
+                'country' => Type::nonNull(Type::string()),
+                'paymentMethod' => Type::string(),   // defaults to 'stripe'
+                'stripeToken' => Type::string(),
+                'shippingQuoteId' => Type::int(),     // a persisted ShippingQuote; its stored amount is billed
+                'state' => Type::string(),
+                'city' => Type::string(),
+                'postalCode' => Type::string(),
+            ],
+        ]);
+    }
+
+    private function checkout(array $input, array $context): Order
+    {
+        $user = $this->requireUser($context);
+
+        try {
+            return app(HeadlessCheckoutService::class)->place($user, $input);
+        } catch (CheckoutException $e) {
+            // Client-safe failures (empty cart, out of stock, bad quote, declined) are
+            // surfaced; anything else bubbles and webonyx masks it as an internal error.
+            throw new Error($e->getMessage());
+        }
     }
 
     private function requireUser(array $context)
