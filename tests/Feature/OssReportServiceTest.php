@@ -82,4 +82,19 @@ class OssReportServiceTest extends TestCase
         $this->assertCount(1, $report['lines']);
         $this->assertSame(1, $report['lines'][0]['orders']);
     }
+
+    public function test_partially_refunded_orders_are_netted_by_the_refunded_fraction(): void
+    {
+        // €120 order (€20 VAT), half of it refunded → net €60 gross, €10 VAT, €50 net.
+        $order = $this->order('DE', 120.0, 20.0, 'partially_refunded', '2026-05-10');
+        $order->update(['refund_total' => 60.0]);
+        // A second, un-refunded order confirms the netting is per-order.
+        $this->order('DE', 60.0, 10.0, 'paid', '2026-05-11');
+
+        $de = collect($this->report()['lines'])->firstWhere('country', 'DE');
+
+        $this->assertSame(120.0, $de['gross']);   // 60 (netted order1) + 60 (order2)
+        $this->assertSame(20.0, $de['vat']);      // 10 (netted order1) + 10 (order2)
+        $this->assertSame(100.0, $de['net']);
+    }
 }

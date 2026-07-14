@@ -16,9 +16,8 @@ class OssReportService
      * Statuses that count as a completed sale with VAT due. Excludes pending/failed/
      * cancelled (no sale) and fully refunded (VAT reversed).
      *
-     * ponytail: partially-refunded orders are counted at their full VAT — netting a
-     * partial VAT refund needs per-line refund data; revisit if partial refunds of EU
-     * orders become common.
+     * Partially-refunded orders are netted (see the query below): the report bills only
+     * the un-refunded fraction of the order and its VAT, using refund_total.
      */
     private const REPORTABLE_STATUSES = [
         Order::STATUS_PAID,
@@ -35,7 +34,12 @@ class OssReportService
             ->whereIn('status', self::REPORTABLE_STATUSES)
             ->whereIn('billing_country', EuVat::memberStates())
             ->whereBetween('created_at', [$from, $to])
-            ->selectRaw('billing_country, COUNT(*) as orders, SUM(total_amount) as gross, SUM(tax_amount) as vat')
+            // Net out partial refunds: bill only the un-refunded fraction of each order,
+            // and the same fraction of its VAT. Non-refunded orders (refund_total 0/null)
+            // are unaffected; fully-refunded orders are already excluded by status.
+            ->selectRaw('billing_country, COUNT(*) as orders, '
+                .'SUM(total_amount - COALESCE(refund_total, 0)) as gross, '
+                .'SUM(tax_amount * (total_amount - COALESCE(refund_total, 0)) / NULLIF(total_amount, 0)) as vat')
             ->groupBy('billing_country')
             ->orderBy('billing_country')
             ->get();
