@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Services;
+
+use App\Exceptions\CheckoutException;
+use App\Factories\PaymentGatewayFactory;
+use App\Models\InventoryLog;
+use App\Models\Order;
+use App\Models\Product;
+
+/**
+ * The shared money mechanics behind both checkout entry points — the web checkout
+ * (session cart) and the headless GraphQL checkout (CartItem cart). Keeping stock
+ * reservation, release and payment capture in one place stops the two paths from
+ * drifting on the parts that are dangerous to get wrong.
+ *
+ * Each caller keeps its own orchestration (cart source, tax/coupon/shipping, error
+ * presentation) and calls these primitives; they do not encode any web- or
+ * GraphQL-specific behaviour.
+ *
+ * @phpstan-type LineItem array{product_id: int, quantity: int, price: float|string}
+ */
+class CheckoutService
+{
+    /**
+     * Create the order's line items and RESERVE their stock with a guarded atomic
+     * decrement. Call inside a transaction: on the first shortfall this throws, the
+     * transaction rolls back, and no payment is taken. Reserving before charging is
+     * what prevents charging a customer for stock we can't fulfil.
+     *
+     * @param  array<int, LineItem>  $lineItems
+     *
+     * @throws CheckoutException when any line can't be fully reserved
+     */
+    public function reserveStock(Order $order, array $lineItems): void
+    {
+        foreach ($lineItems as $line) {
+            $order->items()->create([
+                'product_id' => $line['product_id'],
+                'quantity' => $line['quantity'],
+                'price' => $line['price'],
+            ]);
+
+            $before = Product::where('id', $line['product_id'])->value('inventory_count');
+
+            $affected = Product::where('id', $line['product_id'])
+                ->where('inventory_count', '>=', $line['quantity'])
+                ->decrement('inventory_count', $line['quantity']);
+
+            if ($affected === 0) {
+                throw new CheckoutException('Some items in your cart are no longer available in the requested quantity.');
+            }
+
+            InventoryLog::create([
+                'product_id' => $line['product_id'],
+                'quantity_change' => -$line['quantity'],
+                'old_quantity' => $before,
+                'new_quantity' => $before - $line['quantity'],
+                'reason' => 'order',
+                'reference_id' => $order->id,
+                'reference_type' => Order::class,
+            ]);
+        }
+    }
+
+    /**
+     * Return reserved stock when a charge fails after the order was created. Keeps an
+     * audit row so the reserve/release pair is traceable.
+     *
+     * @param  array<int, LineItem>  $lineItems
+     */
+    public function releaseStock(Order $order, array $lineItems): void
+    {
+        foreach ($lineItems as $line) {
+            $before = Product::where('id', $line['product_id'])->value('inventory_count');
+            if ($before === null) {
+                continue;
+            }
+
+            Product::where('id', $line['product_id'])->increment('inventory_count', $line['quantity']);
+
+            InventoryLog::create([
+                'product_id' => $line['product_id'],
+                'quantity_change' => $line['quantity'],
+                'old_quantity' => $before,
+                'new_quantity' => $before + $line['quantity'],
+                'reason' => 'payment_failed_release',
+                'reference_id' => $order->id,
+                'reference_type' => Order::class,
+            ]);
+        }
+    }
+
+    /**
+     * Charge the order total through the given gateway. $paymentExtra carries the
+     * gateway-specific token/id (e.g. ['token' => ...] for Stripe, ['payment_id' => ...]
+     * for PayPal); order_id and customer_email are always included.
+     */
+    public function capturePayment(Order $order, string $gateway, array $paymentExtra): array
+    {
+        return PaymentGatewayFactory::create($gateway)->processPayment((float) $order->total_amount, [
+            'order_id' => $order->id,
+            'customer_email' => $order->customer_email,
+        ] + $paymentExtra);
+    }
+}

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Factories\PaymentGatewayFactory;
+use App\Exceptions\CheckoutException;
 use App\Jobs\DispatchDropshippingOrder;
 use App\Models\Coupon;
-use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderConfirmationNotification;
 use App\Notifications\SupplierFailureNotification;
+use App\Services\CheckoutService;
 use App\Services\CouponService;
 use App\Services\ShippingService;
 use App\Services\TaxCalculator;
@@ -24,20 +24,20 @@ use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
-    /** Sentinel thrown inside the reservation transaction to roll it back on insufficient stock. */
-    private const OUT_OF_STOCK = 'OUT_OF_STOCK';
-
     protected $shippingService;
 
     protected $taxCalculator;
 
     protected $couponService;
 
-    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CouponService $couponService)
+    protected $checkoutService;
+
+    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CouponService $couponService, CheckoutService $checkoutService)
     {
         $this->shippingService = $shippingService;
         $this->taxCalculator = $taxCalculator;
         $this->couponService = $couponService;
+        $this->checkoutService = $checkoutService;
     }
 
     public function initiateCheckout(Request $request)
@@ -259,9 +259,14 @@ class CheckoutController extends Controller
         // If any line can't be reserved (e.g. a concurrent buyer took the last
         // unit), the whole transaction rolls back and no payment is taken — this
         // is what prevents charging a customer for stock we can't fulfil.
+        $lineItems = [];
+        foreach ($cart as $productId => $item) {
+            $lineItems[] = ['product_id' => $productId, 'quantity' => $item['quantity'], 'price' => $item['price']];
+        }
+
         $order = null;
         try {
-            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId) {
+            DB::transaction(function () use (&$order, $lineItems, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId) {
                 $order = Order::create([
                     'user_id' => auth()->id(),
                     'customer_email' => $request->email,
@@ -287,42 +292,11 @@ class CheckoutController extends Controller
                     'gift_message' => $request->gift_message,
                 ]);
 
-                foreach ($cart as $productId => $item) {
-                    $order->items()->create([
-                        'product_id' => $productId,
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                    ]);
-
-                    $before = Product::where('id', $productId)->value('inventory_count');
-
-                    // Atomic, guarded decrement: only succeeds while enough stock remains.
-                    $affected = Product::where('id', $productId)
-                        ->where('inventory_count', '>=', $item['quantity'])
-                        ->decrement('inventory_count', $item['quantity']);
-
-                    if ($affected === 0) {
-                        // Not enough stock (or product gone) — abort the whole order.
-                        throw new \RuntimeException(self::OUT_OF_STOCK);
-                    }
-
-                    InventoryLog::create([
-                        'product_id' => $productId,
-                        'quantity_change' => -$item['quantity'],
-                        'old_quantity' => $before,
-                        'new_quantity' => $before - $item['quantity'],
-                        'reason' => 'order',
-                        'reference_id' => $order->id,
-                        'reference_type' => Order::class,
-                    ]);
-                }
+                // Reserve stock atomically before charging (shared with headless checkout).
+                $this->checkoutService->reserveStock($order, $lineItems);
             });
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() === self::OUT_OF_STOCK) {
-                return redirect()->back()
-                    ->with('error', 'Some items in your cart are no longer available in the requested quantity.');
-            }
-            throw $e;
+        } catch (CheckoutException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
 
         /** @var Order $order */
@@ -331,11 +305,11 @@ class CheckoutController extends Controller
         // we can't fulfil. If the charge fails, release the reservation.
         if ($totalAmount > 0) {
             if ($request->payment_method === 'stripe' && $request->has('stripeToken')) {
-                $paymentResult = $this->processStripePayment($order, $request->stripeToken);
+                $paymentResult = $this->checkoutService->capturePayment($order, 'stripe', ['token' => $request->stripeToken]);
             } elseif ($request->payment_method === 'paypal' && $request->has('paypal_payment_id')) {
-                $paymentResult = $this->processPayPalPayment($order, $request->paypal_payment_id);
+                $paymentResult = $this->checkoutService->capturePayment($order, 'paypal', ['payment_id' => $request->paypal_payment_id]);
             } else {
-                $this->releaseInventory($order, $cart);
+                $this->checkoutService->releaseStock($order, $lineItems);
                 $order->transitionTo(Order::STATUS_FAILED, notes: 'Invalid payment information');
 
                 return redirect()->back()
@@ -343,7 +317,7 @@ class CheckoutController extends Controller
             }
 
             if (! $paymentResult['success']) {
-                $this->releaseInventory($order, $cart);
+                $this->checkoutService->releaseStock($order, $lineItems);
                 $order->transitionTo(Order::STATUS_FAILED, notes: 'Payment failed: '.($paymentResult['error'] ?? 'unknown'));
 
                 return redirect()->back()
@@ -449,42 +423,6 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.initiate');
     }
 
-    protected function processPayment($order, $paymentMethod)
-    {
-        $paymentGateway = PaymentGatewayFactory::create($paymentMethod);
-
-        return $paymentGateway->processPayment($order->total_amount, [
-            'order_id' => $order->id,
-            'customer_email' => $order->customer_email,
-        ]);
-    }
-
-    /**
-     * Return reserved stock to inventory when a payment fails after the order was
-     * created. Keeps an audit row so the reserve/release pair is traceable.
-     */
-    private function releaseInventory($order, array $cart): void
-    {
-        foreach ($cart as $productId => $item) {
-            $before = Product::where('id', $productId)->value('inventory_count');
-            if ($before === null) {
-                continue;
-            }
-
-            Product::where('id', $productId)->increment('inventory_count', $item['quantity']);
-
-            InventoryLog::create([
-                'product_id' => $productId,
-                'quantity_change' => $item['quantity'],
-                'old_quantity' => $before,
-                'new_quantity' => $before + $item['quantity'],
-                'reason' => 'payment_failed_release',
-                'reference_id' => $order->id,
-                'reference_type' => Order::class,
-            ]);
-        }
-    }
-
     private function hasPhysicalProducts($cart)
     {
         foreach ($cart as $item) {
@@ -494,27 +432,5 @@ class CheckoutController extends Controller
         }
 
         return false;
-    }
-
-    protected function processStripePayment($order, $stripeToken)
-    {
-        $paymentGateway = PaymentGatewayFactory::create('stripe');
-
-        return $paymentGateway->processPayment($order->total_amount, [
-            'order_id' => $order->id,
-            'customer_email' => $order->customer_email,
-            'token' => $stripeToken,
-        ]);
-    }
-
-    protected function processPayPalPayment($order, $paypalPaymentId)
-    {
-        $paymentGateway = PaymentGatewayFactory::create('paypal');
-
-        return $paymentGateway->processPayment($order->total_amount, [
-            'order_id' => $order->id,
-            'customer_email' => $order->customer_email,
-            'payment_id' => $paypalPaymentId,
-        ]);
     }
 }
