@@ -40,13 +40,15 @@ class GenerateOssVatReport extends Command
             return self::SUCCESS;
         }
 
-        $this->table(
-            ['Member state', 'Std rate %', 'Orders', 'Net', 'VAT', 'Gross'],
-            array_map(fn ($l) => [
+        $rows = [];
+        foreach ($report['lines'] as $l) {
+            $rows[] = [
                 $l['country'], $l['standard_rate'], $l['orders'],
                 number_format($l['net'], 2), number_format($l['vat'], 2), number_format($l['gross'], 2),
-            ], $report['lines']),
-        );
+            ];
+        }
+
+        $this->table(['Member state', 'Std rate %', 'Orders', 'Net', 'VAT', 'Gross'], $rows);
 
         $t = $report['totals'];
         $this->info("Totals — orders: {$t['orders']}, net: ".number_format($t['net'], 2)
