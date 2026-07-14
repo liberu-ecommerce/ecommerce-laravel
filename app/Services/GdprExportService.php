@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\CustomerSegment;
 use App\Models\GiftRegistry;
 use App\Models\Order;
 use App\Models\ProductRating;
@@ -78,21 +77,13 @@ class GdprExportService
         ])->all();
     }
 
-    /**
-     * Segment memberships — the segment names only, not the internal matching rules.
-     *
-     * Queried via a direct join rather than the User::customerSegments() relation: that
-     * relation declares withTimestamps() but the customer_segment_members pivot has no
-     * created_at/updated_at, so using it errors. (Left for a separate fix.)
-     */
+    /** Segment memberships — the segment names only, not the internal matching rules. */
     private function segments(User $user): array
     {
-        return CustomerSegment::query()
-            ->join('customer_segment_members', 'customer_segments.id', '=', 'customer_segment_members.segment_id')
-            ->where('customer_segment_members.user_id', $user->id)
-            ->get(['customer_segments.name', 'customer_segments.description'])
-            ->map(fn ($s) => ['name' => $s->name, 'description' => $s->description])
-            ->all();
+        return $user->customerSegments()->get()->map(fn ($s) => [
+            'name' => $s->name,
+            'description' => $s->description,
+        ])->all();
     }
 
     private function reviews(User $user): array

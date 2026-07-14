@@ -17,7 +17,6 @@ use App\Models\Rating;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -141,11 +140,7 @@ class GdprDataExportTest extends TestCase
             'conditions' => [['field' => 'lifetime_value', 'operator' => '>', 'value' => 'SECRET-RULE-9000']],
             'match_type' => 'all',
         ]);
-        // Insert the pivot directly — the customerSegments() relation's withTimestamps()
-        // is incompatible with the pivot table (no created_at/updated_at).
-        DB::table('customer_segment_members')->insert([
-            'user_id' => $user->id, 'segment_id' => $segment->id, 'added_at' => now(),
-        ]);
+        $user->customerSegments()->attach($segment->id);
 
         $response = $this->actingAs($user)->getJson(route('account.data-export'));
 
