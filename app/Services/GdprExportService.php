@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CustomerSegment;
 use App\Models\GiftRegistry;
 use App\Models\Order;
 use App\Models\ProductRating;
@@ -22,9 +23,10 @@ use App\Models\User;
  * Registry access codes (a private-registry secret) and registry purchases (a third
  * party's PII) are deliberately excluded.
  *
- * ponytail: covers identity, transactional data, and user-authored content. Behavioural
- * /tracking data (browsing history, product interactions, customer segments) is personal
- * data too — add it here when a user actually asks for it; it is high-volume and derived.
+ * Covers identity, transactional data, user-authored content, and behavioural/tracking
+ * data (browsing history, product interactions, segment memberships). Behavioural data
+ * is high-volume; it is exported in full rather than capped, since Art. 15 asks for
+ * completeness — trim with a date range here if volume becomes a problem.
  */
 class GdprExportService
 {
@@ -51,7 +53,46 @@ class GdprExportService
             'product_reviews' => $customer ? $this->productReviews($customer->id) : [],
             'product_ratings' => $customer ? $this->productRatings($customer->id) : [],
             'gift_registries' => $this->giftRegistries($user),
+            'browsing_history' => $this->browsingHistory($user),
+            'product_interactions' => $this->productInteractions($user),
+            'segments' => $this->segments($user),
         ];
+    }
+
+    private function browsingHistory(User $user): array
+    {
+        return $user->browsingHistory()->latest('id')->get()->map(fn ($h) => [
+            'product_id' => $h->product_id,
+            'viewed_at' => optional($h->created_at)->toIso8601String(),
+        ])->all();
+    }
+
+    private function productInteractions(User $user): array
+    {
+        return $user->productInteractions()->latest('id')->get()->map(fn ($i) => [
+            'product_id' => $i->product_id,
+            'interaction_type' => $i->interaction_type,
+            'duration' => $i->duration,
+            'metadata' => $i->metadata,
+            'interacted_at' => optional($i->interacted_at)->toIso8601String(),
+        ])->all();
+    }
+
+    /**
+     * Segment memberships — the segment names only, not the internal matching rules.
+     *
+     * Queried via a direct join rather than the User::customerSegments() relation: that
+     * relation declares withTimestamps() but the customer_segment_members pivot has no
+     * created_at/updated_at, so using it errors. (Left for a separate fix.)
+     */
+    private function segments(User $user): array
+    {
+        return CustomerSegment::query()
+            ->join('customer_segment_members', 'customer_segments.id', '=', 'customer_segment_members.segment_id')
+            ->where('customer_segment_members.user_id', $user->id)
+            ->get(['customer_segments.name', 'customer_segments.description'])
+            ->map(fn ($s) => ['name' => $s->name, 'description' => $s->description])
+            ->all();
     }
 
     private function reviews(User $user): array
