@@ -2,12 +2,35 @@
 
 namespace App\Services;
 
+use App\Factories\CarrierRateFactory;
 use App\Models\Product;
 use App\Models\ShippingMethod;
+use App\Services\Shipping\CarrierRate;
 use Illuminate\Support\Facades\Http;
 
 class ShippingService
 {
+    /**
+     * Live carrier rates for a cart shipping to $to. Returns [] when no live-rate
+     * carrier is configured or the carrier is unreachable — the caller then falls
+     * back to the flat DB methods from getAvailableShippingMethods().
+     *
+     * @param  array  $to  destination address (name/street1/city/state/zip/country)
+     * @param  array|null  $from  origin; defaults to config('shipping.origin')
+     * @return CarrierRate[]
+     */
+    public function getLiveRates($cart, array $to, ?array $from = null): array
+    {
+        $carrier = CarrierRateFactory::create();
+        if ($carrier === null) {
+            return [];
+        }
+
+        $parcel = ['weight' => $this->calculateTotalWeight($cart)];
+
+        return $carrier->getRates($parcel, $from ?? (array) config('shipping.origin'), $to);
+    }
+
     public function getAvailableShippingMethods($cart = null, $address = null)
     {
         // Only offer active methods; a deactivated method must never be selectable.
