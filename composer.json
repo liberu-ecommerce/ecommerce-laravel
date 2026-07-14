@@ -28,7 +28,8 @@
         "spatie/laravel-menu": "^4.2",
         "spatie/laravel-permission": "^6.0",
         "spatie/laravel-query-builder": "^7.0",
-        "srmklive/paypal": "^3.1"
+        "srmklive/paypal": "^3.1",
+        "webonyx/graphql-php": "^15.34"
     },
     "require-dev": {
         "driftingly/rector-laravel": "^2.5",
