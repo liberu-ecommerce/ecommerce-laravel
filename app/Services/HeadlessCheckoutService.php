@@ -60,6 +60,9 @@ class HeadlessCheckoutService
 
         $order = null;
         DB::transaction(function () use (&$order, $lineItems, $user, $input, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines, $discount, $coupon, $isDropship) {
+            // Close the coupon usage-limit race under a row lock before creating the order.
+            $this->checkoutService->assertCouponAvailable($coupon['code']);
+
             $order = Order::create([
                 'user_id' => $user->id,
                 'customer_email' => $user->email,

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\CheckoutException;
 use App\Factories\PaymentGatewayFactory;
 use App\Jobs\DispatchDropshippingOrder;
+use App\Models\Coupon;
 use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Product;
@@ -48,6 +49,31 @@ class CheckoutService
         return $result['valid']
             ? ['valid' => true, 'discount' => (float) $result['discount'], 'code' => $code]
             : ['valid' => false, 'discount' => 0.0, 'code' => null];
+    }
+
+    /**
+     * Re-check a coupon's usage limit under a row lock, inside the order transaction.
+     *
+     * Coupon usage is derived from the order count, so resolveCouponDiscount validating
+     * it up front leaves a TOCTOU window: two simultaneous checkouts of a max_uses=1
+     * coupon can both pass before either order commits. Locking the coupon row here
+     * serialises those checkouts — the first to commit consumes the use, and the next,
+     * counting orders under the lock, is rejected. (Row locks are a MySQL feature; the
+     * re-check logic still runs on sqlite so the guard is testable.)
+     *
+     * @throws CheckoutException when the coupon has since become unusable
+     */
+    public function assertCouponAvailable(?string $code): void
+    {
+        if (empty($code)) {
+            return;
+        }
+
+        $coupon = Coupon::where('code', $code)->lockForUpdate()->first();
+
+        if ($coupon !== null && ! $coupon->isValid()) {
+            throw new CheckoutException('This coupon is no longer available.');
+        }
     }
 
     /**
