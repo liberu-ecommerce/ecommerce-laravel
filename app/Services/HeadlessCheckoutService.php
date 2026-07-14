@@ -36,18 +36,30 @@ class HeadlessCheckoutService
 
         $paymentMethod = $input['paymentMethod'] ?? 'stripe';
         $country = strtoupper((string) ($input['country'] ?? ''));
+        $isDropship = (bool) ($input['dropship'] ?? false);
+        if ($isDropship && (empty($input['recipientName']) || empty($input['recipientEmail']))) {
+            throw new CheckoutException('A drop-shipped order needs a recipient name and email.');
+        }
 
         $subtotal = (float) $cart->sum(fn (CartItem $i) => (float) $i->price * $i->quantity);
         [$shippingCost, $carrier, $service, $quoteId] = $this->resolveShipping($input, $user);
-        [$taxAmount, $taxLines] = $this->calculateTax($cart, $input, $shippingCost);
 
-        $total = max(0, round($subtotal + $shippingCost + $taxAmount, 2));
+        // Re-validate the coupon against the live subtotal (never trust a client figure).
+        $coupon = $this->checkoutService->resolveCouponDiscount($input['couponCode'] ?? null, $subtotal);
+        $discount = $coupon['discount'];
+
+        // Tax lands on the post-discount amount (pro-rata), matching the web checkout.
+        $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discount) / $subtotal : 1.0;
+        [$taxAmount, $taxLines] = $this->calculateTax($cart, $input, $shippingCost, $discountFactor);
+
+        // Floor at 0 — a discount can zero an order but must never make it negative.
+        $total = max(0, round($subtotal - $discount + $shippingCost + $taxAmount, 2));
         $lineItems = $cart->map(fn (CartItem $i) => [
             'product_id' => $i->product_id, 'quantity' => $i->quantity, 'price' => $i->price,
         ])->all();
 
         $order = null;
-        DB::transaction(function () use (&$order, $lineItems, $user, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines) {
+        DB::transaction(function () use (&$order, $lineItems, $user, $input, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines, $discount, $coupon, $isDropship) {
             $order = Order::create([
                 'user_id' => $user->id,
                 'customer_email' => $user->email,
@@ -60,6 +72,12 @@ class HeadlessCheckoutService
                 'shipping_cost' => $shippingCost,
                 'tax_amount' => $taxAmount,
                 'tax_lines' => $taxLines,
+                'discount_amount' => $discount,
+                'coupon_code' => $coupon['code'],
+                'is_dropshipped' => $isDropship,
+                'recipient_name' => $input['recipientName'] ?? null,
+                'recipient_email' => $input['recipientEmail'] ?? null,
+                'gift_message' => $input['giftMessage'] ?? null,
                 'status' => Order::STATUS_PENDING,
             ]);
 
@@ -70,6 +88,12 @@ class HeadlessCheckoutService
         $this->charge($order, $lineItems, $paymentMethod, $input['stripeToken'] ?? null, $total);
 
         $order->transitionTo(Order::STATUS_PAID, notes: 'Payment captured (headless checkout)');
+
+        // Post-payment fulfilment (shared with the web checkout).
+        $this->checkoutService->grantDownloads($order);
+        if ($isDropship) {
+            $this->checkoutService->queueDropship($order, $input['supplierId'] ?? 'dropxl');
+        }
 
         CartItem::where('user_id', $user->id)->delete();
 
@@ -95,7 +119,7 @@ class HeadlessCheckoutService
     }
 
     /** @return array{0: float, 1: array} */
-    private function calculateTax(Collection $cart, array $input, float $shippingCost): array
+    private function calculateTax(Collection $cart, array $input, float $shippingCost, float $discountFactor = 1.0): array
     {
         $address = [
             'country' => $input['country'] ?? null,
@@ -107,7 +131,7 @@ class HeadlessCheckoutService
         $taxItems = [];
         foreach ($cart as $item) {
             if ($item->products) {
-                $taxItems[] = ['product' => $item->products, 'quantity' => $item->quantity, 'price' => (float) $item->price];
+                $taxItems[] = ['product' => $item->products, 'quantity' => $item->quantity, 'price' => (float) $item->price * $discountFactor];
             }
         }
 

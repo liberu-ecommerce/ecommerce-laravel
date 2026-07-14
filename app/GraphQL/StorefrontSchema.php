@@ -292,6 +292,12 @@ class StorefrontSchema
                 'state' => Type::string(),
                 'city' => Type::string(),
                 'postalCode' => Type::string(),
+                'couponCode' => Type::string(),       // re-validated against the live subtotal
+                'dropship' => Type::boolean(),
+                'supplierId' => Type::string(),
+                'recipientName' => Type::string(),
+                'recipientEmail' => Type::string(),
+                'giftMessage' => Type::string(),
             ],
         ]);
     }

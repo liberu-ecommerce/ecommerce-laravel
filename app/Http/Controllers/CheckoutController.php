@@ -3,24 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CheckoutException;
-use App\Jobs\DispatchDropshippingOrder;
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingMethod;
 use App\Notifications\OrderConfirmationNotification;
-use App\Notifications\SupplierFailureNotification;
 use App\Services\CheckoutService;
-use App\Services\CouponService;
 use App\Services\ShippingService;
 use App\Services\TaxCalculator;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -28,15 +22,12 @@ class CheckoutController extends Controller
 
     protected $taxCalculator;
 
-    protected $couponService;
-
     protected $checkoutService;
 
-    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CouponService $couponService, CheckoutService $checkoutService)
+    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CheckoutService $checkoutService)
     {
         $this->shippingService = $shippingService;
         $this->taxCalculator = $taxCalculator;
-        $this->couponService = $couponService;
         $this->checkoutService = $checkoutService;
     }
 
@@ -216,10 +207,10 @@ class CheckoutController extends Controller
         $couponCode = null;
         $couponData = Session::get('coupon');
         if ($couponData && ! empty($couponData['code'])) {
-            $result = $this->couponService->validateAndApplyCoupon($couponData['code'], $subtotal);
-            if ($result['valid']) {
-                $discountAmount = $result['discount'];
-                $couponCode = $couponData['code'];
+            $coupon = $this->checkoutService->resolveCouponDiscount($couponData['code'], $subtotal);
+            if ($coupon['valid']) {
+                $discountAmount = $coupon['discount'];
+                $couponCode = $coupon['code'];
             } else {
                 Session::forget('coupon');
             }
@@ -341,53 +332,17 @@ class CheckoutController extends Controller
         Notification::route('mail', $order->customer_email)
             ->notify(new OrderConfirmationNotification($order));
 
-        // If dropshipping, queue supplier order placement
+        // If dropshipping, queue supplier order placement (shared with headless checkout).
         if ($order->is_dropshipped) {
-            try {
-                $supplierId = $request->input('supplier_id', 'dropxl');
-                // persist chosen supplier so admin can see it immediately
-                $order->update(['supplier_id' => $supplierId]);
-
-                // dispatch a job to place the supplier order asynchronously
-                DispatchDropshippingOrder::dispatch($order->id, $supplierId);
-
-                // set temporary status indicating background placement
-                $order->transitionTo(Order::STATUS_SUPPLIER_QUEUED, notes: "Supplier order queued ({$supplierId})");
-
-            } catch (Exception $e) {
-                \Log::error('Dropshipping dispatch error: '.$e->getMessage());
-                $order->transitionTo(Order::STATUS_SUPPLIER_FAILED, notes: 'Dropshipping dispatch error: '.$e->getMessage());
-
-                Notification::route('mail', config('mail.from.address'))
-                    ->notify(new SupplierFailureNotification("Error queuing dropshipping order for order {$order->id}: ".$e->getMessage()));
-
+            $supplierId = $request->input('supplier_id', 'dropxl');
+            if (! $this->checkoutService->queueDropship($order, $supplierId)) {
                 return redirect()->route('checkout.confirmation', ['order' => $order->id])
                     ->with('warning', 'Order placed but an error occurred while queuing the supplier order. Our team will follow up.');
             }
         }
 
-        // Generate download links for downloadable products
-        foreach ($cart as $productId => $item) {
-            if ($item['is_downloadable']) {
-                $product = Product::with('category')->find($productId);
-                $orderItem = $order->items()->where('product_id', $productId)->first();
-
-                if ($orderItem && $product) {
-                    // Generate secure download link with expiration (30 days)
-                    $token = Str::random(64);
-                    $downloadLink = route('download.serve-file', [
-                        'product' => $product->id,
-                        'token' => $token,
-                    ]);
-
-                    $orderItem->update([
-                        'download_link' => $token, // Store token, not full URL
-                        'download_expires_at' => now()->addDays(30),
-                        'download_count' => 0,
-                    ]);
-                }
-            }
-        }
+        // Issue download tokens for any downloadable lines.
+        $this->checkoutService->grantDownloads($order);
 
         // Clear cart and coupon
         Session::forget('cart');
