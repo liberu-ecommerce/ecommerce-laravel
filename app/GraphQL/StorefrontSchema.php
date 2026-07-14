@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductCollection;
 use App\Services\HeadlessCheckoutService;
+use App\Services\ShippingService;
 use GraphQL\Error\Error;
 use GraphQL\Type\Definition\InputObjectType;
 use GraphQL\Type\Definition\ObjectType;
@@ -93,6 +94,13 @@ class StorefrontSchema
                     'type' => Type::nonNull($order),
                     'args' => ['input' => Type::nonNull($this->checkoutInputType())],
                     'resolve' => fn ($root, array $args, array $context) => $this->checkout($args['input'], $context),
+                ],
+                // A mutation (not a query): it persists a ShippingQuote per rate so the
+                // returned ids can be passed to checkout, where the STORED amount is billed.
+                'shippingRates' => [
+                    'type' => Type::nonNull(Type::listOf(Type::nonNull($this->shippingRateType()))),
+                    'args' => ['input' => Type::nonNull($this->shippingRatesInputType())],
+                    'resolve' => fn ($root, array $args, array $context) => $this->shippingRates($args['input'], $context),
                 ],
             ],
         ]);
@@ -299,6 +307,62 @@ class StorefrontSchema
             // surfaced; anything else bubbles and webonyx masks it as an internal error.
             throw new Error($e->getMessage());
         }
+    }
+
+    private function shippingRateType(): ObjectType
+    {
+        return new ObjectType([
+            'name' => 'ShippingRate',
+            'fields' => [
+                'id' => Type::nonNull(Type::int()),   // the persisted quote id — pass to checkout
+                'carrier' => Type::nonNull(Type::string()),
+                'service' => Type::nonNull(Type::string()),
+                'amount' => ['type' => Type::nonNull(Type::float()), 'resolve' => fn ($q) => (float) $q->amount],
+                'currency' => Type::nonNull(Type::string()),
+                'deliveryDays' => ['type' => Type::int(), 'resolve' => fn ($q) => $q->delivery_days],
+            ],
+        ]);
+    }
+
+    private function shippingRatesInputType(): InputObjectType
+    {
+        return new InputObjectType([
+            'name' => 'ShippingRatesInput',
+            'fields' => [
+                'country' => Type::nonNull(Type::string()),
+                'state' => Type::string(),
+                'city' => Type::string(),
+                'postalCode' => Type::string(),
+            ],
+        ]);
+    }
+
+    private function shippingRates(array $input, array $context): array
+    {
+        $user = $this->requireUser($context);
+
+        $cart = CartItem::where('user_id', $user->id)->get();
+        if ($cart->isEmpty()) {
+            return [];
+        }
+
+        $cartByProduct = [];
+        foreach ($cart as $item) {
+            $cartByProduct[$item->product_id] = ['quantity' => $item->quantity];
+        }
+
+        $to = [
+            'country' => $input['country'],
+            'state' => $input['state'] ?? null,
+            'city' => $input['city'] ?? null,
+            'zip' => $input['postalCode'] ?? null,
+        ];
+
+        // Persist quotes scoped to this user (headless clients have no session), so the
+        // returned ids resolve in checkout by user_id.
+        return app(ShippingService::class)
+            ->quoteLiveRates($cartByProduct, $to, 'api', $user->id)
+            ->all();
     }
 
     private function requireUser(array $context)
