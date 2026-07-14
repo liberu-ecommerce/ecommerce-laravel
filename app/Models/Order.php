@@ -75,6 +75,7 @@ class Order extends Model
         'payment_status',
         'shipping_status',
         'shipping_address',
+        'billing_country',
         'shipping_method_id',
         'shipping_carrier',
         'shipping_service',

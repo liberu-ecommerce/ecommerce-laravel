@@ -266,6 +266,8 @@ class CheckoutController extends Controller
                     'user_id' => auth()->id(),
                     'customer_email' => $request->email,
                     'shipping_address' => $request->shipping_address,
+                    // Buyer country VAT was charged against — drives the OSS/MOSS report.
+                    'billing_country' => strtoupper((string) $request->input('country')),
                     // A live-rate quote drives the cost; don't also record a flat method.
                     'shipping_method_id' => $shippingQuoteId ? null : $request->shipping_method_id,
                     'shipping_carrier' => $shippingCarrier,
