@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReturnRequestController;
 use App\Http\Controllers\Api\WebhookEndpointController;
+use App\Http\Controllers\GraphQLController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Storefront GraphQL endpoint. Public route with optional Sanctum auth resolved in the
+// controller — the catalog is open, me/orders + mutations require a token.
+Route::post('/graphql', GraphQLController::class);
 
 // Dropshipping API routes
 Route::middleware('auth:sanctum')->prefix('dropshipping')->group(function () {
