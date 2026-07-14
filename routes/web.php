@@ -84,6 +84,9 @@ Route::get('/tags/{tag}', [ProductTagController::class, 'show'])->name('tags.sho
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('checkout.initiate');
 Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+// Live carrier rates for the current cart + destination — each is persisted as a
+// session-scoped quote the buyer then selects by id (server bills the stored amount).
+Route::post('/checkout/shipping-rates', [CheckoutController::class, 'shippingRates'])->name('checkout.shipping-rates');
 Route::get('/checkout/confirmation/{order}', [CheckoutController::class, 'showConfirmation'])->name('checkout.confirmation');
 
 // Shipping routes — store-wide config, admin-only (auth here, role checked in the controller)

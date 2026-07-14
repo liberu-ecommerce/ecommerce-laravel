@@ -5,11 +5,58 @@ namespace App\Services;
 use App\Factories\CarrierRateFactory;
 use App\Models\Product;
 use App\Models\ShippingMethod;
+use App\Models\ShippingQuote;
 use App\Services\Shipping\CarrierRate;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class ShippingService
 {
+    /**
+     * Fetch live rates and PERSIST each as a ShippingQuote scoped to this session, so
+     * the buyer can later select one by id and the server bills its stored amount.
+     * Returns the persisted quotes (empty when no carrier is configured/reachable).
+     *
+     * @return Collection<int, ShippingQuote>
+     */
+    public function quoteLiveRates($cart, array $to, string $sessionId, ?int $userId = null): Collection
+    {
+        $rates = $this->getLiveRates($cart, $to);
+        $expiresAt = now()->addMinutes((int) config('shipping.quote_ttl', 30));
+
+        return collect($rates)->map(fn (CarrierRate $rate) => ShippingQuote::create([
+            'session_id' => $sessionId,
+            'user_id' => $userId,
+            'carrier' => $rate->carrier,
+            'service' => $rate->service,
+            'amount' => $rate->amount,
+            'currency' => $rate->currency,
+            'delivery_days' => $rate->deliveryDays,
+            'rate_id' => $rate->rateId,
+            'expires_at' => $expiresAt,
+        ]));
+    }
+
+    /**
+     * Resolve a quote the caller is allowed to use: it must belong to this session (or,
+     * for a logged-in buyer, to them) and not be expired. Returns null otherwise — the
+     * caller rejects checkout rather than trusting a foreign, stale, or client-fabricated
+     * rate.
+     */
+    public function resolveQuote(int $quoteId, string $sessionId, ?int $userId = null): ?ShippingQuote
+    {
+        return ShippingQuote::query()
+            ->where('id', $quoteId)
+            ->where(function ($query) use ($sessionId, $userId) {
+                $query->where('session_id', $sessionId);
+                if ($userId !== null) {
+                    $query->orWhere('user_id', $userId);
+                }
+            })
+            ->active()
+            ->first();
+    }
+
     /**
      * Live carrier rates for a cart shipping to $to. Returns [] when no live-rate
      * carrier is configured or the carrier is unreachable — the caller then falls
