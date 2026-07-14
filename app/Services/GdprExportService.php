@@ -2,7 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\GiftRegistry;
 use App\Models\Order;
+use App\Models\ProductRating;
+use App\Models\ProductReview;
+use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 
 /**
@@ -12,15 +17,21 @@ use App\Models\User;
  * raw payment-method `details` must never leave the system, and a future column added
  * to one of these tables must not silently start appearing in exports.
  *
- * ponytail: covers the core identity + transactional data. Behavioural/tracking data
- * (browsing history, product interactions, customer segments) is personal data too —
- * add it here when a user actually asks for it; it is high-volume, derived, and not
- * needed for the first slice.
+ * Kept in symmetry with GdprErasureService: the content it deletes (reviews, ratings,
+ * gift registries) is exported here, so a user can see everything erasure will remove.
+ * Registry access codes (a private-registry secret) and registry purchases (a third
+ * party's PII) are deliberately excluded.
+ *
+ * ponytail: covers identity, transactional data, and user-authored content. Behavioural
+ * /tracking data (browsing history, product interactions, customer segments) is personal
+ * data too — add it here when a user actually asks for it; it is high-volume and derived.
  */
 class GdprExportService
 {
     public function export(User $user): array
     {
+        $customer = $user->customer;
+
         return [
             'exported_at' => now()->toIso8601String(),
             'user' => [
@@ -35,7 +46,85 @@ class GdprExportService
                 'name' => $pm->name,
                 'is_default' => (bool) $pm->is_default,
             ])->all(),
+            'reviews' => $this->reviews($user),
+            'ratings' => $this->ratings($user),
+            'product_reviews' => $customer ? $this->productReviews($customer->id) : [],
+            'product_ratings' => $customer ? $this->productRatings($customer->id) : [],
+            'gift_registries' => $this->giftRegistries($user),
         ];
+    }
+
+    private function reviews(User $user): array
+    {
+        return Review::where('user_id', $user->id)->latest('id')->get()->map(fn (Review $r) => [
+            'product_id' => $r->product_id,
+            'rating' => $r->rating,
+            'review' => $r->review,
+            'created_at' => optional($r->created_at)->toIso8601String(),
+        ])->all();
+    }
+
+    private function ratings(User $user): array
+    {
+        return Rating::where('user_id', $user->id)->latest('id')->get()->map(fn (Rating $r) => [
+            'product_id' => $r->product_id,
+            'rating' => $r->rating,
+            'overall_rating' => $r->overall_rating,
+            'quality_rating' => $r->quality_rating,
+            'value_rating' => $r->value_rating,
+            'price_rating' => $r->price_rating,
+            'created_at' => optional($r->created_at)->toIso8601String(),
+        ])->all();
+    }
+
+    private function productReviews(int $customerId): array
+    {
+        return ProductReview::where('customer_id', $customerId)->latest('id')->get()->map(fn (ProductReview $r) => [
+            'product_id' => $r->product_id,
+            'comments' => $r->comments,
+            'is_verified_purchase' => (bool) $r->is_verified_purchase,
+            'created_at' => optional($r->created_at)->toIso8601String(),
+        ])->all();
+    }
+
+    private function productRatings(int $customerId): array
+    {
+        return ProductRating::where('customer_id', $customerId)->latest('id')->get()->map(fn (ProductRating $r) => [
+            'product_id' => $r->product_id,
+            'rating' => $r->rating,
+            'overall_rating' => $r->overall_rating,
+            'quality_rating' => $r->quality_rating,
+            'value_rating' => $r->value_rating,
+            'price_rating' => $r->price_rating,
+            'created_at' => optional($r->created_at)->toIso8601String(),
+        ])->all();
+    }
+
+    private function giftRegistries(User $user): array
+    {
+        // access_code (private-registry secret) and purchases (third-party purchaser
+        // PII) are intentionally excluded.
+        return GiftRegistry::where('user_id', $user->id)->with('items')->latest('id')->get()->map(fn (GiftRegistry $g) => [
+            'name' => $g->name,
+            'type' => $g->type,
+            'event_date' => optional($g->event_date)->toDateString(),
+            'message' => $g->message,
+            'location' => $g->location,
+            'privacy' => $g->privacy,
+            'shipping_name' => $g->shipping_name,
+            'shipping_address' => $g->shipping_address,
+            'shipping_city' => $g->shipping_city,
+            'shipping_state' => $g->shipping_state,
+            'shipping_postal_code' => $g->shipping_postal_code,
+            'shipping_country' => $g->shipping_country,
+            'items' => $g->items->map(fn ($i) => [
+                'product_id' => $i->product_id,
+                'quantity_requested' => $i->quantity_requested,
+                'quantity_purchased' => $i->quantity_purchased,
+                'priority' => $i->priority,
+                'notes' => $i->notes,
+            ])->all(),
+        ])->all();
     }
 
     private function customer(User $user): ?array

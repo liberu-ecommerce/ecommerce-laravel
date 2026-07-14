@@ -2,8 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\GiftRegistry;
+use App\Models\GiftRegistryItem;
+use App\Models\GiftRegistryPurchase;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Models\Product;
+use App\Models\ProductRating;
+use App\Models\ProductReview;
+use App\Models\Rating;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -72,5 +80,44 @@ class GdprDataExportTest extends TestCase
         // Payment-method metadata is fine, but the raw stored details must not be.
         $this->assertStringNotContainsString('tok_live_RAWCARDTOKEN', $body, 'Raw payment details leaked in export');
         $response->assertJsonPath('payment_methods.0.name', 'Visa ending 4242');
+    }
+
+    public function test_export_includes_reviews_ratings_and_registries_in_symmetry_with_erasure(): void
+    {
+        $user = User::factory()->create();
+        $customer = $user->getOrCreateCustomer();
+        $product = Product::factory()->create();
+
+        Review::create(['user_id' => $user->id, 'product_id' => $product->id, 'rating' => 5, 'review' => 'MY-REVIEW-TEXT']);
+        Rating::create(['user_id' => $user->id, 'product_id' => $product->id, 'rating' => 4]);
+        (new ProductReview)->forceFill(['product_id' => $product->id, 'customer_id' => $customer->id, 'comments' => 'MY-COMMENT'])->save();
+        (new ProductRating)->forceFill(['product_id' => $product->id, 'customer_id' => $customer->id, 'rating' => 3, 'overall_rating' => 3])->save();
+
+        $registry = GiftRegistry::create([
+            'user_id' => $user->id, 'name' => 'MyRegistry', 'slug' => 'my-registry',
+            'access_code' => 'SECRETCODE123', 'shipping_name' => 'Jane',
+        ]);
+        $item = GiftRegistryItem::create(['registry_id' => $registry->id, 'product_id' => $product->id, 'quantity_requested' => 1, 'notes' => 'ITEM-NOTE']);
+        $order = Order::create(['customer_email' => 'x@y.com', 'total_amount' => 10, 'status' => 'paid']);
+        GiftRegistryPurchase::create([
+            'registry_item_id' => $item->id, 'order_id' => $order->id, 'quantity' => 1,
+            'purchaser_name' => 'THIRDPARTY-BUYER', 'purchaser_email' => 'buyer@third.com',
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('account.data-export'));
+
+        $response->assertOk();
+        $response->assertJsonPath('reviews.0.review', 'MY-REVIEW-TEXT');
+        $response->assertJsonPath('ratings.0.rating', 4);
+        $response->assertJsonPath('product_reviews.0.comments', 'MY-COMMENT');
+        $response->assertJsonPath('product_ratings.0.overall_rating', 3);
+        $response->assertJsonPath('gift_registries.0.name', 'MyRegistry');
+        $response->assertJsonPath('gift_registries.0.items.0.notes', 'ITEM-NOTE');
+
+        $body = $response->getContent();
+        // A private registry's access code is a secret — never exported.
+        $this->assertStringNotContainsString('SECRETCODE123', $body, 'Registry access code leaked in export');
+        // Registry purchases carry a third party's PII — not the exporting user's data.
+        $this->assertStringNotContainsString('THIRDPARTY-BUYER', $body, "Third-party purchaser PII leaked in the user's export");
     }
 }
