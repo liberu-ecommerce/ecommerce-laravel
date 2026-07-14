@@ -169,9 +169,11 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function customerSegments(): BelongsToMany
     {
+        // The pivot tracks membership with its own `added_at` column and has no
+        // created_at/updated_at — so withPivot('added_at'), NOT withTimestamps()
+        // (which would select/write pivot timestamp columns that don't exist and error).
         return $this->belongsToMany(CustomerSegment::class, 'customer_segment_members', 'user_id', 'segment_id')
-            ->withPivot('added_at')
-            ->withTimestamps();
+            ->withPivot('added_at');
     }
 
     public function customerMetric(): HasOne
