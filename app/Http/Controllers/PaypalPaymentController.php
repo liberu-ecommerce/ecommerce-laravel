@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaypalSubscription;
 use App\Services\PaymentGatewayService;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
@@ -34,11 +35,29 @@ class PaypalPaymentController extends Controller
 
     public function createSubscription(Request $request)
     {
-        $paymentMethodId = $request->input('paymentMethodId');
-        $planId = $request->input('planId');
+        $validated = $request->validate([
+            'paymentMethodId' => 'required|string',
+            'planId' => 'required|string',
+        ]);
+
         $userDetails = $request->only(['email', 'address']);
 
-        $result = $this->subscriptionService->createSubscription($paymentMethodId, $planId, $userDetails);
+        $result = $this->subscriptionService->createSubscription(
+            $validated['paymentMethodId'],
+            $validated['planId'],
+            $userDetails,
+        );
+
+        // Persist the subscription owned by the caller so we can sync its status from
+        // webhooks later. Only on success — a failed create has no PayPal id to track.
+        if (($result['success'] ?? false) && ! empty($result['subscription_id'])) {
+            PaypalSubscription::create([
+                'user_id' => $request->user()->id,
+                'paypal_subscription_id' => $result['subscription_id'],
+                'plan_id' => $validated['planId'],
+                'status' => $result['status'] ?? 'APPROVAL_PENDING',
+            ]);
+        }
 
         return response()->json($result);
     }

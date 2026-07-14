@@ -15,6 +15,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OrderHistoryController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaypalPaymentController;
+use App\Http\Controllers\PaypalWebhookController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ShippingController;
@@ -113,6 +114,11 @@ Route::middleware('auth')->prefix('payment_methods')->group(function () {
 // Stripe webhook — unauthenticated + CSRF-exempt (verified by signature in the controller)
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
+// PayPal subscription webhook — unauthenticated + CSRF-exempt (signature verified in
+// the controller). PayPal drives subscription lifecycle status (activated/cancelled/…)
+// out of band; this reconciles it onto the local PaypalSubscription record.
+Route::post('/paypal/webhook', [PaypalWebhookController::class, 'handle'])->name('paypal.webhook');
+
 // Stripe subscription mutations act only on the current user ($request->user()),
 // so an anonymous request would deref null and 500. Require auth.
 Route::middleware('auth')->group(function () {
@@ -135,9 +141,10 @@ Route::middleware('auth')->group(function () {
 // (a PayPal order id to capture / a subscriptionId) against the merchant's live
 // PayPal credentials — require auth so an anonymous request can't trigger a capture
 // or update/cancel someone else's subscription.
-// ponytail: real per-user ownership scoping must come when the PayPal integration is
-// actually built; SubscriptionService is a stub today with no persisted
-// subscription↔user link to check against.
+// createSubscription now persists a PaypalSubscription owned by the caller, and the
+// webhook keeps its status in sync. ponytail: update/cancel still act on a
+// caller-supplied subscriptionId without checking that persisted ownership — a
+// follow-up should scope them to the caller's own PaypalSubscription rows.
 Route::middleware('auth')->group(function () {
     Route::post('/paypal/payment', [PaypalPaymentController::class, 'createOneTimePayment'])->name('paypal.payment.create');
     Route::post('/paypal/subscription', [PaypalPaymentController::class, 'createSubscription'])->name('paypal.subscription.create');
