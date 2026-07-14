@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Interfaces\PaymentGatewayInterface;
 use App\Models\User;
 use App\Services\PaymentGateways\PayPalGateway;
+use App\Services\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -90,5 +91,76 @@ class PaypalPaymentControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertJson(['success' => false, 'error' => 'declined']);
+    }
+
+    /** Bind a SubscriptionService that returns a canned PayPal success without HTTP. */
+    private function fakeSubscriptionService(array $return): void
+    {
+        $this->app->instance(SubscriptionService::class, new class($return) extends SubscriptionService
+        {
+            public function __construct(private array $return) {}
+
+            public function createSubscription($paymentMethodId, $planId, $userDetails)
+            {
+                return $this->return;
+            }
+        });
+    }
+
+    public function test_create_subscription_persists_it_owned_by_the_user(): void
+    {
+        $this->fakeSubscriptionService([
+            'success' => true,
+            'subscription_id' => 'I-SUB999',
+            'status' => 'APPROVAL_PENDING',
+            'approval_url' => 'https://paypal.com/approve/I-SUB999',
+        ]);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('paypal.subscription.create'), [
+                'paymentMethodId' => 'pm_1',
+                'planId' => 'P-PLAN',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true, 'subscription_id' => 'I-SUB999']);
+
+        $this->assertDatabaseHas('paypal_subscriptions', [
+            'user_id' => $user->id,
+            'paypal_subscription_id' => 'I-SUB999',
+            'plan_id' => 'P-PLAN',
+            'status' => 'APPROVAL_PENDING',
+        ]);
+    }
+
+    public function test_create_subscription_requires_authentication(): void
+    {
+        $this->postJson(route('paypal.subscription.create'), [
+            'paymentMethodId' => 'pm_1',
+            'planId' => 'P-PLAN',
+        ])->assertUnauthorized();
+    }
+
+    public function test_create_subscription_requires_a_plan_id(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('paypal.subscription.create'), ['paymentMethodId' => 'pm_1'])
+            ->assertStatus(422);
+    }
+
+    public function test_failed_subscription_is_not_persisted(): void
+    {
+        $this->fakeSubscriptionService(['success' => false, 'error' => 'Invalid plan']);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->postJson(route('paypal.subscription.create'), [
+                'paymentMethodId' => 'pm_1',
+                'planId' => 'P-BAD',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => false]);
+
+        $this->assertDatabaseCount('paypal_subscriptions', 0);
     }
 }
