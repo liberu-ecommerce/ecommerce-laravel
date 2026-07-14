@@ -12,7 +12,9 @@ use App\Models\ShippingQuote;
 use App\Models\User;
 use App\Services\PaymentGateways\StripeGateway;
 use Closure;
+use Database\Seeders\EuVatRatesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -243,5 +245,21 @@ class GraphQLCheckoutTest extends TestCase
 
         $this->assertStringContainsString('recipient name and email', $data['errors'][0]['message']);
         $this->assertDatabaseCount('orders', 0);
+    }
+
+    public function test_checkout_zero_rates_a_valid_eu_b2b_order_via_reverse_charge(): void
+    {
+        config(['ecommerce.store_country' => 'DE']);   // EU-established store
+        $this->seed(EuVatRatesSeeder::class);          // an FR order would otherwise be taxed 20%
+        Http::fake(['ec.europa.eu/*' => Http::response(['isValid' => true])]);
+        Sanctum::actingAs($user = User::factory()->create());
+        $this->cartItem($user, $this->product(price: 100), 1);
+
+        $this->checkout(['country' => 'FR', 'vatNumber' => 'FR 1234 5678']);
+
+        $order = Order::first();
+        $this->assertTrue((bool) $order->reverse_charge);
+        $this->assertEqualsWithDelta(0.0, (float) $order->tax_amount, 0.001);
+        $this->assertSame('FR12345678', $order->vat_number);   // normalised
     }
 }

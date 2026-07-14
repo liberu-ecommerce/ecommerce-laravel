@@ -83,6 +83,18 @@ class OssReportServiceTest extends TestCase
         $this->assertSame(1, $report['lines'][0]['orders']);
     }
 
+    public function test_excludes_reverse_charge_b2b_orders(): void
+    {
+        // Zero-rated intra-EU B2B supply — belongs on the EC Sales List, not OSS.
+        $this->order('DE', 100.0, 0.0, 'paid', '2026-05-10')->update(['reverse_charge' => true]);
+        $this->order('FR', 120.0, 20.0, 'paid', '2026-05-11'); // normal B2C, kept
+
+        $report = $this->report();
+
+        $this->assertCount(1, $report['lines']);
+        $this->assertSame('FR', $report['lines'][0]['country']);
+    }
+
     public function test_partially_refunded_orders_are_netted_by_the_refunded_fraction(): void
     {
         // €120 order (€20 VAT), half of it refunded → net €60 gross, €10 VAT, €50 net.

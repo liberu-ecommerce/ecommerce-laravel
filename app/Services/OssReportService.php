@@ -33,6 +33,9 @@ class OssReportService
         $rows = Order::query()
             ->whereIn('status', self::REPORTABLE_STATUSES)
             ->whereIn('billing_country', EuVat::memberStates())
+            // Reverse-charge B2B supplies collected no VAT — they belong on the EC Sales
+            // List, not the OSS return.
+            ->where('reverse_charge', false)
             ->whereBetween('created_at', [$from, $to])
             // Net out partial refunds: bill only the un-refunded fraction of each order,
             // and the same fraction of its VAT. Non-refunded orders (refund_total 0/null)

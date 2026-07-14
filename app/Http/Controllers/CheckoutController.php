@@ -10,6 +10,7 @@ use App\Notifications\OrderConfirmationNotification;
 use App\Services\CheckoutService;
 use App\Services\ShippingService;
 use App\Services\TaxCalculator;
+use App\Services\ViesService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -24,11 +25,14 @@ class CheckoutController extends Controller
 
     protected $checkoutService;
 
-    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CheckoutService $checkoutService)
+    protected $viesService;
+
+    public function __construct(ShippingService $shippingService, TaxCalculator $taxCalculator, CheckoutService $checkoutService, ViesService $viesService)
     {
         $this->shippingService = $shippingService;
         $this->taxCalculator = $taxCalculator;
         $this->checkoutService = $checkoutService;
+        $this->viesService = $viesService;
     }
 
     public function initiateCheckout(Request $request)
@@ -125,6 +129,7 @@ class CheckoutController extends Controller
             'state' => 'nullable|string|max:100',
             'city' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
+            'vat_number' => 'nullable|string|max:20',
             'payment_method' => 'required|string',
             'recipient_name' => 'required_if:dropship,on|string',
             'recipient_email' => 'required_if:dropship,on|email',
@@ -216,31 +221,41 @@ class CheckoutController extends Controller
             }
         }
 
-        // Calculate tax with the structured shipping address, honouring per-product
-        // tax class + exemptions and returning a tax_lines breakdown. Any cart
-        // discount is distributed pro-rata so tax lands on the post-discount amount.
-        $taxAddress = [
-            'country' => $request->input('country'),
-            'state' => $request->input('state'),
-            'city' => $request->input('city'),
-            'postal_code' => $request->input('postal_code'),
-        ];
-        $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discountAmount) / $subtotal : 1;
-        $taxItems = [];
-        foreach ($cart as $productId => $item) {
-            $product = Product::find($productId);
-            if (! $product) {
-                continue;
-            }
-            $taxItems[] = [
-                'product' => $product,
-                'quantity' => $item['quantity'],
-                'price' => $item['price'] * $discountFactor,
+        // Intra-EU B2B supply with a VIES-valid VAT number is zero-rated (the buyer
+        // accounts for VAT under the reverse charge); otherwise tax normally.
+        $vatNumber = $this->viesService->normalise($request->input('vat_number'));
+        $reverseCharge = $this->viesService->reverseChargeApplies($vatNumber);
+
+        if ($reverseCharge) {
+            $taxAmount = 0;
+            $taxLines = [];
+        } else {
+            // Calculate tax with the structured shipping address, honouring per-product
+            // tax class + exemptions and returning a tax_lines breakdown. Any cart
+            // discount is distributed pro-rata so tax lands on the post-discount amount.
+            $taxAddress = [
+                'country' => $request->input('country'),
+                'state' => $request->input('state'),
+                'city' => $request->input('city'),
+                'postal_code' => $request->input('postal_code'),
             ];
+            $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discountAmount) / $subtotal : 1;
+            $taxItems = [];
+            foreach ($cart as $productId => $item) {
+                $product = Product::find($productId);
+                if (! $product) {
+                    continue;
+                }
+                $taxItems[] = [
+                    'product' => $product,
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'] * $discountFactor,
+                ];
+            }
+            $taxResult = $this->taxCalculator->calculateCartTax($taxItems, $taxAddress, $shippingCost);
+            $taxAmount = $taxResult['total'];
+            $taxLines = $taxResult['lines'];
         }
-        $taxResult = $this->taxCalculator->calculateCartTax($taxItems, $taxAddress, $shippingCost);
-        $taxAmount = $taxResult['total'];
-        $taxLines = $taxResult['lines'];
 
         // Floor at 0 — a discount can zero an order but must never make it negative
         // (which would skip payment yet still mark the order paid).
@@ -257,7 +272,7 @@ class CheckoutController extends Controller
 
         $order = null;
         try {
-            DB::transaction(function () use (&$order, $lineItems, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId) {
+            DB::transaction(function () use (&$order, $lineItems, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId, $vatNumber, $reverseCharge) {
                 // Close the coupon usage-limit race under a row lock before creating the order.
                 $this->checkoutService->assertCouponAvailable($couponCode);
 
@@ -267,6 +282,8 @@ class CheckoutController extends Controller
                     'shipping_address' => $request->shipping_address,
                     // Buyer country VAT was charged against — drives the OSS/MOSS report.
                     'billing_country' => strtoupper((string) $request->input('country')),
+                    'vat_number' => $vatNumber,
+                    'reverse_charge' => $reverseCharge,
                     // A live-rate quote drives the cost; don't also record a flat method.
                     'shipping_method_id' => $shippingQuoteId ? null : $request->shipping_method_id,
                     'shipping_carrier' => $shippingCarrier,

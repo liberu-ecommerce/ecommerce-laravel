@@ -25,6 +25,7 @@ class HeadlessCheckoutService
         private ShippingService $shippingService,
         private TaxCalculator $taxCalculator,
         private CheckoutService $checkoutService,
+        private ViesService $viesService,
     ) {}
 
     public function place(User $user, array $input): Order
@@ -48,9 +49,16 @@ class HeadlessCheckoutService
         $coupon = $this->checkoutService->resolveCouponDiscount($input['couponCode'] ?? null, $subtotal);
         $discount = $coupon['discount'];
 
-        // Tax lands on the post-discount amount (pro-rata), matching the web checkout.
-        $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discount) / $subtotal : 1.0;
-        [$taxAmount, $taxLines] = $this->calculateTax($cart, $input, $shippingCost, $discountFactor);
+        // Intra-EU B2B with a VIES-valid VAT number is zero-rated (reverse charge);
+        // otherwise tax lands on the post-discount amount, matching the web checkout.
+        $vatNumber = $this->viesService->normalise($input['vatNumber'] ?? null);
+        $reverseCharge = $this->viesService->reverseChargeApplies($vatNumber);
+        if ($reverseCharge) {
+            [$taxAmount, $taxLines] = [0, []];
+        } else {
+            $discountFactor = $subtotal > 0 ? max(0, $subtotal - $discount) / $subtotal : 1.0;
+            [$taxAmount, $taxLines] = $this->calculateTax($cart, $input, $shippingCost, $discountFactor);
+        }
 
         // Floor at 0 — a discount can zero an order but must never make it negative.
         $total = max(0, round($subtotal - $discount + $shippingCost + $taxAmount, 2));
@@ -59,7 +67,7 @@ class HeadlessCheckoutService
         ])->all();
 
         $order = null;
-        DB::transaction(function () use (&$order, $lineItems, $user, $input, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines, $discount, $coupon, $isDropship) {
+        DB::transaction(function () use (&$order, $lineItems, $user, $input, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines, $discount, $coupon, $isDropship, $vatNumber, $reverseCharge) {
             // Close the coupon usage-limit race under a row lock before creating the order.
             $this->checkoutService->assertCouponAvailable($coupon['code']);
 
@@ -67,6 +75,8 @@ class HeadlessCheckoutService
                 'user_id' => $user->id,
                 'customer_email' => $user->email,
                 'billing_country' => $country,
+                'vat_number' => $vatNumber,
+                'reverse_charge' => $reverseCharge,
                 'shipping_carrier' => $carrier,
                 'shipping_service' => $service,
                 'shipping_quote_id' => $quoteId,
