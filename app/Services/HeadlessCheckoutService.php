@@ -3,30 +3,28 @@
 namespace App\Services;
 
 use App\Exceptions\CheckoutException;
-use App\Factories\PaymentGatewayFactory;
 use App\Models\CartItem;
-use App\Models\InventoryLog;
 use App\Models\Order;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Places an order from a user's persistent (CartItem) cart for headless/API clients —
- * the GraphQL checkout mutation's engine. Reuses the same money-safe mechanics as the
- * web checkout: stock is reserved with a guarded atomic decrement inside a transaction
- * BEFORE charging, and shipping is billed from the STORED shipping quote (never a
- * client-supplied price — the #775 quote-trust property).
+ * the GraphQL checkout mutation's engine. The money mechanics (reserve stock before
+ * charging, release on failure, capture payment) are the shared CheckoutService; this
+ * class handles the headless-specific orchestration: loading the persistent cart,
+ * billing the STORED shipping quote (never a client price — #775), and clearing the
+ * cart on success.
  *
- * v1 is intentionally lean: no coupon, dropship, or downloadable-link handling. Those
- * live in the web checkout and can be lifted into a shared service later.
+ * v1 is intentionally lean: no coupon, dropship, or downloadable-link handling.
  */
 class HeadlessCheckoutService
 {
     public function __construct(
         private ShippingService $shippingService,
         private TaxCalculator $taxCalculator,
+        private CheckoutService $checkoutService,
     ) {}
 
     public function place(User $user, array $input): Order
@@ -44,9 +42,12 @@ class HeadlessCheckoutService
         [$taxAmount, $taxLines] = $this->calculateTax($cart, $input, $shippingCost);
 
         $total = max(0, round($subtotal + $shippingCost + $taxAmount, 2));
+        $lineItems = $cart->map(fn (CartItem $i) => [
+            'product_id' => $i->product_id, 'quantity' => $i->quantity, 'price' => $i->price,
+        ])->all();
 
         $order = null;
-        DB::transaction(function () use (&$order, $cart, $user, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines) {
+        DB::transaction(function () use (&$order, $lineItems, $user, $paymentMethod, $country, $total, $shippingCost, $carrier, $service, $quoteId, $taxAmount, $taxLines) {
             $order = Order::create([
                 'user_id' => $user->id,
                 'customer_email' => $user->email,
@@ -62,38 +63,11 @@ class HeadlessCheckoutService
                 'status' => Order::STATUS_PENDING,
             ]);
 
-            foreach ($cart as $item) {
-                $order->items()->create([
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
-                ]);
-
-                $before = Product::where('id', $item->product_id)->value('inventory_count');
-
-                // Atomic guarded decrement: succeeds only while enough stock remains.
-                $affected = Product::where('id', $item->product_id)
-                    ->where('inventory_count', '>=', $item->quantity)
-                    ->decrement('inventory_count', $item->quantity);
-
-                if ($affected === 0) {
-                    throw new CheckoutException('Some items in your cart are no longer available in the requested quantity.');
-                }
-
-                InventoryLog::create([
-                    'product_id' => $item->product_id,
-                    'quantity_change' => -$item->quantity,
-                    'old_quantity' => $before,
-                    'new_quantity' => $before - $item->quantity,
-                    'reason' => 'order',
-                    'reference_id' => $order->id,
-                    'reference_type' => Order::class,
-                ]);
-            }
+            $this->checkoutService->reserveStock($order, $lineItems);
         });
 
         /** @var Order $order */
-        $this->charge($order, $cart, $paymentMethod, $input['stripeToken'] ?? null, $total);
+        $this->charge($order, $lineItems, $paymentMethod, $input['stripeToken'] ?? null, $total);
 
         $order->transitionTo(Order::STATUS_PAID, notes: 'Payment captured (headless checkout)');
 
@@ -142,20 +116,16 @@ class HeadlessCheckoutService
         return [$result['total'], $result['lines']];
     }
 
-    private function charge(Order $order, Collection $cart, string $paymentMethod, ?string $token, float $total): void
+    private function charge(Order $order, array $lineItems, string $paymentMethod, ?string $token, float $total): void
     {
         if ($total <= 0) {
             return;
         }
 
-        $result = PaymentGatewayFactory::create($paymentMethod)->processPayment($total, [
-            'order_id' => $order->id,
-            'customer_email' => $order->customer_email,
-            'token' => $token,
-        ]);
+        $result = $this->checkoutService->capturePayment($order, $paymentMethod, ['token' => $token]);
 
         if (! ($result['success'] ?? false)) {
-            $this->releaseInventory($order, $cart);
+            $this->checkoutService->releaseStock($order, $lineItems);
             $order->transitionTo(Order::STATUS_FAILED, notes: 'Payment failed: '.($result['error'] ?? 'unknown'));
 
             throw new CheckoutException('Payment failed: '.($result['error'] ?? 'please try again.'));
@@ -163,29 +133,6 @@ class HeadlessCheckoutService
 
         if (isset($result['transaction_id'])) {
             $order->update(['transaction_id' => $result['transaction_id']]);
-        }
-    }
-
-    /** Return reserved stock when a charge fails after the order was created. */
-    private function releaseInventory(Order $order, Collection $cart): void
-    {
-        foreach ($cart as $item) {
-            $before = Product::where('id', $item->product_id)->value('inventory_count');
-            if ($before === null) {
-                continue;
-            }
-
-            Product::where('id', $item->product_id)->increment('inventory_count', $item->quantity);
-
-            InventoryLog::create([
-                'product_id' => $item->product_id,
-                'quantity_change' => $item->quantity,
-                'old_quantity' => $before,
-                'new_quantity' => $before + $item->quantity,
-                'reason' => 'payment_failed_release',
-                'reference_id' => $order->id,
-                'reference_type' => Order::class,
-            ]);
         }
     }
 }
