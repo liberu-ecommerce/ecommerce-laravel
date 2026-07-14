@@ -64,20 +64,42 @@ class PaypalPaymentController extends Controller
 
     public function updateSubscription(Request $request)
     {
-        $subscriptionId = $request->input('subscriptionId');
-        $planId = $request->input('planId');
+        $validated = $request->validate([
+            'subscriptionId' => 'required|string',
+            'planId' => 'required|string',
+        ]);
 
-        $result = $this->subscriptionService->updateSubscription($subscriptionId, $planId);
+        $this->ownedSubscriptionOrFail($request, $validated['subscriptionId']);
+
+        $result = $this->subscriptionService->updateSubscription($validated['subscriptionId'], $validated['planId']);
 
         return response()->json($result);
     }
 
     public function cancelSubscription(Request $request)
     {
-        $subscriptionId = $request->input('subscriptionId');
+        $validated = $request->validate([
+            'subscriptionId' => 'required|string',
+        ]);
 
-        $result = $this->subscriptionService->cancelSubscription($subscriptionId);
+        $this->ownedSubscriptionOrFail($request, $validated['subscriptionId']);
+
+        $result = $this->subscriptionService->cancelSubscription($validated['subscriptionId']);
 
         return response()->json($result);
+    }
+
+    /**
+     * The subscriptionId is caller-supplied and acts directly against PayPal, so without
+     * this an authenticated user could update/cancel anyone's subscription (IDOR). Scope
+     * it to a PaypalSubscription the caller owns; 404 (not 403) so a probe can't tell an
+     * unowned id from a nonexistent one.
+     */
+    private function ownedSubscriptionOrFail(Request $request, string $subscriptionId): PaypalSubscription
+    {
+        return PaypalSubscription::query()
+            ->where('user_id', $request->user()->id)
+            ->where('paypal_subscription_id', $subscriptionId)
+            ->firstOrFail();
     }
 }
