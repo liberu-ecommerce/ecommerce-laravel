@@ -2,18 +2,22 @@
 
 namespace Tests\Feature;
 
+use App\Models\BrowsingHistory;
+use App\Models\CustomerSegment;
 use App\Models\GiftRegistry;
 use App\Models\GiftRegistryItem;
 use App\Models\GiftRegistryPurchase;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Models\Product;
+use App\Models\ProductInteraction;
 use App\Models\ProductRating;
 use App\Models\ProductReview;
 use App\Models\Rating;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -119,5 +123,39 @@ class GdprDataExportTest extends TestCase
         $this->assertStringNotContainsString('SECRETCODE123', $body, 'Registry access code leaked in export');
         // Registry purchases carry a third party's PII — not the exporting user's data.
         $this->assertStringNotContainsString('THIRDPARTY-BUYER', $body, "Third-party purchaser PII leaked in the user's export");
+    }
+
+    public function test_export_includes_behavioural_data_but_not_internal_segment_rules(): void
+    {
+        $user = User::factory()->create();
+        $product = Product::factory()->create();
+
+        BrowsingHistory::create(['user_id' => $user->id, 'product_id' => $product->id]);
+        ProductInteraction::create([
+            'user_id' => $user->id, 'product_id' => $product->id,
+            'interaction_type' => 'add_to_cart', 'duration' => 12, 'metadata' => ['ref' => 'HOMEPAGE'],
+            'interacted_at' => now(),
+        ]);
+        $segment = CustomerSegment::create([
+            'name' => 'VIP', 'description' => 'Top spenders',
+            'conditions' => [['field' => 'lifetime_value', 'operator' => '>', 'value' => 'SECRET-RULE-9000']],
+            'match_type' => 'all',
+        ]);
+        // Insert the pivot directly — the customerSegments() relation's withTimestamps()
+        // is incompatible with the pivot table (no created_at/updated_at).
+        DB::table('customer_segment_members')->insert([
+            'user_id' => $user->id, 'segment_id' => $segment->id, 'added_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('account.data-export'));
+
+        $response->assertOk();
+        $response->assertJsonPath('browsing_history.0.product_id', $product->id);
+        $response->assertJsonPath('product_interactions.0.interaction_type', 'add_to_cart');
+        $response->assertJsonPath('product_interactions.0.metadata.ref', 'HOMEPAGE');
+        $response->assertJsonPath('segments.0.name', 'VIP');
+
+        // The segment's internal matching rules are not the user's data — never exported.
+        $this->assertStringNotContainsString('SECRET-RULE-9000', $response->getContent());
     }
 }
