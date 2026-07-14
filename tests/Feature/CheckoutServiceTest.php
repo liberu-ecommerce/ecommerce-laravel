@@ -144,4 +144,27 @@ class CheckoutServiceTest extends TestCase
         $this->assertSame('dropxl', $order->fresh()->supplier_id);
         Queue::assertPushed(DispatchDropshippingOrder::class);
     }
+
+    public function test_assert_coupon_available_throws_once_the_usage_limit_is_reached(): void
+    {
+        Coupon::create(['code' => 'ONCE', 'type' => 'percentage', 'value' => 50, 'max_uses' => 1]);
+        // The single allowed use is already consumed by a committed order.
+        Order::create(['customer_email' => 'x@y.com', 'total_amount' => 1, 'status' => 'paid', 'coupon_code' => 'ONCE']);
+
+        $this->expectException(CheckoutException::class);
+        app(CheckoutService::class)->assertCouponAvailable('ONCE');
+    }
+
+    public function test_assert_coupon_available_passes_when_under_limit_or_absent(): void
+    {
+        Coupon::create(['code' => 'TWICE', 'type' => 'percentage', 'value' => 10, 'max_uses' => 2]);
+        Order::create(['customer_email' => 'x@y.com', 'total_amount' => 1, 'status' => 'paid', 'coupon_code' => 'TWICE']);
+
+        // 1 of 2 used → still available; null and unknown codes are no-ops.
+        app(CheckoutService::class)->assertCouponAvailable('TWICE');
+        app(CheckoutService::class)->assertCouponAvailable(null);
+        app(CheckoutService::class)->assertCouponAvailable('DOES-NOT-EXIST');
+
+        $this->expectNotToPerformAssertions();
+    }
 }

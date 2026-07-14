@@ -258,6 +258,9 @@ class CheckoutController extends Controller
         $order = null;
         try {
             DB::transaction(function () use (&$order, $lineItems, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId) {
+                // Close the coupon usage-limit race under a row lock before creating the order.
+                $this->checkoutService->assertCouponAvailable($couponCode);
+
                 $order = Order::create([
                     'user_id' => auth()->id(),
                     'customer_email' => $request->email,
