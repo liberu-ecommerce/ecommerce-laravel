@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\ProductRating;
+use App\Models\ProductReview;
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,9 +16,10 @@ use Illuminate\Support\Str;
  * their orders remain intact for accounting/legal retention while every identifying
  * field is scrubbed. All writes happen in one transaction.
  *
- * ponytail: scrubs the core identity, order PII, saved payment methods and behavioural
- * tracking. User-generated content (reviews/ratings) and gift registries are left for a
- * follow-up — deleting them changes public product aggregates and needs its own call.
+ * Scrubs the core identity, order PII, saved payment methods, behavioural tracking, and
+ * user-authored content (reviews, ratings, gift registries). Content is DELETED rather
+ * than anonymised: user_id/customer_id are NOT NULL and reviews carry free text, so
+ * there is no clean row to keep — product rating/review aggregates simply recompute.
  */
 class GdprErasureService
 {
@@ -35,6 +39,16 @@ class GdprErasureService
             $user->browsingHistory()->delete();
             $user->productInteractions()->delete();
             $user->wishlist()->delete();
+
+            // User-authored content (Art. 17). Deleting registries cascades (DB FK) to
+            // their items and purchases.
+            Review::where('user_id', $user->id)->delete();
+            $user->ratings()->delete();
+            $user->giftRegistries()->delete();
+            if ($customer !== null) {
+                ProductReview::where('customer_id', $customer->id)->delete();
+                ProductRating::where('customer_id', $customer->id)->delete();
+            }
 
             if ($customer !== null) {
                 $customer->update([
