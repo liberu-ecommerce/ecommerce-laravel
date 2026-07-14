@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Interfaces\PaymentGatewayInterface;
+use App\Jobs\DispatchDropshippingOrder;
 use App\Models\CartItem;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingQuote;
@@ -11,6 +13,7 @@ use App\Models\User;
 use App\Services\PaymentGateways\StripeGateway;
 use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -183,5 +186,62 @@ class GraphQLCheckoutTest extends TestCase
         $this->assertSame(5, $product->fresh()->inventory_count);  // reserved then released
         $this->assertSame('failed', Order::first()->status);
         $this->assertDatabaseCount('cart_items', 1);               // cart kept for retry
+    }
+
+    public function test_checkout_applies_a_coupon_revalidated_against_the_subtotal(): void
+    {
+        Coupon::create(['code' => 'TENOFF', 'type' => 'percentage', 'value' => 10]);
+        Sanctum::actingAs($user = User::factory()->create());
+        $this->cartItem($user, $this->product(price: 100), 1);
+
+        $data = $this->checkout(['couponCode' => 'TENOFF']);
+
+        $this->assertSame('paid', $data['data']['checkout']['status']);
+        $order = Order::first();
+        $this->assertEqualsWithDelta(10.0, (float) $order->discount_amount, 0.001);
+        $this->assertEqualsWithDelta(90.0, (float) $order->total_amount, 0.001);   // 100 - 10
+        $this->assertEqualsWithDelta(90.0, $this->gateway->chargedAmount, 0.001);
+    }
+
+    public function test_checkout_grants_download_tokens_for_downloadable_lines(): void
+    {
+        Sanctum::actingAs($user = User::factory()->create());
+        $product = Product::factory()->create(['price' => 50, 'inventory_count' => 5, 'is_downloadable' => true]);
+        CartItem::create(['user_id' => $user->id, 'product_id' => $product->id, 'quantity' => 1, 'price' => 50, 'session_id' => 'api']);
+
+        $this->checkout([]);
+
+        $item = Order::first()->items()->first();
+        $this->assertNotNull($item->download_link);
+        $this->assertTrue($item->download_expires_at->isFuture());
+    }
+
+    public function test_checkout_queues_a_dropship_order_with_recipient_details(): void
+    {
+        Queue::fake();
+        Sanctum::actingAs($user = User::factory()->create());
+        $this->cartItem($user, $this->product(), 1);
+
+        $this->checkout([
+            'dropship' => true, 'supplierId' => 'dropxl',
+            'recipientName' => 'Grandma', 'recipientEmail' => 'gran@example.com',
+        ]);
+
+        $order = Order::first();
+        $this->assertTrue((bool) $order->is_dropshipped);
+        $this->assertSame('supplier_queued', $order->status);
+        $this->assertSame('Grandma', $order->recipient_name);
+        Queue::assertPushed(DispatchDropshippingOrder::class);
+    }
+
+    public function test_dropship_without_recipient_is_rejected(): void
+    {
+        Sanctum::actingAs($user = User::factory()->create());
+        $this->cartItem($user, $this->product(), 1);
+
+        $data = $this->checkout(['dropship' => true]);
+
+        $this->assertStringContainsString('recipient name and email', $data['errors'][0]['message']);
+        $this->assertDatabaseCount('orders', 0);
     }
 }

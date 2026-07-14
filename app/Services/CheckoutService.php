@@ -4,9 +4,15 @@ namespace App\Services;
 
 use App\Exceptions\CheckoutException;
 use App\Factories\PaymentGatewayFactory;
+use App\Jobs\DispatchDropshippingOrder;
 use App\Models\InventoryLog;
 use App\Models\Order;
 use App\Models\Product;
+use App\Notifications\SupplierFailureNotification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * The shared money mechanics behind both checkout entry points — the web checkout
@@ -22,6 +28,69 @@ use App\Models\Product;
  */
 class CheckoutService
 {
+    public function __construct(private CouponService $couponService) {}
+
+    /**
+     * Re-validate a coupon against the LIVE subtotal and return the discount to apply.
+     * Never trust a client- or session-cached figure: recomputing here also drops a
+     * coupon that has since expired, hit its usage limit, or fallen below min spend.
+     *
+     * @return array{valid: bool, discount: float, code: ?string}
+     */
+    public function resolveCouponDiscount(?string $code, float $subtotal): array
+    {
+        if (empty($code)) {
+            return ['valid' => false, 'discount' => 0.0, 'code' => null];
+        }
+
+        $result = $this->couponService->validateAndApplyCoupon($code, $subtotal);
+
+        return $result['valid']
+            ? ['valid' => true, 'discount' => (float) $result['discount'], 'code' => $code]
+            : ['valid' => false, 'discount' => 0.0, 'code' => null];
+    }
+
+    /**
+     * Issue a download token + 30-day expiry for each downloadable line on a paid
+     * order. Reads the order's own items (not a cart), so it works for any checkout.
+     */
+    public function grantDownloads(Order $order): void
+    {
+        foreach ($order->items as $item) {
+            $product = Product::find($item->product_id);
+            if ($product && $product->is_downloadable) {
+                $item->update([
+                    'download_link' => Str::random(64),   // a token, not a full URL
+                    'download_expires_at' => now()->addDays(30),
+                    'download_count' => 0,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Queue supplier placement for a drop-shipped order. Returns true when queued;
+     * on failure it records SUPPLIER_FAILED + notifies staff and returns false (never
+     * throws — the order is already paid). Callers decide how to surface the outcome.
+     */
+    public function queueDropship(Order $order, string $supplierId): bool
+    {
+        try {
+            $order->update(['supplier_id' => $supplierId]);
+            DispatchDropshippingOrder::dispatch($order->id, $supplierId);
+            $order->transitionTo(Order::STATUS_SUPPLIER_QUEUED, notes: "Supplier order queued ({$supplierId})");
+
+            return true;
+        } catch (Throwable $e) {
+            Log::error('Dropshipping dispatch error: '.$e->getMessage());
+            $order->transitionTo(Order::STATUS_SUPPLIER_FAILED, notes: 'Dropshipping dispatch error: '.$e->getMessage());
+            Notification::route('mail', config('mail.from.address'))
+                ->notify(new SupplierFailureNotification("Error queuing dropshipping order for order {$order->id}: ".$e->getMessage()));
+
+            return false;
+        }
+    }
+
     /**
      * Create the order's line items and RESERVE their stock with a guarded atomic
      * decrement. Call inside a transaction: on the first shortfall this throws, the

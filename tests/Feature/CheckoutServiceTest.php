@@ -4,11 +4,14 @@ namespace Tests\Feature;
 
 use App\Exceptions\CheckoutException;
 use App\Interfaces\PaymentGatewayInterface;
+use App\Jobs\DispatchDropshippingOrder;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\CheckoutService;
 use App\Services\PaymentGateways\StripeGateway;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 /**
@@ -97,5 +100,48 @@ class CheckoutServiceTest extends TestCase
         $this->assertSame(150.0, $spy->amount);
         $this->assertSame($order->id, $spy->details['order_id']);
         $this->assertSame('tok_x', $spy->details['token']);
+    }
+
+    public function test_resolve_coupon_discount_applies_a_valid_coupon_and_ignores_others(): void
+    {
+        Coupon::create(['code' => 'TENOFF', 'type' => 'percentage', 'value' => 10]);
+        $service = app(CheckoutService::class);
+
+        $valid = $service->resolveCouponDiscount('TENOFF', 100);
+        $this->assertTrue($valid['valid']);
+        $this->assertSame(10.0, $valid['discount']);
+        $this->assertSame('TENOFF', $valid['code']);
+
+        $this->assertFalse($service->resolveCouponDiscount(null, 100)['valid']);
+        $this->assertFalse($service->resolveCouponDiscount('NOPE', 100)['valid']);
+        $this->assertSame(0.0, $service->resolveCouponDiscount('NOPE', 100)['discount']);
+    }
+
+    public function test_grant_downloads_tokenizes_only_downloadable_lines(): void
+    {
+        $downloadable = Product::factory()->create(['is_downloadable' => true]);
+        $physical = Product::factory()->create(['is_downloadable' => false]);
+        $order = $this->order();
+        $dItem = $order->items()->create(['product_id' => $downloadable->id, 'quantity' => 1, 'price' => 10]);
+        $pItem = $order->items()->create(['product_id' => $physical->id, 'quantity' => 1, 'price' => 10]);
+
+        app(CheckoutService::class)->grantDownloads($order->fresh());
+
+        $this->assertNotNull($dItem->fresh()->download_link);
+        $this->assertTrue($dItem->fresh()->download_expires_at->isFuture());
+        $this->assertNull($pItem->fresh()->download_link);
+    }
+
+    public function test_queue_dropship_queues_the_job_and_marks_supplier_queued(): void
+    {
+        Queue::fake();
+        $order = Order::create(['customer_email' => 'b@c.com', 'total_amount' => 10, 'status' => 'paid']);
+
+        $ok = app(CheckoutService::class)->queueDropship($order, 'dropxl');
+
+        $this->assertTrue($ok);
+        $this->assertSame('supplier_queued', $order->fresh()->status);
+        $this->assertSame('dropxl', $order->fresh()->supplier_id);
+        Queue::assertPushed(DispatchDropshippingOrder::class);
     }
 }
