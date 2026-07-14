@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Clear out expired shipping quotes daily so the table doesn't grow unbounded.
+        $schedule->command('shipping:prune-quotes')->daily();
     }
 
     /**
