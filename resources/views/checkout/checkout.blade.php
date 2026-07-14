@@ -196,6 +196,16 @@
                                 @enderror
                             </div>
 
+                            <!-- Live carrier rates (progressive enhancement; falls back to the flat methods above) -->
+                            <div>
+                                <button type="button" id="get-live-rates"
+                                    class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                                    Get live carrier rates
+                                </button>
+                                <p id="live-rates-status" class="mt-1 text-xs text-gray-500 hidden"></p>
+                                <div id="live-rates-container" class="space-y-2 mt-2"></div>
+                            </div>
+
                             <!-- Drop Shipping Option -->
                             <div class="pt-2 border-t border-gray-100">
                                 <label class="flex items-start cursor-pointer group">
@@ -516,6 +526,80 @@
         const checkedRadio = document.querySelector('input[name="shipping_method_id"]:checked');
         if (checkedRadio) {
             updateShippingDisplay(parseFloat(checkedRadio.dataset.baseRate) || 0);
+        }
+
+        // Live carrier rates: fetch server-persisted quotes; the buyer selects one by id
+        // (posted as shipping_quote_id, the server bills the stored amount).
+        const liveRatesBtn = document.getElementById('get-live-rates');
+        const liveRatesContainer = document.getElementById('live-rates-container');
+        const liveRatesStatus = document.getElementById('live-rates-status');
+        const csrfToken = document.querySelector('input[name="_token"]')?.value;
+
+        function setStatus(text) {
+            liveRatesStatus.textContent = text;
+            liveRatesStatus.classList.toggle('hidden', !text);
+        }
+
+        // Choosing a flat method clears any live selection — an order ships on one source.
+        shippingMethodRadios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                liveRatesContainer.querySelectorAll('input[name="shipping_quote_id"]').forEach(function (r) { r.checked = false; });
+            });
+        });
+
+        if (liveRatesBtn) {
+            liveRatesBtn.addEventListener('click', function () {
+                const country = document.getElementById('country')?.value;
+                if (!country) { setStatus('Enter your country first.'); return; }
+                setStatus('Fetching rates…');
+
+                fetch('{{ route('checkout.shipping-rates') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({
+                        country: country,
+                        state: document.getElementById('state')?.value || null,
+                        city: document.getElementById('city')?.value || null,
+                        postal_code: document.getElementById('postal_code')?.value || null,
+                    }),
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    liveRatesContainer.innerHTML = '';
+                    const rates = (data && data.rates) || [];
+                    if (!rates.length) { setStatus('No live rates available — using the methods above.'); return; }
+                    setStatus('');
+                    rates.forEach(function (rate) {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center justify-between p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-indigo-300 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50';
+                        const days = rate.delivery_days ? (' · ' + rate.delivery_days + ' day(s)') : '';
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = 'shipping_quote_id';
+                        input.value = rate.id;
+                        input.className = 'h-4 w-4 text-indigo-600';
+                        input.dataset.amount = rate.amount;
+                        input.addEventListener('change', function () {
+                            shippingMethodRadios.forEach(function (fr) { fr.checked = false; });
+                            updateShippingDisplay(parseFloat(this.dataset.amount) || 0);
+                        });
+                        const left = document.createElement('span');
+                        left.className = 'flex items-center';
+                        const name = document.createElement('span');
+                        name.className = 'ml-3 text-sm font-medium text-gray-900';
+                        name.textContent = rate.carrier + ' ' + rate.service + days;
+                        left.appendChild(input);
+                        left.appendChild(name);
+                        const price = document.createElement('span');
+                        price.className = 'text-sm font-semibold text-gray-900';
+                        price.textContent = '$' + Number(rate.amount).toFixed(2);
+                        label.appendChild(left);
+                        label.appendChild(price);
+                        liveRatesContainer.appendChild(label);
+                    });
+                })
+                .catch(function () { setStatus('Could not fetch live rates — using the methods above.'); });
+            });
         }
     });
 

@@ -69,13 +69,64 @@ class CheckoutController extends Controller
         ]);
     }
 
+    /**
+     * Fetch live carrier rates for the current cart + destination and persist each as
+     * a session-scoped quote. Returns the quotes (with their ids) for the buyer to
+     * select. Empty `rates` = no live carrier configured/reachable → the page keeps
+     * its flat DB methods.
+     */
+    public function shippingRates(Request $request)
+    {
+        $validated = $request->validate([
+            'country' => 'required|string|size:2',
+            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'street1' => 'nullable|string|max:255',
+        ]);
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            return response()->json(['rates' => [], 'error' => 'Your cart is empty.'], 422);
+        }
+
+        $to = [
+            'country' => $validated['country'],
+            'state' => $validated['state'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'zip' => $validated['postal_code'] ?? null,
+            'street1' => $validated['street1'] ?? null,
+        ];
+
+        $quotes = $this->shippingService->quoteLiveRates(
+            $cart,
+            $to,
+            $request->session()->getId(),
+            auth()->id(),
+        );
+
+        return response()->json([
+            'rates' => $quotes->map(fn ($q) => [
+                'id' => $q->id,
+                'carrier' => $q->carrier,
+                'service' => $q->service,
+                'amount' => (float) $q->amount,
+                'currency' => $q->currency,
+                'delivery_days' => $q->delivery_days,
+            ])->all(),
+        ]);
+    }
+
     public function processCheckout(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'has_physical_products' => 'sometimes|in:0,1',
             'shipping_address' => 'required_if:has_physical_products,1|string',
-            'shipping_method_id' => 'required_if:has_physical_products,1|exists:shipping_methods,id',
+            // A physical order ships on either a flat method OR a live-rate quote;
+            // the "one of them is present" check is enforced below (needs the cart).
+            'shipping_method_id' => 'nullable|exists:shipping_methods,id',
+            'shipping_quote_id' => 'nullable|integer|exists:shipping_quotes,id',
             // Structured address drives tax (country) and is required for physical orders.
             // Required for every order — a digital-only order still needs the buyer's
             // country so digital goods are taxed (VAT-on-digital), not just physical ones.
@@ -115,11 +166,37 @@ class CheckoutController extends Controller
         });
 
         $shippingCost = 0;
+        $shippingCarrier = null;
+        $shippingServiceName = null;
+        $shippingQuoteId = null;
         if ($this->hasPhysicalProducts($cart)) {
-            $shippingMethod = ShippingMethod::find($request->shipping_method_id);
-            $shippingCost = $request->has('dropship') ?
-                $this->shippingService->calculateDropShippingCost($shippingMethod, $cart, $request->shipping_address) :
-                $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address) ?? $shippingMethod->base_rate;
+            if ($request->filled('shipping_quote_id')) {
+                // Live carrier rate. Bill the STORED quote amount — an API-quoted price
+                // can't be recomputed, and a client-posted price must never be trusted.
+                // resolveQuote scopes to this session and rejects expired quotes.
+                $quote = $this->shippingService->resolveQuote(
+                    (int) $request->input('shipping_quote_id'),
+                    $request->session()->getId(),
+                    auth()->id(),
+                );
+                if (! $quote) {
+                    return redirect()->back()->withInput()
+                        ->with('error', 'Your selected shipping rate is no longer valid. Please choose shipping again.');
+                }
+                $premium = $request->has('dropship') ? (float) config('shipping.drop_shipping_premium', 2.00) : 0.0;
+                $shippingCost = round((float) $quote->amount + $premium, 2);
+                $shippingCarrier = $quote->carrier;
+                $shippingServiceName = $quote->service;
+                $shippingQuoteId = $quote->id;
+            } elseif ($request->filled('shipping_method_id')) {
+                $shippingMethod = ShippingMethod::find($request->shipping_method_id);
+                $shippingCost = $request->has('dropship') ?
+                    $this->shippingService->calculateDropShippingCost($shippingMethod, $cart, $request->shipping_address) :
+                    $this->shippingService->calculateShippingCost($shippingMethod, $cart, $request->shipping_address);
+            } else {
+                return redirect()->back()->withInput()
+                    ->with('error', 'Please choose a shipping method.');
+            }
         }
 
         // Re-validate and RE-COMPUTE the coupon discount against the LIVE cart.
@@ -184,12 +261,16 @@ class CheckoutController extends Controller
         // is what prevents charging a customer for stock we can't fulfil.
         $order = null;
         try {
-            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode) {
+            DB::transaction(function () use (&$order, $cart, $request, $totalAmount, $shippingCost, $taxAmount, $taxLines, $discountAmount, $couponCode, $shippingCarrier, $shippingServiceName, $shippingQuoteId) {
                 $order = Order::create([
                     'user_id' => auth()->id(),
                     'customer_email' => $request->email,
                     'shipping_address' => $request->shipping_address,
-                    'shipping_method_id' => $request->shipping_method_id,
+                    // A live-rate quote drives the cost; don't also record a flat method.
+                    'shipping_method_id' => $shippingQuoteId ? null : $request->shipping_method_id,
+                    'shipping_carrier' => $shippingCarrier,
+                    'shipping_service' => $shippingServiceName,
+                    'shipping_quote_id' => $shippingQuoteId,
                     'payment_method' => $request->payment_method,
                     'total_amount' => $totalAmount,
                     'shipping_cost' => $shippingCost,

@@ -18,6 +18,10 @@ return [
     // Per-request timeout (seconds) for carrier rate lookups.
     'timeout' => env('SHIPPING_TIMEOUT', 15),
 
+    // How long a fetched live rate stays selectable at checkout (minutes). After this
+    // the buyer must re-fetch — carrier prices drift, so a stale quote is rejected.
+    'quote_ttl' => env('SHIPPING_QUOTE_TTL', 30),
+
     /*
     | Ship-from (origin) address used for rate quotes.
     */
