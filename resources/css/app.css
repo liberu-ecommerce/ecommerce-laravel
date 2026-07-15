@@ -1,39 +1,102 @@
 @import 'tailwindcss';
 
+/* Inter as a single variable file — smaller than the three static weights we'd
+   otherwise ship, and it gives fractional weight control. Plex Mono is static
+   because only two weights are ever used; loading its full range would cost
+   more than it buys. Fontsource sets font-display: swap for us. */
+@import '@fontsource-variable/inter';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
 @import '@fortawesome/fontawesome-free/css/fontawesome';
 @import '@fortawesome/fontawesome-free/css/solid';
 @import '@fortawesome/fontawesome-free/css/brands';
 
 
 
-/* Custom CSS Variables for Design System */
-:root {
-    --primary-50: #eff6ff;
-    --primary-100: #dbeafe;
-    --primary-500: #3b82f6;
-    --primary-600: #2563eb;
-    --primary-700: #1d4ed8;
-    --primary-900: #1e3a8a;
+/* ---------------------------------------------------------------------------
+   Workshop Moss — the "Parts Catalogue" palette. Strategy and doctrine: DESIGN.md.
 
-    --secondary-50: #f8fafc;
-    --secondary-100: #f1f5f9;
-    --secondary-500: #64748b;
-    --secondary-600: #475569;
-    --secondary-900: #0f172a;
+   Restrained: pure white ground, neutrals tinted toward the brand hue (140),
+   one deep moss accent held to <=10% of any screen.
 
-    --success-500: #10b981;
-    --warning-500: #f59e0b;
-    --error-500: #ef4444;
+   Two decisions worth knowing before editing:
 
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+   1. There is no blue. Blue is anti-reference #1, so `info` is neutral, not blue.
+   2. There is no second green. Moss doubles as the affirmative signal, because a
+      semantic success-green next to a brand-green would be two similar-but-not-
+      identical greens — the colour equivalent of pairing two humanist sans.
+      A consequence: .btn-success and .btn-primary are deliberately the same.
 
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
+   Every token below is inside the sRGB gamut, and every foreground/background
+   pair in use clears WCAG 2.2 AA. Both were machine-verified, not eyeballed.
+   Changing any lightness or chroma invalidates that — re-verify.
+
+   Tailwind v4 is CSS-first: this @theme block is the single source of truth and
+   generates the utilities. tailwind.config.js is NOT loaded by this stylesheet.
+   --------------------------------------------------------------------------- */
+@theme {
+    /* Brand. The anchor is primary-700 — it sits at the sRGB gamut edge for
+       hue 140, which is what makes it read as enamel rather than foliage. */
+    --color-primary-50: oklch(0.972 0.013 140);
+    --color-primary-100: oklch(0.938 0.028 140);
+    --color-primary-200: oklch(0.872 0.050 140);
+    --color-primary-300: oklch(0.780 0.072 140);
+    --color-primary-400: oklch(0.650 0.090 140);
+    --color-primary-500: oklch(0.520 0.100 140);
+    --color-primary-600: oklch(0.400 0.100 140);
+    --color-primary-700: oklch(0.300 0.096 140);
+    --color-primary-800: oklch(0.245 0.078 140);
+    --color-primary-900: oklch(0.195 0.058 140);
+    --color-primary-950: oklch(0.150 0.038 140);
+
+    /* Neutrals, tinted toward the brand hue rather than toward warm-by-default.
+       The ground itself stays pure white — see The White Ground Rule. */
+    --color-surface: oklch(0.985 0.004 140);
+    --color-hairline: oklch(0.905 0.008 140);
+    --color-stroke: oklch(0.640 0.015 140);
+    --color-muted: oklch(0.470 0.012 140);
+    --color-ink: oklch(0.240 0.015 140);
+
+    /* Text on dark surfaces (the footer). */
+    --color-ink-inverse: oklch(0.860 0.012 140);
+    --color-muted-inverse: oklch(0.720 0.012 140);
+
+    /* Semantics. Success is intentionally absent: it is the brand moss. */
+    --color-danger-50: oklch(0.960 0.016 27);
+    --color-danger-600: oklch(0.505 0.190 27);
+    --color-danger-700: oklch(0.440 0.170 27);
+    --color-warning-50: oklch(0.965 0.022 75);
+    --color-warning-600: oklch(0.560 0.110 75);
+    --color-warning-700: oklch(0.470 0.090 75);
+
+    /* ---- Type -------------------------------------------------------------
+       One grotesque carries display through label on weight and size alone.
+       Inter is the honest open-source Helvetica-for-screens, which is the
+       actual Vignelli/Swiss lineage this system descends from.
+
+       Plex Mono is not a second UI font — it is a data font, and it pairs on a
+       real contrast axis rather than being a near-miss sibling of the sans.
+       See The Numerals Rule: it is reserved for prices, quantities and refs. */
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', monospace;
+
+    /* Fixed rem scale at a ~1.2 ratio. Product register: dense, container-based
+       layouts need spatial predictability, and no major product design system
+       (Material, Polaris, Carbon, Primer) uses fluid type in UI. The hero is the
+       single exception and clamps below, because it is the one display moment. */
+    --text-caption: 0.75rem;
+    --text-caption--line-height: 1.4;
+    --text-label: 0.875rem;
+    --text-label--line-height: 1.45;
+    --text-body: 1rem;
+    --text-body--line-height: 1.6;
+    --text-lead: 1.25rem;
+    --text-lead--line-height: 1.5;
+    --text-title: 1.5rem;
+    --text-title--line-height: 1.25;
+    --text-headline: 1.875rem;
+    --text-headline--line-height: 1.2;
 }
 
 /* Smooth Animations */
@@ -41,318 +104,373 @@
     transition: all 0.2s ease-in-out;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: var(--secondary-100);
-    border-radius: var(--radius-md);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--secondary-500);
-    border-radius: var(--radius-md);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: var(--secondary-600);
-}
-
-/* Enhanced Button Styles */
-.btn {
-    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
-}
-
-.btn-primary {
-    @apply bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
-}
-
-.btn-secondary {
-    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500 border border-gray-300;
-}
-
-.btn-success {
-    @apply bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-md hover:shadow-lg;
-}
-
-.btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-md hover:shadow-lg;
-}
-
-.btn-lg {
-    @apply px-6 py-3 text-base;
-}
-
-.btn-sm {
-    @apply px-3 py-1.5 text-xs;
-}
-
-/* Enhanced Card Styles */
-.card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100;
-}
-
-.card-hover {
-    @apply transform hover:-translate-y-1 hover:scale-105;
-}
-
-.card-body {
-    @apply p-6;
-}
-
-.card-header {
-    @apply px-6 py-4 border-b border-gray-100;
-}
-
-/* Enhanced Form Styles */
-.form-input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white;
-}
-
-.form-input:focus {
-    @apply shadow-md;
-}
-
-.form-label {
-    @apply block text-sm font-medium text-gray-700 mb-2;
-}
-
-.form-error {
-    @apply text-red-500 text-sm mt-1;
-}
-
-/* Loading States */
-.loading {
-    @apply opacity-50 pointer-events-none;
-}
-
-.spinner {
-    @apply animate-spin rounded-full h-4 w-4 border-b-2 border-current;
-}
-
-/* Enhanced Navigation */
-.nav-link {
-    @apply text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
-}
-
-.nav-link.active {
-    @apply text-blue-600 bg-blue-50;
-}
-
-/* Product Grid Enhancements */
-.product-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
-}
-
-.product-card {
-    @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100;
-}
-
-.product-card:hover {
-    @apply transform -translate-y-1;
-}
-
-.product-image {
-    @apply w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105;
-}
-
-.product-badge {
-    @apply absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full;
-}
-
-/* Enhanced Typography */
-.heading-1 {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight;
-}
-
-.heading-2 {
-    @apply text-3xl md:text-4xl font-bold text-gray-900 leading-tight;
-}
-
-.heading-3 {
-    @apply text-2xl md:text-3xl font-bold text-gray-900 leading-tight;
-}
-
-.text-muted {
-    @apply text-gray-600;
-}
-
-/* Enhanced Alerts */
-.alert {
-    @apply px-4 py-3 rounded-lg border-l-4 mb-4;
-}
-
-.alert-success {
-    @apply bg-green-50 border-green-400 text-green-700;
-}
-
-.alert-error {
-    @apply bg-red-50 border-red-400 text-red-700;
-}
-
-.alert-warning {
-    @apply bg-yellow-50 border-yellow-400 text-yellow-700;
-}
-
-.alert-info {
-    @apply bg-blue-50 border-blue-400 text-blue-700;
-}
-
-/* Enhanced Badges */
-.badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.badge-primary {
-    @apply bg-blue-100 text-blue-800;
-}
-
-.badge-success {
-    @apply bg-green-100 text-green-800;
-}
-
-.badge-warning {
-    @apply bg-yellow-100 text-yellow-800;
-}
-
-.badge-danger {
-    @apply bg-red-100 text-red-800;
-}
-
-/* Enhanced Modals */
-.modal-overlay {
-    @apply fixed inset-0 bg-black z-50 flex items-center justify-center p-4;
-}
-
-.modal-content {
-    @apply bg-white rounded-xl shadow-2xl max-w-md w-full max-h-screen overflow-y-auto;
-}
-
-/* Enhanced Dropdowns */
-.dropdown {
-    @apply relative inline-block text-left;
-}
-
-.dropdown-menu {
-    @apply absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black z-50;
-}
-
-.dropdown-item {
-    @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150;
-}
-
-/* Enhanced Tables */
-.table {
-    @apply min-w-full divide-y divide-gray-200;
-}
-
-.table-header {
-    @apply bg-gray-50;
-}
-
-.table-header th {
-    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
-}
-
-.table-body {
-    @apply bg-white divide-y divide-gray-200;
-}
-
-.table-body td {
-    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
-}
-
-/* Enhanced Pagination */
-.pagination {
-    @apply flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6;
-}
-
-.pagination-link {
-    @apply relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md transition-colors duration-150;
-}
-
-.pagination-link.active {
-    @apply bg-blue-600 text-white border-blue-600;
-}
-
-/* Enhanced Search */
-.search-container {
-    @apply relative;
-}
-
-.search-input {
-    @apply w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-}
-
-.search-icon {
-    @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
-}
-
-/* Enhanced Breadcrumbs */
-.breadcrumb {
-    @apply flex items-center space-x-2 text-sm text-gray-500;
-}
-
-.breadcrumb-item {
-    @apply hover:text-gray-700;
-}
-
-.breadcrumb-separator {
-    @apply text-gray-300;
-}
-
-/* Enhanced Progress Bars */
-.progress {
-    @apply w-full bg-gray-200 rounded-full h-2;
-}
-
-.progress-bar {
-    @apply bg-blue-600 h-2 rounded-full transition-all duration-300;
-}
-
-/* Enhanced Tooltips */
-.tooltip {
-    @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg;
-}
-
-/* Enhanced Skeleton Loading */
-.skeleton {
-    @apply animate-pulse bg-gray-200 rounded;
-}
-
-.skeleton-text {
-    @apply h-4 bg-gray-200 rounded;
-}
-
-.skeleton-avatar {
-    @apply h-10 w-10 bg-gray-200 rounded-full;
-}
-
-/* Enhanced Responsive Utilities */
-@media (max-width: 640px) {
-    .mobile-hidden {
-        @apply hidden;
+/* Component classes live in @layer components so that utilities win.
+
+   Without this layer they were emitted after Tailwind's utilities, and at equal
+   specificity source order decides — so `.btn{display:inline-flex}` silently beat
+   `.hidden{display:none}`, making `class="btn hidden sm:inline-flex"` a no-op.
+   Every display/spacing utility on .btn, .card and .alert was affected, not just
+   that one case. Layer order (theme -> base -> components -> utilities) fixes the
+   whole class of bug rather than the one instance that surfaced it. */
+@layer components {
+    /* Enhanced Button Styles */
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
     }
 
-    .mobile-full {
-        @apply w-full;
+    /* Disabled was previously unstyled, so a sold-out product's button rendered as a
+       fully saturated, apparently-clickable moss button. A disabled control has to
+       look disabled: drained, flat, and not offering a hover response. */
+    .btn:disabled,
+    .btn[disabled] {
+        @apply cursor-not-allowed bg-hairline text-muted shadow-none;
+        transform: none;
     }
+
+    .btn:disabled:hover,
+    .btn[disabled]:hover {
+        @apply bg-hairline text-muted shadow-none;
+        transform: none;
+    }
+
+    .btn-primary {
+        @apply bg-primary-700 text-white hover:bg-primary-600 focus:ring-primary-600 shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+    }
+
+    .btn-secondary {
+        @apply bg-surface text-ink hover:bg-primary-50 focus:ring-primary-600 border border-stroke;
+    }
+
+    /* Identical to .btn-primary by design: moss is the affirmative colour, and a
+       second green would fight the brand. Kept as an alias so existing views don't
+       break; prefer .btn-primary in new work. */
+    .btn-success {
+        @apply bg-primary-700 text-white hover:bg-primary-600 focus:ring-primary-600 shadow-md hover:shadow-lg;
+    }
+
+    .btn-danger {
+        @apply bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-600 shadow-md hover:shadow-lg;
+    }
+
+    .btn-lg {
+        @apply px-6 py-3 text-base;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    /* Enhanced Card Styles */
+    .card {
+        @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100;
+    }
+
+    .card-hover {
+        @apply transform hover:-translate-y-1 hover:scale-105;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-gray-100;
+    }
+
+    /* Enhanced Form Styles */
+    /* border-stroke, not the old border-gray-300: a control's boundary is the only
+       thing identifying it, so it owes 3:1 (WCAG 1.4.11). gray-300 managed 1.47:1. */
+    .form-input {
+        @apply w-full px-4 py-3 border border-stroke rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent transition-all duration-200 bg-white;
+    }
+
+    .form-input:focus {
+        @apply shadow-md;
+    }
+
+    .form-label {
+        @apply block text-sm font-medium text-ink mb-2;
+    }
+
+    .form-error {
+        @apply text-danger-600 text-sm mt-1;
+    }
+
+    /* Loading States */
+    .loading {
+        @apply opacity-50 pointer-events-none;
+    }
+
+    .spinner {
+        @apply animate-spin rounded-full h-4 w-4 border-b-2 border-current;
+    }
+
+    /* Enhanced Navigation */
+    .nav-link {
+        @apply text-ink hover:text-primary-700 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200;
+    }
+
+    .nav-link.active {
+        @apply text-primary-700 bg-primary-50;
+    }
+
+    /* Product Grid Enhancements */
+    .product-grid {
+        @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+    }
+
+    .product-card {
+        @apply bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100;
+    }
+
+    .product-card:hover {
+        @apply transform -translate-y-1;
+    }
+
+    .product-image {
+        @apply w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105;
+    }
+
+    /* Ink, not red. A red badge on a product tile is urgency theatre — and it would
+       also spend the brand's scarcity on every tile in a 12-up grid. A black tag
+       states the fact and lets moss stay reserved for actions. */
+    .product-badge {
+        @apply absolute top-3 left-3 bg-ink text-white text-xs font-bold px-2 py-1 rounded-full;
+    }
+
+    /* Enhanced Typography */
+
+    /* The one display moment on the storefront. Clamped rather than fixed because
+       the hero is the single place where text dominates the layout. Bounds are
+       deliberate: max 4rem sits under the 6rem ceiling, and max <= 2.5x min keeps
+       browser zoom and reflow sane. Tracking of -0.02em stays clear of the -0.04em
+       floor where a grotesque's letters start touching. */
+    .heading-1 {
+        font-size: clamp(2.25rem, 1.5rem + 3vw, 4rem);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+        @apply font-bold text-ink;
+    }
+
+    .heading-2 {
+        font-size: var(--text-headline);
+        line-height: var(--text-headline--line-height);
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        @apply font-semibold text-ink;
+    }
+
+    .heading-3 {
+        font-size: var(--text-title);
+        line-height: var(--text-title--line-height);
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+        @apply font-semibold text-ink;
+    }
+
+    /* .text-muted is deliberately not defined here: --color-muted in @theme already
+       generates a `text-muted` utility, so the old hand-rolled class is redundant
+       and `@apply text-muted` inside it would be circular. */
+
+    /* The Numerals Rule, made mechanical. Every price, quantity, order reference
+       and stock count gets this: mono, tabular figures, so digits align in a column
+       and can be compared at a glance by someone who reads them all day.
+       Commercial data is not prose. */
+    .data {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: 'tnum' 1;
+        letter-spacing: -0.01em;
+    }
+
+    /* Long-form prose. Capped at a readable measure; `pretty` kills orphans. */
+    .prose-measure {
+        max-width: 68ch;
+        text-wrap: pretty;
+    }
+
+    /* Enhanced Alerts */
+    /* Full 1px border, not the old border-l-4: a >1px coloured side-stripe is a
+       banned pattern. The tint plus a hairline in the level's own hue carries the
+       same signal without the racing stripe. */
+    .alert {
+        @apply px-4 py-3 rounded-lg border mb-4;
+    }
+
+    /* Success is moss — the brand colour is the affirmative colour. */
+    .alert-success {
+        @apply bg-primary-50 border-primary-300 text-primary-700;
+    }
+
+    .alert-error {
+        @apply bg-danger-50 border-danger-600 text-danger-700;
+    }
+
+    .alert-warning {
+        @apply bg-warning-50 border-warning-600 text-warning-700;
+    }
+
+    /* Info is neutral, not blue. There is no blue in this system. */
+    .alert-info {
+        @apply bg-surface border-hairline text-ink;
+    }
+
+    /* Enhanced Badges */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-primary {
+        @apply bg-primary-100 text-primary-700;
+    }
+
+    .badge-success {
+        @apply bg-primary-100 text-primary-700;
+    }
+
+    .badge-warning {
+        @apply bg-warning-50 text-warning-700;
+    }
+
+    .badge-danger {
+        @apply bg-danger-50 text-danger-700;
+    }
+
+    /* Enhanced Modals */
+    .modal-overlay {
+        @apply fixed inset-0 bg-black z-50 flex items-center justify-center p-4;
+    }
+
+    .modal-content {
+        @apply bg-white rounded-xl shadow-2xl max-w-md w-full max-h-screen overflow-y-auto;
+    }
+
+    /* Enhanced Dropdowns */
+    .dropdown {
+        @apply relative inline-block text-left;
+    }
+
+    .dropdown-menu {
+        @apply absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black z-50;
+    }
+
+    .dropdown-item {
+        @apply block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150;
+    }
+
+    /* Enhanced Tables */
+    .table {
+        @apply min-w-full divide-y divide-gray-200;
+    }
+
+    .table-header {
+        @apply bg-gray-50;
+    }
+
+    .table-header th {
+        @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
+    }
+
+    .table-body {
+        @apply bg-white divide-y divide-gray-200;
+    }
+
+    .table-body td {
+        @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+    }
+
+    /* Enhanced Pagination */
+    .pagination {
+        @apply flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6;
+    }
+
+    .pagination-link {
+        @apply relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md transition-colors duration-150;
+    }
+
+    .pagination-link.active {
+        @apply bg-primary-700 text-white border-primary-700;
+    }
+
+    /* Enhanced Search */
+    .search-container {
+        @apply relative;
+    }
+
+    .search-input {
+        @apply w-full pl-10 pr-4 py-3 border border-stroke rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent;
+    }
+
+    .search-icon {
+        @apply absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400;
+    }
+
+    /* Enhanced Breadcrumbs */
+    .breadcrumb {
+        @apply flex items-center space-x-2 text-sm text-gray-500;
+    }
+
+    .breadcrumb-item {
+        @apply hover:text-gray-700;
+    }
+
+    .breadcrumb-separator {
+        @apply text-gray-300;
+    }
+
+    /* Enhanced Progress Bars */
+    .progress {
+        @apply w-full bg-gray-200 rounded-full h-2;
+    }
+
+    .progress-bar {
+        @apply bg-primary-700 h-2 rounded-full transition-all duration-300;
+    }
+
+    /* Enhanced Tooltips */
+    .tooltip {
+        @apply absolute z-50 px-2 py-1 text-xs text-white bg-gray-900 rounded shadow-lg;
+    }
+
+    /* Enhanced Skeleton Loading */
+    .skeleton {
+        @apply animate-pulse bg-gray-200 rounded;
+    }
+
+    .skeleton-text {
+        @apply h-4 bg-gray-200 rounded;
+    }
+
+    .skeleton-avatar {
+        @apply h-10 w-10 bg-gray-200 rounded-full;
+    }
+
+    /* Enhanced Responsive Utilities */
+    @media (max-width: 640px) {
+        .mobile-hidden {
+            @apply hidden;
+        }
+
+        .mobile-full {
+            @apply w-full;
+        }
+    }
+
 }
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .dark-mode {
-        @apply bg-gray-900 text-white;
-    }
+/* Dark mode intentionally absent.
+   What used to live here was a `.dark-mode` class, gated behind a
+   prefers-color-scheme query, that was never applied to a single element —
+   three dead rules pretending the theme existed. DESIGN.md's ruling: make it
+   real or delete it, because a half-present theme is worse than none.
 
-    .dark-mode .card {
-        @apply bg-gray-800 border-gray-700;
-    }
+   Making it real is a genuine piece of work, not a token flip: it needs a
+   3-step surface scale (depth comes from surface lightness, not shadow), a
+   desaturated moss, lighter body weight, and it has to hold across 39
+   storefront views AND both Filament panels. That is its own task.
 
-    .dark-mode .form-input {
-        @apply bg-gray-800 border-gray-600 text-white;
-    }
-}
+   The palette above is built to support it when that happens — the neutrals
+   are already a tinted ramp on hue 140, so a dark theme redefines the semantic
+   layer only. Until then, this system is light, which is what the scene called
+   for: merchant photography is shot on white and a dark ground fights it. */

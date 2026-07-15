@@ -7,114 +7,153 @@
 
     <title>@yield('title', config('app.name'))</title>
     <meta name="description" content="@yield('meta_description', 'Your premier ecommerce destination')">
-    <meta name="keywords" content="@yield('meta_keywords', 'ecommerce, online shopping')">
 
     <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:title" content="@yield('og_title', config('app.name'))">
     <meta property="og:description" content="@yield('og_description', 'Your premier ecommerce destination')">
-    <meta property="og:image" content="@yield('og_image', asset('images/logo.png'))">
     <meta property="og:url" content="{{ url()->current() }}">
+    {{-- Emitted only when a view supplies an image: a 404 og:image is worse than none.
+         asset() cannot be used here — config('app.asset_url') defaults to '/', so it
+         returns a root-relative path and OpenGraph requires an absolute URL. --}}
+    @hasSection('og_image')
+        <meta property="og:image" content="{{ url(trim($__env->yieldContent('og_image'))) }}">
+    @endif
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
 </head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+{{-- Pure white ground, per The White Ground Rule: merchant product photography
+     is the subject, and the page it sits on is apparatus. Not gray-50, and
+     explicitly not a warm near-white. --}}
+<body class="bg-white text-ink min-h-screen flex flex-col">
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:font-medium focus:text-primary-700 focus:shadow-lg focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-primary-600">
+        Skip to main content
+    </a>
+
     <x-home-navbar />
 
-    <!-- Enhanced Flash Messages -->
-    <div id="flash-messages" class="fixed top-4 right-4 z-50 space-y-2">
-        @if (session('success'))
-            <div class="alert alert-success shadow-lg max-w-md animate-slide-in-right" role="alert">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="font-medium">{{ session('success') }}</span>
-                    <button type="button" class="ml-auto text-green-600 hover:text-green-800" onclick="this.parentElement.parentElement.remove()">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        @endif
+    @php
+        // Icon + label per level. The label is a visually-hidden text channel so the
+        // severity is never carried by colour alone.
+        // Success uses the brand moss, not a second green — see the palette note
+        // at the top of app.css. Colours come from the token scales only.
+        $flashLevels = [
+            'success' => [
+                'label' => 'Success',
+                'icon' => 'text-primary-600',
+                'button' => 'text-primary-700 hover:bg-primary-100',
+                'path' => 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z',
+            ],
+            'error' => [
+                'label' => 'Error',
+                'icon' => 'text-danger-600',
+                'button' => 'text-danger-700 hover:bg-danger-50',
+                'path' => 'M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z',
+            ],
+            'warning' => [
+                'label' => 'Warning',
+                'icon' => 'text-warning-600',
+                'button' => 'text-warning-700 hover:bg-warning-50',
+                'path' => 'M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z',
+            ],
+        ];
+    @endphp
 
-        @if (session('error'))
-            <div class="alert alert-error shadow-lg max-w-md animate-slide-in-right" role="alert">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="font-medium">{{ session('error') }}</span>
-                    <button type="button" class="ml-auto text-red-600 hover:text-red-800" onclick="this.parentElement.parentElement.remove()">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+    {{-- Flash messages are never auto-dismissed (WCAG 2.2.1 Timing Adjustable): a failed
+         payment or stock warning must not delete itself while the user is still reading. --}}
+    <div id="flash-messages" class="fixed inset-x-4 top-4 z-50 space-y-2 sm:left-auto sm:right-4 sm:max-w-md" aria-live="polite">
+        @foreach ($flashLevels as $level => $style)
+            @if (session($level))
+                <div class="alert alert-{{ $level }} shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start gap-2">
+                        <svg class="mt-0.5 size-5 shrink-0 {{ $style['icon'] }}" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                            <path fill-rule="evenodd" d="{{ $style['path'] }}" clip-rule="evenodd"></path>
                         </svg>
-                    </button>
+                        <p class="min-w-0 grow font-medium break-words">
+                            <span class="sr-only">{{ $style['label'] }}:</span>
+                            {{ session($level) }}
+                        </p>
+                        <button type="button"
+                                data-dismiss-flash
+                                aria-label="Dismiss {{ strtolower($style['label']) }} message"
+                                class="-me-1 -mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded {{ $style['button'] }}">
+                            <svg class="size-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        @endif
-
-        @if (session('warning'))
-            <div class="alert alert-warning shadow-lg max-w-md animate-slide-in-right" role="alert">
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span class="font-medium">{{ session('warning') }}</span>
-                    <button type="button" class="ml-auto text-yellow-600 hover:text-yellow-800" onclick="this.parentElement.parentElement.remove()">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        @endif
+            @endif
+        @endforeach
     </div>
 
-    <main class="grow">
+    <main id="main-content" tabindex="-1" class="grow">
         @yield('content')
     </main>
 
     <!-- Chat Widget -->
     @livewire('chat-widget')
 
-    <footer class="bg-gray-800 text-white py-8 mt-8">
+    @php
+        $settings = app(\App\Settings\GeneralSettings::class);
+
+        // Only render links the merchant has actually configured — an unset setting
+        // would otherwise emit href="" and silently link to the current page.
+        $socialLinks = array_filter([
+            'Facebook' => ['url' => $settings->facebook_url, 'icon' => 'fa-facebook'],
+            'X (Twitter)' => ['url' => $settings->twitter_url, 'icon' => 'fa-twitter'],
+            'YouTube' => ['url' => $settings->youtube_url, 'icon' => 'fa-youtube'],
+            'GitHub' => ['url' => $settings->github_url, 'icon' => 'fa-github'],
+        ], fn ($link) => filled($link['url']));
+    @endphp
+
+    {{-- The footer is the one dark surface: a moss-tinted near-black, so it reads
+         as the same material as the brand rather than as generic gray chrome. --}}
+    <footer class="bg-primary-950 text-white py-8 mt-8">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">{{ config('app.name') }}</h3>
-                    <p class="text-gray-300">Your premier ecommerce destination for quality products.</p>
+                    <h2 class="text-lg font-semibold mb-4">{{ config('app.name') }}</h2>
+                    <p class="text-ink-inverse">Your premier ecommerce destination for quality products.</p>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
                     <ul class="space-y-2">
-                        <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-white">Home</a></li>
-                        <li><a href="{{ route('products.index') }}" class="text-gray-300 hover:text-white">Products</a></li>
-                        <li><a href="{{ route('contact') }}" class="text-gray-300 hover:text-white">Contact</a></li>
+                        <li><a href="{{ route('home') }}" class="inline-block py-1 text-ink-inverse hover:text-white">Home</a></li>
+                        <li><a href="{{ route('products.index') }}" class="inline-block py-1 text-ink-inverse hover:text-white">Products</a></li>
+                        <li><a href="{{ route('contact') }}" class="inline-block py-1 text-ink-inverse hover:text-white">Contact</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold mb-4">Customer Service</h3>
+                    <h2 class="text-lg font-semibold mb-4">Customer Service</h2>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-300 hover:text-white">FAQ</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white">Shipping Policy</a></li>
-                        <li><a href="#" class="text-gray-300 hover:text-white">Return Policy</a></li>
+                        <li><a href="#" class="inline-block py-1 text-ink-inverse hover:text-white">FAQ</a></li>
+                        <li><a href="#" class="inline-block py-1 text-ink-inverse hover:text-white">Shipping Policy</a></li>
+                        <li><a href="#" class="inline-block py-1 text-ink-inverse hover:text-white">Return Policy</a></li>
                     </ul>
                 </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-4">Connect With Us</h3>
-                    <div class="flex space-x-4">
-                        <a href="{{ app(\App\Settings\GeneralSettings::class)->facebook_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-facebook"></i></a>
-                        <a href="{{ app(\App\Settings\GeneralSettings::class)->twitter_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
-                        <a href="{{ app(\App\Settings\GeneralSettings::class)->youtube_url }}" class="text-gray-300 hover:text-white"><i class="fab fa-youtube"></i></a>
+                @if (filled($socialLinks))
+                    <div>
+                        <h2 class="text-lg font-semibold mb-4">Connect With Us</h2>
+                        <div class="flex flex-wrap gap-1">
+                            @foreach ($socialLinks as $name => $link)
+                                <a href="{{ $link['url'] }}"
+                                   class="inline-flex size-10 items-center justify-center rounded text-ink-inverse hover:bg-primary-900 hover:text-white">
+                                    <i class="fab {{ $link['icon'] }}" aria-hidden="true"></i>
+                                    <span class="sr-only">{{ $name }}</span>
+                                </a>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
-            <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400">
-                <p>{{ app(\App\Settings\GeneralSettings::class)->footer_copyright }}</p>
+            <div class="border-t border-primary-900 mt-8 pt-4 text-center text-muted-inverse">
+                <p>{{ $settings->footer_copyright }}</p>
             </div>
         </div>
     </footer>
@@ -124,32 +163,43 @@
 
     <!-- Enhanced JavaScript for UI/UX -->
     <script>
-        // Auto-hide flash messages after 5 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const flashMessages = document.querySelectorAll('#flash-messages .alert');
-            flashMessages.forEach(function(message) {
-                setTimeout(function() {
-                    message.style.opacity = '0';
-                    message.style.transform = 'translateX(100%)';
-                    setTimeout(function() {
-                        message.remove();
-                    }, 300);
-                }, 5000);
-            });
+        // Flash messages are dismissed by the user, never on a timer (WCAG 2.2.1).
+        document.addEventListener('click', function (event) {
+            const dismiss = event.target.closest('[data-dismiss-flash]');
+            if (dismiss) {
+                dismiss.closest('.alert').remove();
+            }
         });
 
-        // Enhanced loading states for forms
-        document.addEventListener('DOMContentLoaded', function() {
-            const forms = document.querySelectorAll('form');
-            forms.forEach(function(form) {
-                form.addEventListener('submit', function() {
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = '<span class="spinner mr-2"></span>Loading...';
-                        submitButton.classList.add('loading');
-                    }
+        // Guard against double submission.
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+
+            // Livewire and other in-place handlers never navigate away, so disabling
+            // their submit button would strand it disabled forever.
+            const handledInPlace = event.defaultPrevented
+                || Array.from(form.attributes).some(function (attr) {
+                    return attr.name.startsWith('wire:submit');
                 });
+
+            if (handledInPlace) return;
+
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+                submitButton.classList.add('loading');
+            }
+        });
+
+        // Back-navigation restores the DOM verbatim, disabled button included, leaving
+        // the user staring at a dead button. Re-enable whatever we locked on the way out.
+        window.addEventListener('pageshow', function (event) {
+            if (!event.persisted) return;
+            document.querySelectorAll('button[aria-busy="true"]').forEach(function (button) {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+                button.classList.remove('loading');
             });
         });
 
@@ -187,19 +237,10 @@
         // Initialize tooltips
         document.addEventListener('DOMContentLoaded', initTooltips);
 
-        // Enhanced smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+        // Smooth scrolling is handled natively via CSS `scroll-behavior` below. The old
+        // JS intercepted every a[href^="#"], called preventDefault(), then threw on
+        // querySelector('#') for bare hash links — and it swallowed the focus move that
+        // makes the skip link work.
 
         // Enhanced image lazy loading with fade-in effect
         function initLazyLoading() {
@@ -301,9 +342,11 @@
             animation: pulse-scale 2s infinite;
         }
 
-        /* Enhanced focus styles for accessibility */
-        *:focus {
-            outline: 2px solid #3b82f6;
+        /* Focus ring in the brand's own colour rather than a hardcoded blue.
+           :focus-visible, not :focus, so the ring answers keyboard navigation
+           instead of firing on every mouse click. */
+        *:focus-visible {
+            outline: 2px solid var(--color-primary-600);
             outline-offset: 2px;
         }
 
@@ -342,10 +385,41 @@
             }
         }
 
+        /* Tinted toward the brand hue rather than the old neutral #f0f0f0/#e0e0e0,
+           so loading states belong to the same material as everything else. */
         .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(
+                90deg,
+                var(--color-surface) 25%,
+                var(--color-hairline) 50%,
+                var(--color-surface) 75%
+            );
             background-size: 200px 100%;
             animation: skeleton-loading 1.5s infinite;
+        }
+
+        /* Native smooth scrolling, replacing the old JS handler. Keeping it in CSS
+           preserves the browser's own focus management, which is what makes the
+           skip link actually land on <main> rather than merely scroll to it. */
+        @media (prefers-reduced-motion: no-preference) {
+            html {
+                scroll-behavior: smooth;
+            }
+        }
+
+        /* Motion is opt-out everywhere. Deliberately blunt: app.css declares a global
+           `* { transition: all }`, so nothing here can be scoped narrowly until that
+           goes. Every animation in this file is decorative or a loading affordance —
+           none carry meaning that exists only in the motion. */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
         }
     </style>
 </body>

@@ -1,77 +1,72 @@
-@extends('layouts.app')
+{{-- The "Demo Credentials" panel that used to sit here is deliberately gone. It
+     rendered unconditionally — in production — advertising admin@example.com and
+     staff@example.com as valid usernames next to the word "password". The seeder
+     randomises that password, so the panel was simultaneously useless to an honest
+     visitor and a free username list for a dishonest one.
 
-@section('content')
-    <div class="min-h-full flex flex-col sm:justify-center items-center pt-6 sm:pt-0">
-        <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-            <div class="mb-4 text-sm text-gray-600">
-                {{ __('Please sign in to access the admin panel.') }}
+     The old copy also read "Please sign in to access the admin panel", on the
+     storefront login that shoppers use. --}}
+<x-guest-layout :title="__('Log in')">
+    <x-authentication-card>
+        <x-slot name="logo">
+            <x-authentication-card-logo />
+        </x-slot>
+
+        <h1 class="heading-3">{{ __('Log in') }}</h1>
+        <p class="mt-2 text-label text-muted">
+            {{ __('Sign in to track orders, save a wishlist, and check out faster.') }}
+        </p>
+
+        <x-validation-errors class="mt-6" />
+
+        @session('status')
+            <p class="mt-6 rounded-lg border border-primary-300 bg-primary-50 px-4 py-3 text-label font-medium text-primary-700" role="status">
+                {{ $value }}
+            </p>
+        @endsession
+
+        <form method="POST" action="{{ route('login') }}" class="mt-6 space-y-5">
+            @csrf
+
+            <div>
+                <x-label for="email" value="{{ __('Email') }}" />
+                <x-input id="email" class="mt-1 block w-full" type="email" name="email"
+                         :value="old('email')" required autofocus autocomplete="username" />
+                <x-input-error for="email" class="mt-1" />
             </div>
-        
-            <x-validation-errors class="mb-4" />
-        
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
 
-                <div>
-                    <x-label for="email" value="{{ __('Email') }}" />
-                    <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-                </div>
-
-                <div class="mt-4">
-                    <x-label for="password" value="{{ __('Password') }}" />
-                    <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="current-password" />
-                </div>
-
-                <div class="block mt-4">
-                    <label for="remember_me" class="flex items-center">
-                        <input type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" id="remember_me" name="remember">
-                        <span class="ml-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-                    </label>
-                </div>
-
-                <div class="flex items-center justify-end mt-4">
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition ease-in-out duration-150 ml-4">
-                        {{ __('Log in') }}
-                    </button>                    
-                </div>
-
-                <a href="/forgot-password" class="underline text-sm text-gray-600 hover:text-gray-900">Forgot password?</a>
-            </form>
-
-            @if (JoelButcher\Socialstream\Socialstream::show())
-                <x-socialstream::socialstream />
-            @endif
-
-            {{-- Demo Credentials Section --}}
-<div class="mt-6 p-4 bg-gray-100 rounded-lg shadow">
-    <h3 class="text-lg font-semibold text-gray-700 mb-4">Demo Credentials</h3>
-
-    <div class="grid grid-cols-2 gap-4">
-        <div class="border p-4 rounded bg-white shadow-sm">
-            <h4 class="font-bold text-gray-800">Admin</h4>
-            <div class="mt-2">
-                <span class="block text-sm text-gray-600 font-mono">admin@example.com</span>
+            <div>
+                <x-label for="password" value="{{ __('Password') }}" />
+                <x-input id="password" class="mt-1 block w-full" type="password" name="password"
+                         required autocomplete="current-password" />
+                <x-input-error for="password" class="mt-1" />
             </div>
-            <div class="mt-2">
-                <span class="block text-sm text-gray-600 font-mono">password</span>
-            </div>
-        </div>
 
-        <div class="border p-4 rounded bg-white shadow-sm">
-            <h4 class="font-bold text-gray-800">Staff</h4>
-            <div class="mt-2">
-                <span class="block text-sm text-gray-600 font-mono">staff@example.com</span>
-            </div>
-            <div class="mt-2">
-                
-                <span class="block text-sm text-gray-600 font-mono">password</span>
-            </div>
-        </div>
-    </div>
-</div>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <label for="remember_me" class="flex items-center gap-2 py-1">
+                    <x-checkbox id="remember_me" name="remember" />
+                    <span class="text-label text-muted">{{ __('Remember me') }}</span>
+                </label>
 
-             
-        
-        </div>
-    </div>
-@endsection
+                <a href="{{ route('password.request') }}"
+                   class="rounded py-1 text-label text-primary-700 underline underline-offset-4 hover:text-primary-600">
+                    {{ __('Forgot your password?') }}
+                </a>
+            </div>
+
+            <x-button class="w-full justify-center">{{ __('Log in') }}</x-button>
+        </form>
+
+        @if (JoelButcher\Socialstream\Socialstream::show())
+            <x-socialstream::socialstream />
+        @endif
+
+        <p class="mt-6 border-t border-hairline pt-6 text-label text-muted">
+            {{ __('New here?') }}
+            <a href="{{ route('register') }}"
+               class="rounded text-primary-700 underline underline-offset-4 hover:text-primary-600">
+                {{ __('Create an account') }}
+            </a>
+        </p>
+    </x-authentication-card>
+</x-guest-layout>

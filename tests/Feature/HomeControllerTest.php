@@ -90,10 +90,40 @@ class HomeControllerTest extends TestCase
         $this->assertLessThanOrEqual(6, $latestProducts->count());
     }
 
-    public function test_home_page_passes_special_offers(): void
+    public function test_home_page_passes_categories_that_have_products(): void
     {
+        $product = $this->makeProduct(['name' => 'Stocked Item']);
+
         $response = $this->get(route('home'));
 
-        $response->assertViewHas('specialOffers');
+        $response->assertStatus(200);
+        $categories = $response->viewData('categories');
+        $this->assertTrue($categories->contains('id', $product->category_id));
+    }
+
+    public function test_home_page_omits_categories_with_no_products(): void
+    {
+        $empty = ProductCategory::create([
+            'name' => 'Empty Category',
+            'slug' => 'empty-cat-' . uniqid(),
+        ]);
+
+        $response = $this->get(route('home'));
+
+        $categories = $response->viewData('categories');
+        $this->assertFalse(
+            $categories->contains('id', $empty->id),
+            'A category with no products must not be offered as a way in — it is a dead end.'
+        );
+    }
+
+    public function test_home_page_exposes_a_product_count_per_category(): void
+    {
+        $product = $this->makeProduct();
+
+        $response = $this->get(route('home'));
+
+        $category = $response->viewData('categories')->firstWhere('id', $product->category_id);
+        $this->assertSame(1, $category->products_count);
     }
 }

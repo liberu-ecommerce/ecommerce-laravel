@@ -3,7 +3,7 @@
         <!-- Chat Window -->
         <div class="bg-white rounded-lg shadow-2xl w-96 h-[500px] flex flex-col">
             <!-- Chat Header -->
-            <div class="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+            <div class="bg-primary-700 text-white p-4 rounded-t-lg flex justify-between items-center">
                 <div class="flex items-center space-x-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
@@ -35,12 +35,12 @@
                     <textarea 
                         wire:model="feedback"
                         placeholder="Any additional feedback? (optional)"
-                        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                         rows="3"></textarea>
 
                     <button 
                         wire:click="submitRating"
-                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        class="bg-primary-700 text-white px-6 py-2 rounded-lg hover:bg-primary-600 transition">
                         Submit Feedback
                     </button>
                 </div>
@@ -49,7 +49,7 @@
                 <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="chat-messages-{{ $sessionId }}">
                     @if($isLoading)
                         <div class="flex justify-center items-center h-full">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-700"></div>
                         </div>
                     @else
                         <div id="messages-container-{{ $sessionId }}">
@@ -65,11 +65,11 @@
                             type="text" 
                             wire:model="newMessage"
                             placeholder="Type your message..."
-                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-600 focus:border-transparent"
                             autocomplete="off">
                         <button 
                             type="submit"
-                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                            class="bg-primary-700 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition flex items-center">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
                             </svg>
@@ -82,7 +82,7 @@
         <!-- Chat Button -->
         <button 
             wire:click="toggleChat"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition transform hover:scale-110">
+            class="bg-primary-700 hover:bg-primary-600 text-white rounded-full p-4 shadow-lg transition transform hover:scale-110">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
             </svg>
@@ -185,7 +185,7 @@
 
         container.innerHTML = messages.map(msg => {
             const isAgent = msg.sender_type === 'agent' || msg.sender_type === 'system';
-            const bgColor = isAgent ? 'bg-blue-100' : 'bg-gray-200';
+            const bgColor = isAgent ? 'bg-primary-100' : 'bg-surface';
             const alignment = isAgent ? 'items-start' : 'items-end';
             
             return `

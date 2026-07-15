@@ -26,6 +26,13 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
+        <!--
+            Social login is opt-in in production (config/socialstream.php): providers
+            default to empty because nine were rendering with no credentials, so every
+            button 500'd on click. The suite still needs them enabled to exercise the
+            registration flows, so the full list lives here rather than in the default.
+        -->
+        <env name="SOCIALSTREAM_PROVIDERS" value="bitbucket,facebook,github,gitlab,google,linkedin,linkedin-openid,slack,twitter-oauth-2"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
     </php>

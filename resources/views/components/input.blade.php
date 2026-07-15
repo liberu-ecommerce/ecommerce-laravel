@@ -1,3 +1,5 @@
 @props(['disabled' => false])
 
-<input {{ $disabled ? 'disabled' : '' }} {!! $attributes->merge(['class' => 'px-3 py-2 bg-white text-gray-900 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 rounded-md shadow-sm transition']) !!}>
+{{-- .form-input carries the system's stroke and moss focus ring. The old inline
+     classes hardcoded indigo, which is the framework's brand, not this one. --}}
+<input {{ $disabled ? 'disabled' : '' }} {!! $attributes->merge(['class' => 'form-input']) !!}>
