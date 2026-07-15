@@ -82,7 +82,62 @@ jobs:
             type=semver,pattern={{version}}
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      # Build first, publish only once the image has been shown to work. This job
+      # used to build and push in one step, so "green" meant nothing more than
+      # `docker build` exiting 0 — and two faults rode that all the way to the
+      # registry: the image could not start PHP at all (opcache.file_cache was set
+      # to a number, so every invocation was fatal), and it served a vite manifest
+      # naming 32 assets while containing none of them. Both were invisible to a
+      # build-exit-code check. The smoke step below is what those needed.
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: liberu/ecommerce:ci-smoke
+          cache-from: type=registry,ref=liberu/ecommerce:buildcache
+          cache-to: type=registry,ref=liberu/ecommerce:buildcache,mode=max
+
+      - name: Smoke test the image
+        run: |
+          set -euo pipefail
+
+          # PHP must actually start, and the framework must boot. This is the
+          # check that opcache.file_cache=60 would have failed for two years.
+          docker run --rm --entrypoint php liberu/ecommerce:ci-smoke \
+            /var/www/html/artisan --version
+
+          # Every asset the vite manifest promises must be in the image. Both
+          # layouts call @vite, so a manifest without its assets is a storefront
+          # served with no CSS and no JS.
+          rm -rf /tmp/build-check
+          cid=$(docker create liberu/ecommerce:ci-smoke)
+          docker cp "$cid:/var/www/html/public/build" /tmp/build-check
+          docker rm -f "$cid" > /dev/null
+
+          python3 - <<'PY'
+          import json, pathlib, sys
+
+          root = pathlib.Path("/tmp/build-check")
+          manifest = root / "manifest.json"
+          if not manifest.is_file():
+              sys.exit("FAIL: no vite manifest in the image")
+
+          entries = json.loads(manifest.read_text())
+          if not entries:
+              sys.exit("FAIL: vite manifest is empty")
+
+          missing = [e["file"] for e in entries.values() if not (root / e["file"]).is_file()]
+          if missing:
+              sys.exit(f"FAIL: {len(missing)}/{len(entries)} assets in the manifest "
+                       f"are missing from the image, e.g. {missing[:5]}")
+
+          print(f"ok: {len(entries)} assets present, all referenced files exist")
+          PY
+
+      # Reuses the layers just built and verified; this only uploads them.
+      - name: Push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -91,4 +146,3 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=liberu/ecommerce:buildcache
-          cache-to: type=registry,ref=liberu/ecommerce:buildcache,mode=max
