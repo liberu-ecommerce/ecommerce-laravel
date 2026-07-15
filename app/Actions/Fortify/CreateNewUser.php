@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Spatie\Permission\Exceptions\RoleDoesNotExist;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -75,15 +76,18 @@ class CreateNewUser implements CreatesNewUsers
         } catch (ValidationException $e) {
             Log::error('User creation validation failed', [
                 'errors' => $e->errors(),
-                'input' => array_diff_key($input, array_flip(['password'])),
+                // ponytail: allowlist, not a denylist. 'password_confirmation' holds the
+                // same plaintext as 'password'; a denylist leaks every field we forget.
+                'input' => Arr::only($input, ['name', 'email']),
             ]);
             throw $e;
         } catch (QueryException $e) {
+            // No 'message'/'bindings': QueryException::formatMessage() interpolates the
+            // bindings into the message, so both carry the bcrypt hash. getSql() keeps
+            // its '?' placeholders and is safe.
             Log::error('Database error during user creation', [
-                'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'sql' => $e->getSql(),
-                'bindings' => $e->getBindings(),
             ]);
             throw new Exception($this->getDatabaseErrorMessage($e));
         } catch (RoleDoesNotExist $e) {
