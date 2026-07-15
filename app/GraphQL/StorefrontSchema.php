@@ -293,6 +293,7 @@ class StorefrontSchema
                 'city' => Type::string(),
                 'postalCode' => Type::string(),
                 'couponCode' => Type::string(),       // re-validated against the live subtotal
+                'vatNumber' => Type::string(),        // EU VAT number → VIES-checked reverse charge
                 'dropship' => Type::boolean(),
                 'supplierId' => Type::string(),
                 'recipientName' => Type::string(),

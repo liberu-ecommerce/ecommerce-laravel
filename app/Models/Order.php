@@ -76,6 +76,8 @@ class Order extends Model
         'shipping_status',
         'shipping_address',
         'billing_country',
+        'vat_number',
+        'reverse_charge',
         'shipping_method_id',
         'shipping_carrier',
         'shipping_service',
