@@ -2,16 +2,15 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Actions\Action;
-use Filament\Widgets\AccountWidget;
-use App\Filament\App\Pages\CreateTeam;
-use App\Filament\App\Pages\EditTeam;
 use App\Filament\App\Pages;
+use App\Filament\App\Pages\CreateTeam;
 use App\Filament\App\Pages\EditProfile;
+use App\Filament\App\Pages\EditTeam;
 use App\Http\Middleware\TeamsPermission;
 use App\Listeners\CreatePersonalTeam;
 use App\Listeners\SwitchTeam;
 use App\Models\Team;
+use Filament\Actions\Action;
 use Filament\Events\Auth\Registered;
 use Filament\Events\TenantSet;
 use Filament\Facades\Filament;
@@ -24,6 +23,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
+use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,13 +42,32 @@ class AppPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         $panel
-            ->default()
+            // No ->default() here: AdminPanelProvider already claims it, and
+            // PanelRegistry::getDefault() takes Arr::first(), so admin won on
+            // registration order alone while this panel also claimed the flag.
+            // That made the fallback panel a function of provider order, and the
+            // fallback is load-bearing — FilamentManager::isAuthorizationStrict()
+            // reads getCurrentOrDefaultPanel(), so outside a panel (queues,
+            // console, policy checks with no request) it reads the default. If
+            // order ever flipped, strictAuthorization() below would have become
+            // the global fallback and thrown on every policy-less Admin resource.
             ->id('app')
             ->path('app')
             // ->login([AuthenticatedSessionController::class, 'create'])
             // ->registration()
             // ->passwordReset()
             // ->emailVerification()
+            // Without this, a resource with no policy is wide open: Filament's
+            // get_authorization_response() returns allow() when no policy exists.
+            // That is how ArticleResource and CollectionResource shipped with
+            // unguarded CRUD. Strict mode throws instead, so the next policy-less
+            // resource fails loudly in CI rather than silently granting everyone.
+            //
+            // Scoped to this panel deliberately: the Admin panel still has
+            // policy-less resources (ChatConversation, CustomerSegment, Discount,
+            // Menu, MenuItem, Page, TaxClass, User), so turning it on there would
+            // throw across the back-office. Those want policies, not a flag.
+            ->strictAuthorization()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Gray,
@@ -104,14 +123,14 @@ class AppPanelProvider extends PanelProvider
                 ->tenant(Team::class, ownershipRelationship: 'team')
                 ->tenantRegistration(CreateTeam::class)
                 ->tenantProfile(EditTeam::class);
-                // ->userMenuItems([
-                //     MenuItem::make()
-                //         ->label('Team Settings')
-                //         ->icon('heroicon-o-cog-6-tooth')
-                //         ->url(fn () => $this->shouldRegisterMenuItem()
-                //             ? url(Pages\EditTeam::getUrl())
-                //             : url($panel->getPath())),
-                // ]);
+            // ->userMenuItems([
+            //     MenuItem::make()
+            //         ->label('Team Settings')
+            //         ->icon('heroicon-o-cog-6-tooth')
+            //         ->url(fn () => $this->shouldRegisterMenuItem()
+            //             ? url(Pages\EditTeam::getUrl())
+            //             : url($panel->getPath())),
+            // ]);
         }
 
         return $panel;
@@ -148,6 +167,6 @@ class AppPanelProvider extends PanelProvider
 
     public function shouldRegisterMenuItem(): bool
     {
-        return true; //auth()->user()?->hasVerifiedEmail() && Filament::hasTenancy() && Filament::getTenant();
+        return true; // auth()->user()?->hasVerifiedEmail() && Filament::hasTenancy() && Filament::getTenant();
     }
 }

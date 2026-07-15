@@ -2,12 +2,9 @@
 
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -34,7 +31,7 @@ class UserForm
                                             ->maxLength(255)
                                             ->columnSpanFull()
                                             ->placeholder('Enter full name'),
-                                        
+
                                         TextInput::make('email')
                                             ->label('Email Address')
                                             ->email()
@@ -51,18 +48,28 @@ class UserForm
                                             ->maxLength(255)
                                             ->placeholder('Enter password')
                                             ->helperText('Leave blank to keep current password (when editing)'),
-                                        
+
+                                        // Security: ->image() means
+                                        // acceptedFileTypes(['image/*']), which
+                                        // accepts image/svg+xml -- an XML doc that
+                                        // can carry <script>. This field lands on
+                                        // the default (private, non-web-served) disk
+                                        // today so it is not currently an XSS vector,
+                                        // but the allowlist is the cheap half of the
+                                        // fix and survives the disk being re-pointed.
+                                        // Validates the *upload*; does not make the
+                                        // serving origin safe. maxSize stays 2MB.
                                         FileUpload::make('profile_photo_path')
                                             ->label('Profile Photo')
-                                            ->image()
+                                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/avif'])
                                             ->imageEditor()
                                             ->maxSize(2048)
                                             ->directory('profile-photos')
                                             ->columnSpanFull()
-                                            ->helperText('Upload a profile photo (max 2MB)')
+                                            ->helperText('Upload a profile photo (max 2MB)'),
                                     ]),
                             ]),
-                        
+
                         Tab::make('Roles & Permissions')
                             ->schema([
                                 Section::make('Role Assignment')
@@ -78,7 +85,7 @@ class UserForm
                                             ->columnSpanFull(),
                                     ]),
                             ]),
-                        
+
                     ]),
             ]);
     }

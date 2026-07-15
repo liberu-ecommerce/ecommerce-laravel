@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use JoelButcher\Socialstream\HasConnectedAccounts;
 use Laravel\Cashier\Billable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -27,12 +28,11 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 {
     use Billable;
     use HasApiTokens;
+    use HasConnectedAccounts;
     use HasFactory;
     use HasProfilePhoto {
         HasProfilePhoto::profilePhotoUrl as getPhotoUrl;
     }
-
-    // use HasConnectedAccounts;
     use HasRoles;
     use HasTeams;
     use Notifiable;
