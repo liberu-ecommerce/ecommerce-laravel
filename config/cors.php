@@ -31,9 +31,9 @@ return [
      * correct for a same-origin storefront; server-to-server API clients are
      * unaffected because CORS is a browser mechanism.
      */
-    'allowed_origins' => array_values(array_filter(
-        array_map('trim', explode(',', (string) env('CORS_ALLOWED_ORIGINS', '')))
-    )),
+    'allowed_origins' => preg_split(
+        '/\s*,\s*/', (string) env('CORS_ALLOWED_ORIGINS', ''), -1, PREG_SPLIT_NO_EMPTY
+    ) ?: [],
 
     'allowed_origins_patterns' => [],
 

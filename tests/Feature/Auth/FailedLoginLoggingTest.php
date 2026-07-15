@@ -66,7 +66,9 @@ class FailedLoginLoggingTest extends TestCase
 
         Log::shouldHaveReceived('warning')
             ->once()
-            ->withArgs(fn (string $m, array $c) => $c['account_exists'] === true);
+            ->withArgs(function (string $message, array $context) {
+                return str_contains($message, 'Failed login') && $context['account_exists'] === true;
+            });
     }
 
     #[Test]
@@ -78,6 +80,9 @@ class FailedLoginLoggingTest extends TestCase
 
         Log::shouldHaveReceived('warning')
             ->once()
-            ->withArgs(fn (string $m, array $c) => str_contains($m, 'Login throttled'));
+            ->withArgs(function (string $message, array $context) {
+                return str_contains($message, 'Login throttled')
+                    && $context['email'] === 'victim@example.com';
+            });
     }
 }

@@ -8,6 +8,7 @@ use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Uri;
 
 class WebhookEndpointController extends Controller
 {
@@ -90,7 +91,8 @@ class WebhookEndpointController extends Controller
     private function urlRules(string $presence): array
     {
         return [$presence, 'url:https', function (string $attribute, mixed $value, Closure $fail): void {
-            $host = trim((string) parse_url((string) $value, PHP_URL_HOST), '[]');
+            // trim('[]') unwraps bracketed IPv6 literals, which Uri::host() preserves.
+            $host = trim((string) Uri::of((string) $value)->host(), '[]');
 
             // ponytail: a host that doesn't resolve now is allowed through (test and
             // staging hostnames are routinely resolvable only from the delivery box).
@@ -100,7 +102,7 @@ class WebhookEndpointController extends Controller
 
             foreach ($ips as $ip) {
                 if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    $fail('The :attribute must not point at a private or reserved network address.');
+                    $fail("The {$attribute} must not point at a private or reserved network address.");
 
                     return;
                 }

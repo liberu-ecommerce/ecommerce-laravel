@@ -37,9 +37,9 @@ return [
     | Note that `linkedin` and `linkedin-openid` both render as "LinkedIn"; pick one.
     |
     */
-    'providers' => array_values(array_filter(
-        array_map('trim', explode(',', (string) env('SOCIALSTREAM_PROVIDERS', '')))
-    )),
+    'providers' => preg_split(
+        '/\s*,\s*/', (string) env('SOCIALSTREAM_PROVIDERS', ''), -1, PREG_SPLIT_NO_EMPTY
+    ) ?: [],
     'features' => [
         Features::generateMissingEmails(),
         Features::createAccountOnFirstLogin(),
