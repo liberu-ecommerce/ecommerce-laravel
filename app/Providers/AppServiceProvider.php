@@ -14,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ModuleManager::class, fn ($app) => new ModuleManager);
+        $this->app->singleton(ModuleManager::class, fn () => new ModuleManager);
         $this->app->register(ModuleServiceProvider::class);
     }
 
@@ -41,7 +41,13 @@ class AppServiceProvider extends ServiceProvider
             // air-gapped/local deploy never touch the network. Laravel fails OPEN on a
             // request error, so an HIBP outage degrades to the complexity rules above
             // rather than blocking every signup.
-            return $this->app->isProduction() ? $rule->uncompromised() : $rule;
+            //
+            // environment('production'), not isProduction(): ServiceProvider::$app is
+            // typed as the Foundation\Application *contract*, which declares
+            // environment() but not isProduction() — the latter only exists on the
+            // concrete class. It resolves at runtime either way, but only this one is
+            // sound against the declared type. isProduction() just delegates here.
+            return $this->app->environment('production') ? $rule->uncompromised() : $rule;
         });
     }
 }
