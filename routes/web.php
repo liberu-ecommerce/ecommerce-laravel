@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountDataExportController;
 use App\Http\Controllers\AccountErasureController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\Frontend\ProductCategoryController;
@@ -212,7 +213,12 @@ Route::post('/inventory/adjust', [InventoryController::class, 'adjustInventory']
 
 // Pages
 // TODO: implement CMS features for page and form editing
-Route::view('/contact', 'contact')->name('contact');
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+// Public and unauthenticated, so it is a spam-relay target: honeypot in the
+// controller, throttle here. Matches the convention used by apply-coupon and notify-me.
+Route::post('/contact', [ContactController::class, 'send'])
+    ->middleware('throttle:5,1')
+    ->name('contact.send');
 Route::view('/about', 'about')->name('about');
 Route::view('/shop', 'shop')->name('shop');
 
