@@ -40,3 +40,42 @@ jobs:
       # it checks the versions that actually get deployed, and needs no install.
       - name: Run Composer security audit
         run: composer audit --locked --no-interaction
+
+  # Split from the Composer job rather than bolted on as a step: the two need
+  # different toolchains (PHP vs Node), they run in parallel, and a JS advisory
+  # reports as a JS failure instead of turning up under a PHP-shaped job name.
+  # The extra checkout costs a couple of seconds.
+  npm-security:
+    name: npm Dependency Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # package.json declares no engines. 20 matches the php-fpm image that
+          # actually builds these assets (v20.20.2) and clears Vite 8's >= 20.19
+          # floor. No cache: npm — nothing installs here, so there's nothing to
+          # cache.
+          node-version: '20'
+
+      # --package-lock-only is the npm mirror of `composer audit --locked` above:
+      # audit the lockfile, install nothing. That keeps the whole npm ci
+      # lockfile-out-of-sync failure mode out of the security gate (the build
+      # workflow is where a desync should shout), and the lock is what ships
+      # anyway. npm 10 already falls back to the lock when node_modules is
+      # absent; the flag says so out loud instead of leaning on that fallback —
+      # an unstated install assumption is what left the Composer job red and
+      # silent for months.
+      #
+      # --omit=dev scopes this to what reaches a browser. The devDependencies
+      # are the build chain (vite, tailwind, postcss) and their advisories tend
+      # to be dev-server noise that's unfixable until upstream moves — a gate
+      # that cries wolf gets ignored, which is how the jobs above died. No
+      # --audit-level in exchange: within the handful of shipped packages we
+      # fail on anything, because flowbite/preline render user-facing markup and
+      # XSS routinely rates "moderate", which --audit-level=high would wave
+      # through. Narrow scope, zero tolerance inside it.
+      - name: Run npm security audit
+        run: npm audit --omit=dev --package-lock-only
