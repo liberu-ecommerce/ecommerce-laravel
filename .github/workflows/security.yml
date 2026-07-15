@@ -33,5 +33,10 @@ jobs:
         with:
           php-version: '8.5'
 
+      # --locked audits composer.lock directly. Without it, `composer audit` looks
+      # for an installed vendor/ tree, which no step here creates, so the job died
+      # with "No installed packages found" on every run — red since at least
+      # 2026-07-14 and reporting nothing. Auditing the lock is also what we want:
+      # it checks the versions that actually get deployed, and needs no install.
       - name: Run Composer security audit
-        run: composer audit --no-interaction
+        run: composer audit --locked --no-interaction
