@@ -1,40 +1,56 @@
-<header class="bg-white shadow-md">
+@php
+    $settings = app(\App\Settings\GeneralSettings::class);
+@endphp
+
+<header class="bg-white border-b border-hairline">
     <!-- Top Bar -->
-    <div class="bg-blue-600 text-white py-2">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <a href="mailto:support@example.com" class="text-sm hover:text-blue-200 flex items-center">
-                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    support@example.com
-                </a>
-                <a href="tel:+1234567890" class="text-sm hover:text-blue-200 flex items-center">
-                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
-                    (123) 456-7890
-                </a>
+    <div class="bg-primary-950 text-white py-2">
+        <div class="container mx-auto px-4 flex justify-between items-center gap-4">
+            {{-- Real contact details from settings only. The hardcoded
+                 support@example.com / +1234567890 shipped as a merchant's live
+                 support contact; an unset field now renders nothing instead.
+
+                 Hidden below sm: at 390px the email and phone were squeezed until the
+                 number wrapped down four lines ("+44 / 208 / 050 / 5865"). Both are
+                 merchant-supplied and unbounded in length, so they get a viewport with
+                 room for them; the footer and /contact carry the same details. --}}
+            <div class="hidden items-center gap-4 sm:flex">
+                @if (filled($settings->site_email))
+                    <a href="mailto:{{ $settings->site_email }}" class="text-label text-ink-inverse hover:text-white flex items-center">
+                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        {{ $settings->site_email }}
+                    </a>
+                @endif
+                @if (filled($settings->site_phone))
+                    <a href="tel:{{ preg_replace('/[^\d+]/', '', $settings->site_phone) }}" class="text-label text-ink-inverse hover:text-white flex items-center">
+                        <svg class="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                        <span class="data">{{ $settings->site_phone }}</span>
+                    </a>
+                @endif
             </div>
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center gap-4">
                 @guest
-                    <a href="{{ route('login') }}" class="text-sm hover:text-blue-200">Login</a>
-                    <a href="{{ route('register') }}" class="text-sm hover:text-blue-200">Register</a>
+                    <a href="{{ route('login') }}" class="inline-block py-1 text-label text-ink-inverse hover:text-white">Login</a>
+                    <a href="{{ route('register') }}" class="inline-block py-1 text-label text-ink-inverse hover:text-white">Register</a>
                 @else
                     <div class="relative group">
-                        <button class="text-sm hover:text-blue-200 flex items-center">
+                        <button class="text-label text-ink-inverse hover:text-white flex items-center">
                             {{ Auth::user()->name }}
-                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                            <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                            <a href="{{ route('orders.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</a>
-                            <a href="{{ route('wishlist.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Wishlist</a>
+                            <a href="{{ route('profile.show') }}" class="block px-4 py-2 text-label text-ink hover:bg-primary-50">Profile</a>
+                            <a href="{{ route('orders.index') }}" class="block px-4 py-2 text-label text-ink hover:bg-primary-50">My Orders</a>
+                            <a href="{{ route('wishlist.index') }}" class="block px-4 py-2 text-label text-ink hover:bg-primary-50">Wishlist</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-label text-ink hover:bg-primary-50">
                                     Logout
                                 </button>
                             </form>
@@ -49,8 +65,13 @@
     <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="shrink-0">
-                <h1 class="text-2xl font-bold text-blue-600">{{ config('app.name') }}</h1>
+            {{-- A logo is not the page heading: this was a second <h1> on every page,
+                 competing with the real one and duplicating across the whole site. --}}
+            {{-- Shrinkable and smaller below sm. A long store name at text-2xl plus the
+                 icon row overflowed a 390px viewport; the name is merchant-supplied and
+                 can be any length, so it must be allowed to truncate rather than push. --}}
+            <a href="{{ route('home') }}" class="min-w-0 shrink">
+                <span class="block truncate text-lg font-bold text-primary-700 sm:text-2xl">{{ config('app.name') }}</span>
             </a>
 
             <!-- Enhanced Search Bar -->
@@ -62,48 +83,50 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
-                        <input type="text" 
-                               name="search" 
-                               placeholder="Search for products, brands, categories..." 
+                        <label for="search-input" class="sr-only">Search products</label>
+                        <input type="search"
+                               name="search"
+                               placeholder="Search products"
                                class="search-input"
                                autocomplete="off"
                                id="search-input">
-                        <button type="submit" 
+                        <button type="submit"
                                 class="absolute right-2 top-1/2 transform -translate-y-1/2 btn btn-primary btn-sm">
                             Search
                         </button>
-
-                        <!-- Search Suggestions Dropdown -->
-                        <div id="search-suggestions" 
-                             class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 hidden z-50 max-h-96 overflow-y-auto">
-                            <!-- Dynamic suggestions will be populated here -->
-                        </div>
                     </form>
                 </div>
             </div>
 
             <!-- Enhanced Navigation Icons -->
-            <div class="flex items-center space-x-4">
+            {{-- Tighter gaps below sm: logo + icons + auth + hamburger overflowed a
+                 390px viewport by 71px at space-x-4. --}}
+            <div class="flex items-center gap-1 sm:gap-3">
                 <!-- Wishlist -->
                 <a href="{{ route('wishlist.index') }}" 
-                   class="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
+                   class="relative p-2 text-muted hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all duration-200 group"
                    data-tooltip="Wishlist">
-                    <svg class="h-6 w-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-6 w-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                     </svg>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center transform transition-transform group-hover:scale-110">
-                        0
-                    </span>
+                    <span class="sr-only">Wishlist</span>
+                    {{-- No badge here: the count was hardcoded to 0, so it read "empty"
+                         even with items saved. There is no WishlistCount component to
+                         drive it (unlike the cart), and a wrong number is worse than
+                         no number. --}}
                 </a>
 
                 <!-- Shopping Cart -->
                 <a href="{{ route('cart.index') }}" 
-                    class="relative p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
+                    class="relative p-2 text-muted hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all duration-200 group"
                     data-tooltip="Shopping Cart">
-                    <svg class="h-6 w-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="h-6 w-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m0 0h8"></path>
                     </svg>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center transform transition-transform group-hover:scale-110">
+                    <span class="sr-only">Shopping cart</span>
+                    {{-- Moss, not red: this is a count of things you chose, not an
+                         error. Red is reserved for danger in this system. --}}
+                    <span class="data absolute -top-1 -right-1 bg-primary-700 text-white text-caption rounded-full h-5 min-w-5 px-1 flex items-center justify-center">
                         <livewire:cart-count />
                     </span>
                 </a>
@@ -112,10 +135,10 @@
                 <!-- User Account -->
                 @auth
                     <div class="relative dropdown">
-                        <button class="flex items-center p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                        <button class="flex items-center p-2 text-muted hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all duration-200"
                                 data-tooltip="Account">
-                            <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span class="text-sm font-medium text-blue-600">
+                            <div class="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
+                                <span class="text-label font-medium text-primary-700">
                                     {{ substr(Auth::user()->name, 0, 1) }}
                                 </span>
                             </div>
@@ -154,14 +177,17 @@
                         </div>
                     </div>
                 @else
-                    <a href="{{ route('login') }}" 
-                       class="btn btn-secondary btn-sm">
+                    {{-- Hidden below sm: the top bar already carries Login/Register,
+                         so on mobile this was a duplicate control paying for itself
+                         in horizontal overflow. --}}
+                    <a href="{{ route('login') }}"
+                       class="btn btn-secondary btn-sm hidden sm:inline-flex">
                         Login
                     </a>
                 @endauth
 
                 <!-- Mobile Menu Button -->
-                <button class="md:hidden p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200" 
+                <button class="md:hidden p-2 text-muted hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-all duration-200" 
                         id="mobile-menu-button"
                         data-tooltip="Menu">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,9 +206,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" 
-                           name="search" 
-                           placeholder="Search products..." 
+                    <label for="mobile-search-input" class="sr-only">Search products</label>
+                    <input type="search"
+                           name="search"
+                           placeholder="Search products"
                            class="search-input pr-20"
                            autocomplete="off"
                            id="mobile-search-input">
@@ -216,7 +243,10 @@
     </div>
 
     <!-- Category Navigation -->
-    <nav class="bg-gray-100 py-3 shadow-inner">
+    {{-- Surface + a hairline rather than bg-gray-100 and an inner shadow: this system
+         separates with rules, not shadows. Renders empty until the "main" menu has
+         items, which is a seed/config concern rather than a layout one. --}}
+    <nav class="border-t border-hairline bg-surface py-3">
         <div class="container mx-auto px-4">
             <x-filament-menu-builder::menu slug="main" view="components.menus.home-category-menu" />
         </div>
@@ -289,199 +319,13 @@
             }
         });
 
-        // Enhanced Search Functionality
-        const searchInputs = document.querySelectorAll('#search-input, #mobile-search-input');
-
-        searchInputs.forEach(function(searchInput) {
-            const suggestionsContainer = document.getElementById('search-suggestions');
-            let searchTimeout;
-
-            searchInput.addEventListener('input', function() {
-                const query = this.value.trim();
-
-                clearTimeout(searchTimeout);
-
-                if (query.length >= 2) {
-                    searchTimeout = setTimeout(() => {
-                        fetchSearchSuggestions(query, suggestionsContainer);
-                    }, 300);
-                } else {
-                    if (suggestionsContainer) {
-                        suggestionsContainer.classList.add('hidden');
-                    }
-                }
-            });
-
-            searchInput.addEventListener('focus', function() {
-                const query = this.value.trim();
-                if (query.length >= 2 && suggestionsContainer) {
-                    suggestionsContainer.classList.remove('hidden');
-                }
-            });
-
-            // Close suggestions when clicking outside
-            document.addEventListener('click', function(event) {
-                if (suggestionsContainer && !searchInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
-                    suggestionsContainer.classList.add('hidden');
-                }
-            });
-        });
-
-        // Search Suggestions Function
-        function fetchSearchSuggestions(query, container) {
-            if (!container) return;
-
-            // Show loading state
-            container.innerHTML = `
-                <div class="p-4 text-center">
-                    <div class="spinner mx-auto mb-2"></div>
-                    <span class="text-sm text-gray-500">Searching...</span>
-                </div>
-            `;
-            container.classList.remove('hidden');
-
-            // Simulate API call (replace with actual endpoint)
-            setTimeout(() => {
-                const suggestions = [
-                    { type: 'product', name: 'iPhone 15 Pro', category: 'Electronics' },
-                    { type: 'product', name: 'Samsung Galaxy S24', category: 'Electronics' },
-                    { type: 'category', name: 'Electronics', count: 150 },
-                    { type: 'brand', name: 'Apple', count: 45 }
-                ].filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
-
-                if (suggestions.length > 0) {
-                    container.innerHTML = suggestions.map(suggestion => {
-                        const icon = getSuggestionIcon(suggestion.type);
-                        return `
-                            <a href="#" class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors duration-150">
-                                ${icon}
-                                <div class="ml-3">
-                                    <div class="text-sm font-medium text-gray-900">${suggestion.name}</div>
-                                    ${suggestion.category ? `<div class="text-xs text-gray-500">${suggestion.category}</div>` : ''}
-                                    ${suggestion.count ? `<div class="text-xs text-gray-500">${suggestion.count} items</div>` : ''}
-                                </div>
-                            </a>
-                        `;
-                    }).join('');
-                } else {
-                    container.innerHTML = `
-                        <div class="p-4 text-center text-gray-500">
-                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                            <span class="text-sm">No results found for "${query}"</span>
-                        </div>
-                    `;
-                }
-            }, 500);
-        }
-
-        function getSuggestionIcon(type) {
-            const icons = {
-                product: `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>`,
-                category: `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>`,
-                brand: `<svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                </svg>`
-            };
-            return icons[type] || icons.product;
-        }
-
-        // Cart Animation
-        window.addToCartAnimation = function(button) {
-            const originalText = button.innerHTML;
-            button.innerHTML = '<span class="spinner mr-2"></span>Adding...';
-            button.disabled = true;
-
-            setTimeout(() => {
-                button.innerHTML = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Added!';
-                button.classList.remove('btn-primary');
-                button.classList.add('btn-success');
-
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.disabled = false;
-                    button.classList.remove('btn-success');
-                    button.classList.add('btn-primary');
-                }, 2000);
-            }, 1000);
-        };
-
-        // Quick View Modal
-        window.quickView = function(productId) {
-            // Create modal overlay
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal-content max-w-4xl">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-lg font-semibold">Quick View</h3>
-                            <button onclick="this.closest('.modal-overlay').remove()" class="text-gray-400 hover:text-gray-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="text-center py-8">
-                            <div class="spinner mx-auto mb-4"></div>
-                            <p class="text-gray-500">Loading product details...</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // Simulate loading product data
-            setTimeout(() => {
-                modal.querySelector('.modal-content').innerHTML = `
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-semibold">Product Quick View</h3>
-                            <button onclick="this.closest('.modal-overlay').remove()" class="text-gray-400 hover:text-gray-600">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <img src="/images/placeholder.png" alt="Product" class="w-full h-64 object-cover rounded-lg">
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-semibold mb-2">Sample Product</h4>
-                                <p class="text-gray-600 mb-4">This is a sample product description for the quick view modal.</p>
-                                <div class="text-2xl font-bold text-blue-600 mb-4">$99.99</div>
-                                <button class="btn btn-primary w-full">Add to Cart</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }, 1000);
-        };
-
-        // Add to Wishlist
-        window.addToWishlist = function(productId) {
-            // Show success message
-            const message = document.createElement('div');
-            message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-slide-in-right';
-            message.innerHTML = `
-                <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                    Added to wishlist!
-                </div>
-            `;
-            document.body.appendChild(message);
-
-            setTimeout(() => {
-                message.remove();
-            }, 3000);
-        };
     });
 </script>
+
+{{-- The search input submits its form to /products?search=, which returns real
+     results. Four simulated features used to live in the script above and are
+     deliberately gone, not restyled: fetchSearchSuggestions hardcoded
+     'iPhone 15 Pro' / 'Apple (45)' regardless of the catalogue and linked every
+     result to '#'; addToWishlist, addToCartAnimation and quickView each faked a
+     network call and reported a success that never happened. This note is a Blade
+     comment so it stays in source without shipping to the browser. --}}

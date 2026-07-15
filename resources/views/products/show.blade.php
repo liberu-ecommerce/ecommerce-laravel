@@ -1,162 +1,221 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container p-8">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                        {{ $product->name }}
-                    </h2>
-                </div>
-                <div class="card-body">
-                    <img src="{{ $product->imageUrl }}" alt="{{ $product->name }}" class="img-fluid mb-3">
-                    <h4>Description:</h4>
-                    <p>{{ $product->long_description }}</p>
+@section('title', $product->meta_title ?: $product->name)
+@section('meta_description', $product->meta_description ?: Str::limit(strip_tags($product->short_description ?: $product->description), 160))
+@section('og_title', $product->meta_title ?: $product->name)
+@section('og_description', $product->meta_description ?: Str::limit(strip_tags($product->short_description ?: $product->description), 160))
+@section('og_type', 'product')
 
-                    <br>
-                    @if($product->isFree())
-                        <p><strong>Price:</strong> Free</p>
-                        <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-success mt-2">Download Now</a>
-                    @elseif($product->isDonationBased())
-                        <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
-                            @csrf
-                            <div class="form-group">
-                                <label for="donation_amount">Support this product (Suggested: ${{ number_format($product->suggested_price, 2) }})</label>
-                                <input type="number" 
-                                       name="price" 
-                                       id="donation_amount" 
-                                       class="form-control" 
-                                       value="{{ $product->suggested_price }}"
-                                       min="{{ $product->minimum_price }}"
-                                       step="0.01">
-                            </div>
-                            <button type="submit" class="btn btn-success mt-2">Support & Download</button>
-                        </form>
-                        @if($product->minimum_price <= 0)
-                            <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-link">Download without donating</a>
-                        @endif
-                    @else
-                        <p><strong>Price:</strong> ${{ number_format($product->displayPrice(), 2) }}@if(config('ecommerce.display_prices_with_tax')) <small>(inc. tax)</small>@endif</p>
-                        @if($product->inventory_count > 0)
-                            <form action="{{ route('cart.add', $product) }}" method="POST" class="d-inline">
-                                @csrf
-                                <div class="flex items-center gap-2 mb-4">
-                                    <label for="quantity" class="text-sm font-medium">Quantity:</label>
-                                    <input type="number" 
-                                           name="quantity" 
-                                           id="quantity" 
-                                           class="w-20 rounded border-gray-300" 
-                                           value="1" 
-                                           min="1" 
-                                           max="{{ $product->inventory_count }}">
-                                </div>
-                                <button type="submit" class="btn btn-success mt-2">Add to Cart</button>
-                            </form>
-                        @endif
-                    @endif
-                    <p><strong>Category:</strong> {{ $product->category->name ?? "" }}</p>
-                    <p><strong>Inventory Count:</strong> {{ $product->inventory_count }}</p>
-                    @if($product->inventory_count > 0)
-                        <p class="text-success"><strong>In Stock</strong></p>
-                    @else
-                        <p class="text-danger"><strong>Out of Stock</strong></p>
-                    @endif
-                    @auth
-                    @if(Route::has('wishlist.add') && Route::has('wishlist.remove'))
-                        @if(auth()->user()->wishlist()->where('product_id', $product->id)->exists())
-                            <form action="{{ route('wishlist.remove', $product) }}" method="POST">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">Remove from Wishlist</button>
-                            </form>
-                        @else
-                            <form action="{{ route('wishlist.add', $product) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-primary">Add to Wishlist</button>
-                            </form>
-                        @endif
-                    @endif
-                    @endauth
-                    {{-- <form action="{{ route('products.addToCompare', $product) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-primary mt-2">Add to Compare</button>
-                    </form> --}}
-                </div>
-            </div>
-            <a href="{{ route('products.index') }}" class="btn btn-primary mt-3">Back to Products</a>
-
-            @if(isset($recommendations) && count($recommendations) > 0)
-                <div class="card mt-4">
-                    <div class="card-header">Recommended Products</div>
-                    <div class="card-body">
-                        <div class="row">
-                            @foreach($recommendations as $recommendedProduct)
-                                <div class="col-md-4 mb-3">
-                                    <div class="card">
-                                        <img src="/images/placeholder.png" alt="{{ $recommendedProduct->name }}" class="card-img-top">
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ $recommendedProduct->name }}</h5>
-                                            <p class="card-text">${{ number_format($recommendedProduct->price, 2) }}</p>
-                                            <a href="{{ route('products.show', $recommendedProduct) }}" class="btn btn-sm btn-primary">View Product</a>
-                                            @if($recommendedProduct->inventory_count == 0)
-                                                <p class="text-danger mt-2">Out of Stock</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
-</div>
-
-@if(isset($product->downloadable) && $product->downloadable->count() > 0 && auth()->user() && auth()->user()->hasPurchased($product))
-    <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-success mt-3">Download</a>
+{{-- The layout only emits og:image when a view supplies one, so a product with a
+     real image finally gets a real social preview. --}}
+@if (filled($product->image_url))
+    @section('og_image', $product->image_url)
 @endif
 
+@php
+    $stock = (int) $product->inventory_count;
+    $isOut = $stock <= 0;
+    $currency = $product->currency_code ?: 'USD';
+@endphp
 
-<script type="application/ld+json">
-{!! json_encode([
-    '@context' => 'https://schema.org/',
-    '@type' => 'Product',
-    'name' => $product->name,
-    'description' => $product->description,
-    'image' => asset('/images/placeholder.png'),
-    'sku' => $product->id,
-    'mpn' => $product->id,
-    'brand' => [
-        '@type' => 'Brand',
-        'name' => config('app.name'),
-    ],
-    'offers' => [
-        '@type' => 'Offer',
-        'url' => route('products.show', $product),
-        'priceCurrency' => 'USD',
-        'price' => $product->price,
-        'availability' => $product->inventory_count > 0
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock',
-        'seller' => [
-            '@type' => 'Organization',
-            'name' => config('app.name'),
-        ],
-    ],
-], JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_PRETTY_PRINT) !!}
-</script>
-    
-@endsection
+@section('content')
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" class="mb-8">
+            <ol class="flex flex-wrap items-center gap-2 text-label text-muted">
+                <li><a href="{{ route('home') }}" class="hover:text-primary-700">Home</a></li>
+                <li aria-hidden="true" class="text-hairline">/</li>
+                <li><a href="{{ route('products.index') }}" class="hover:text-primary-700">Products</a></li>
+                @if ($product->category)
+                    <li aria-hidden="true" class="text-hairline">/</li>
+                    <li>
+                        <a href="{{ route('categories.show', $product->category) }}" class="hover:text-primary-700">
+                            {{ $product->category->name }}
+                        </a>
+                    </li>
+                @endif
+                <li aria-hidden="true" class="text-hairline">/</li>
+                <li><span class="text-ink" aria-current="page">{{ $product->name }}</span></li>
+            </ol>
+        </nav>
 
-@section('meta')
-    <meta name="description" content="{{ $product->meta_description ?? $product->short_description }}">
-    <meta name="keywords" content="{{ $product->meta_keywords }}">
-    <meta property="og:title" content="{{ $product->meta_title ?? $product->name }}">
-    <meta property="og:description" content="{{ $product->meta_description ?? $product->short_description }}">
-    <meta property="og:image" content="{{ asset('/images/placeholder.png') }}">
-    <meta property="og:url" content="{{ route('products.show', $product) }}">
-    <meta name="twitter:card" content="summary_large_image">
+        <div class="grid gap-10 lg:grid-cols-2 lg:gap-16">
+            {{-- Image. No placeholder.png fallback: that file does not exist, so the
+                 old markup guaranteed a broken image for any product without one. --}}
+            <div>
+                @if (filled($product->image_url))
+                    <div class="aspect-square overflow-hidden border border-hairline bg-surface">
+                        <img src="{{ $product->image_url }}"
+                             alt="{{ $product->name }}"
+                             class="size-full object-cover">
+                    </div>
+                @else
+                    <div class="flex aspect-square items-center justify-center border border-dashed border-stroke bg-surface">
+                        <p class="text-label text-muted">No image available</p>
+                    </div>
+                @endif
+            </div>
+
+            <div>
+                <h1 class="heading-2">{{ $product->name }}</h1>
+
+                @if ($product->category)
+                    <p class="mt-2 text-label text-muted">{{ $product->category->name }}</p>
+                @endif
+
+                {{-- Price. Number::currency respects the product's own currency_code
+                     instead of assuming dollars, and .data sets it in tabular mono. --}}
+                <div class="mt-6">
+                    @if ($product->isFree())
+                        <p class="data text-headline font-semibold text-ink">Free</p>
+                    @else
+                        <p class="data text-headline font-semibold text-ink">
+                            {{ \Illuminate\Support\Number::currency($product->displayPrice(), $currency) }}
+                        </p>
+                        @if (config('ecommerce.display_prices_with_tax'))
+                            <p class="mt-1 text-caption text-muted">(inc. tax)</p>
+                        @endif
+                    @endif
+                </div>
+
+                {{-- Stock. The old markup used Bootstrap's text-success/text-danger,
+                     which this project has no styles for, so status rendered as plain
+                     black text. Status now carries a word as well as a colour. --}}
+                <p class="mt-4 flex items-center gap-2 text-label">
+                    <span class="inline-block size-2 rounded-full {{ $isOut ? 'bg-danger-600' : 'bg-primary-700' }}" aria-hidden="true"></span>
+                    @if ($isOut)
+                        <span class="font-medium text-danger-700">Out of stock</span>
+                    @else
+                        <span class="font-medium text-primary-700">In stock</span>
+                        <span class="text-muted">&middot;</span>
+                        <span class="text-muted"><span class="data">{{ $stock }}</span> available</span>
+                    @endif
+                </p>
+
+                <div class="mt-8 border-t border-hairline pt-8">
+                    @if ($product->isFree())
+                        <a href="{{ route('download.serve-file', $product->id) }}" class="btn btn-primary btn-lg">
+                            Download now
+                        </a>
+                    @elseif ($product->isDonationBased())
+                        <form action="{{ route('cart.add', $product) }}" method="POST" class="max-w-sm">
+                            @csrf
+                            <label for="donation_amount" class="form-label">
+                                Support this product
+                                <span class="text-muted">
+                                    (suggested <span class="data">{{ \Illuminate\Support\Number::currency($product->suggested_price, $currency) }}</span>)
+                                </span>
+                            </label>
+                            <input type="number"
+                                   name="price"
+                                   id="donation_amount"
+                                   class="form-input data"
+                                   value="{{ $product->suggested_price }}"
+                                   min="{{ $product->minimum_price }}"
+                                   step="0.01">
+                            <button type="submit" class="btn btn-primary btn-lg mt-4">Support &amp; download</button>
+                        </form>
+                        @if ($product->minimum_price <= 0)
+                            <a href="{{ route('download.serve-file', $product->id) }}" class="mt-4 inline-block text-label text-primary-700 underline underline-offset-4 hover:text-primary-600">
+                                Download without donating
+                            </a>
+                        @endif
+                    @elseif (! $isOut)
+                        <form action="{{ route('cart.add', $product) }}" method="POST">
+                            @csrf
+                            <div class="flex flex-wrap items-end gap-4">
+                                <div>
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number"
+                                           name="quantity"
+                                           id="quantity"
+                                           class="form-input data w-24"
+                                           value="1"
+                                           min="1"
+                                           max="{{ $stock }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg">Add to cart</button>
+                            </div>
+                        </form>
+                    @else
+                        <button type="button" class="btn btn-primary btn-lg" disabled>Sold out</button>
+                        <p class="mt-3 text-label text-muted">This product is currently unavailable.</p>
+                    @endif
+
+                    @auth
+                        @if (Route::has('wishlist.add') && Route::has('wishlist.remove'))
+                            <div class="mt-4">
+                                @if (auth()->user()->wishlist()->where('product_id', $product->id)->exists())
+                                    <form action="{{ route('wishlist.remove', $product) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-secondary btn-sm">Remove from wishlist</button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('wishlist.add', $product) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn btn-secondary btn-sm">Add to wishlist</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
+                    @endauth
+                </div>
+
+                @if (filled($product->long_description ?: $product->description))
+                    <div class="mt-10 border-t border-hairline pt-8">
+                        <h2 class="heading-3">Description</h2>
+                        <p class="prose-measure mt-3 text-muted">
+                            {{ $product->long_description ?: $product->description }}
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <p class="mt-12 border-t border-hairline pt-8">
+            <a href="{{ route('products.index') }}" class="btn btn-secondary">Back to products</a>
+        </p>
+    </div>
+
+    {{-- Structured data. Currency and image now come from the product rather than
+         being hardcoded to USD and a placeholder that 404s. sku/mpn are omitted:
+         products carry no SKU column, and echoing the primary key as an MPN is
+         inventing an identifier that means nothing to anyone.
+
+         The JSON_HEX_* flags are load-bearing, not formatting. This block is echoed
+         raw inside a <script>, so without JSON_HEX_TAG a product named
+         `</script><script>alert(1)</script>` closes the tag and executes.
+         ProductShowXssTest covers exactly that — do not "tidy" these away. --}}
+    @php
+        $jsonLd = [
+            '@context' => 'https://schema.org/',
+            '@type' => 'Product',
+            'name' => $product->name,
+            'description' => strip_tags($product->short_description ?: $product->description ?: ''),
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => config('app.name'),
+            ],
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => route('products.show', $product),
+                'priceCurrency' => $currency,
+                'price' => $product->price,
+                'availability' => $isOut
+                    ? 'https://schema.org/OutOfStock'
+                    : 'https://schema.org/InStock',
+                'seller' => [
+                    '@type' => 'Organization',
+                    'name' => config('app.name'),
+                ],
+            ],
+        ];
+
+        if (filled($product->image_url)) {
+            $jsonLd['image'] = $product->image_url;
+        }
+    @endphp
+    <script type="application/ld+json">
+    {!! json_encode($jsonLd, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_PRETTY_PRINT) !!}
+    </script>
 @endsection
