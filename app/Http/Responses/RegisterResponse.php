@@ -1,25 +1,29 @@
-<?php 
+<?php
 
 namespace App\Http\Responses;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 
 class RegisterResponse implements RegisterResponseContract
 {
+    /**
+     * Kept in step with LoginResponse. `staff => /app` is gone: no seeder has
+     * created that role since cf711cb, and it was a no-op anyway because the
+     * fall-through already sent everyone to /app.
+     *
+     * A brand-new registrant can only be a shopper now — registration grants no
+     * team and no role — so in practice this map never matches here. It stays for
+     * the case where an existing admin somehow lands on this response, and so the
+     * two responses don't drift apart.
+     */
     protected array $roleRedirects = [
+        'super_admin' => '/admin',
         'admin' => '/admin',
-        'staff' => '/app',
     ];
-
-    protected function shouldRedirect(Request $request, string $redirect): bool
-    {
-        // Check if the current request path matches the redirect path
-        return !$request->is($redirect) && !$request->is($redirect . '/*');
-    }
 
     /**
      * @param  Request  $request
@@ -27,26 +31,26 @@ class RegisterResponse implements RegisterResponseContract
      */
     public function toResponse($request)
     {
-        setPermissionsTeamId(Auth::user()->current_team_id);
         $user = Auth::user();
 
-        // Check if the user has a role and redirect accordingly
+        setPermissionsTeamId($user->current_team_id);
+
+        if ($request->wantsJson()) {
+            return new JsonResponse(['two_factor' => false], 200);
+        }
+
         foreach ($this->roleRedirects as $role => $redirect) {
             if ($user->hasRole($role)) {
-                return $request->wantsJson()
-                    ? new JsonResponse(['two_factor' => false], 200)
-                    : ($this->shouldRedirect($request, $redirect)
-                        ? redirect()->to($redirect)
-                        : redirect()->intended($redirect));
+                return redirect()->to($redirect);
             }
         }
 
-        // Default redirection
-        $redirect = '/app';
-        return $request->wantsJson()
-            ? new JsonResponse(['two_factor' => false], 200)
-            : ($this->shouldRedirect($request, $redirect)
-                        ? redirect()->to($redirect)
-                        : redirect()->intended($redirect));
+        if ($user->allTeams()->isNotEmpty()) {
+            return redirect()->to('/app');
+        }
+
+        // Someone who just signed up to buy something. This defaulted to /app —
+        // the team back-office — which they now cannot enter at all.
+        return redirect()->intended('/');
     }
 }

@@ -2,45 +2,52 @@
 
 namespace App\Http\Responses;
 
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
 class LoginResponse implements LoginResponseContract
 {
+    /**
+     * Panels, by role. Checked in order.
+     *
+     * `staff => /app` used to sit here, but no seeder has created that role since
+     * cf711cb, so the entry could never match — and it was a no-op anyway, because
+     * the fall-through below already sent everyone to /app.
+     */
     protected array $roleRedirects = [
+        'super_admin' => '/admin',
         'admin' => '/admin',
-        'staff' => '/app',
     ];
-
-    protected function shouldRedirect(Request $request, string $redirect): bool
-    {
-        // Check if the current request path matches the redirect path
-        return !$request->is($redirect) && !$request->is($redirect . '/*');
-    }
 
     public function toResponse($request)
     {
-        setPermissionsTeamId(Auth::user()->current_team_id);
         $user = Auth::user();
+
+        setPermissionsTeamId($user->current_team_id);
+
+        if ($request->wantsJson()) {
+            return new JsonResponse(['two_factor' => false], 200);
+        }
 
         foreach ($this->roleRedirects as $role => $redirect) {
             if ($user->hasRole($role)) {
-                return $request->wantsJson()
-                    ? new JsonResponse(['two_factor' => false], 200)
-                    : ($this->shouldRedirect($request, $redirect)
-                        ? redirect()->to($redirect)
-                        : redirect()->intended($redirect));
+                return redirect()->to($redirect);
             }
         }
 
-        // Default redirection
-        $redirect = '/app';
-        return $request->wantsJson()
-            ? new JsonResponse(['two_factor' => false], 200)
-            : ($this->shouldRedirect($request, $redirect)
-                        ? redirect()->to($redirect)
-                        : redirect()->intended($redirect));
+        // Team members get the back-office they can actually reach.
+        if ($user->allTeams()->isNotEmpty()) {
+            return redirect()->to('/app');
+        }
+
+        // Everyone else is a shopper. This used to default to /app, which sent every
+        // customer into the team back-office — and now that /app requires a team,
+        // that default would land them on a refusal.
+        //
+        // intended(), not to(): a shopper logging in was usually part-way through
+        // something (a checkout, a product they wanted to save), and that is where
+        // they should end up. '/' is only the fallback.
+        return redirect()->intended('/');
     }
 }

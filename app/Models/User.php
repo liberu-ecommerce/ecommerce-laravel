@@ -40,14 +40,36 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     // use SetsProfilePhotoFromUrl;
     use TwoFactorAuthenticatable;
 
+    /**
+     * Panel access.
+     *
+     * `admin` is the back-office for the whole store: super_admin only.
+     *
+     * `app` is a team's back-office — Products, Orders, Invoices, Customers,
+     * Articles, Collections — scoped by Filament to the current tenant. So the
+     * question it answers is "do you belong to a team?", and teams are handed out
+     * through TeamPolicy::create, which requires the `create_store` permission.
+     * That keeps the decision in one place instead of duplicating a role check here.
+     *
+     * This previously ended `return true; // TODO: Check panel and role`, so any
+     * authenticated user — no roles, no teams — was waved into /app. Only a
+     * separate bug in registration kept strangers from arriving; fixing that
+     * without this would have opened the door.
+     *
+     * Shoppers are not refused anything by this: their account area lives on the
+     * storefront (/orders, /wishlist, /invoices, /payment_methods).
+     *
+     * Note $this, not auth()->user(): Filament passes the user to authorize, and
+     * reading the session instead silently authorized the wrong person under
+     * impersonation or in queued contexts.
+     */
     public function canAccessPanel(Panel $panel): bool
     {
-        $user = auth()->user();
-        if ($panel->getId() === 'admin' && ! $user->hasRole('super_admin')) {
-            return false;
-        }
-
-        return true; // TODO: Check panel and role
+        return match ($panel->getId()) {
+            'admin' => $this->hasRole('super_admin'),
+            'app' => $this->allTeams()->isNotEmpty(),
+            default => false,
+        };
     }
 
     public function wishlist()
