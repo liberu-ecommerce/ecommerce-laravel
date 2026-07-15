@@ -6,38 +6,30 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class FortifyActionsTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function makeTeam(): Team
-    {
-        $tempUser = User::factory()->create();
-        $team = new Team();
-        $team->name = 'Test Team';
-        $team->user_id = $tempUser->id;
-        $team->personal_team = false;
-        $team->save();
-
-        // Spatie permissions need team context and the staff role
-        setPermissionsTeamId($team->id);
-        Role::findOrCreate('staff');
-
-        return $team;
-    }
+    /**
+     * Deliberately removed: makeTeam().
+     *
+     * It created a team and a `staff` role, which is precisely why this suite was
+     * green while registration threw on every real request. CreateNewUser attached
+     * every registrant to Team::first() and assigned `staff`; the fixture supplied
+     * both, so neither the missing role nor the null team could ever surface here.
+     *
+     * Registration now creates a user and nothing else, so there is nothing to
+     * arrange. AppPanelAccessTest asserts that directly — no team, no roles.
+     */
 
     public function test_create_new_user_creates_user(): void
     {
-        $this->makeTeam();
-
         $action = new CreateNewUser();
         $user = $action->create([
             'name' => 'John Doe',
@@ -53,8 +45,6 @@ class FortifyActionsTest extends TestCase
 
     public function test_create_new_user_hashes_password(): void
     {
-        $this->makeTeam();
-
         $action = new CreateNewUser();
         $user = $action->create([
             'name' => 'Jane Doe',
@@ -77,8 +67,6 @@ class FortifyActionsTest extends TestCase
 
     public function test_create_new_user_validates_email_uniqueness(): void
     {
-        $this->makeTeam();
-
         $action = new CreateNewUser();
         $action->create([
             'name' => 'First User',

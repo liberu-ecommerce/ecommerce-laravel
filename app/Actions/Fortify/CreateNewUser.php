@@ -44,18 +44,28 @@ class CreateNewUser implements CreatesNewUsers
             ])->validate();
 
            
-            $user = DB::transaction(function () use ($input) {
-                return tap(User::create([
-                    'name'     => $input['name'],
-                    'email'    => $input['email'],
-                    'password' => Hash::make($input['password']),
-                ]), function (User $user) use ($input) {
-                    $team = $this->assignOrCreateTeam($user);
-                    $user->switchTeam($team);
-                    setPermissionsTeamId($team->id);
-                    $user->assignRole("staff");
-                });
-            });
+            // A public registration produces a shopper: a user, and nothing else.
+            //
+            // This used to attach every registrant to Team::first() — the merchant's
+            // own team, seeded by DefaultTeamSeeder and owned by the admin — and then
+            // assign a `staff` role. Both were wrong:
+            //
+            //  - Team membership is what gates /app (see User::canAccessPanel), and
+            //    teams are created through TeamPolicy::create, which requires the
+            //    `create_store` permission. Handing one out at signup bypassed that
+            //    gate and dropped strangers inside the store's tenant.
+            //  - Nothing consumes `staff`. RolesSeeder stopped creating it in cf711cb
+            //    without touching this caller, so every registration has been throwing
+            //    RoleDoesNotExist since — and on an unseeded database Team::first()
+            //    returned null and fatally errored one line earlier.
+            //
+            // Shoppers have their own account area on the storefront (/orders,
+            // /wishlist, /invoices, /payment_methods). They do not need the panel.
+            $user = User::create([
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'password' => Hash::make($input['password']),
+            ]);
             // $user = DB::transaction(function () use ($input) {
             //     return tap(,
             //     , function (User $user) use ($input) {
@@ -122,16 +132,4 @@ class CreateNewUser implements CreatesNewUsers
         }
     }
 
-    /**
-     * Assign the user to the first team or create a personal team.
-     *
-     * @throws Exception
-     */
-    protected function assignOrCreateTeam(User $user): Team
-    {
-        $team = Team::first();
-    
-        $team->users()->attach($user);
-        return $team;
-    }
 }
