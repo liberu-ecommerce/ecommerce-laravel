@@ -9,9 +9,19 @@ FROM php:${PHP_VERSION}-cli-alpine AS composer-deps
 
 WORKDIR /app
 
-# Install required extensions for composer install
+# Install required extensions for composer install.
+#
+# bcmath is here because moneyphp/money (via laravel/cashier) hard-requires it,
+# and `composer install` validates platform requirements even with --no-scripts
+# --no-autoloader. Without it this stage fails outright:
+#
+#   moneyphp/money v4.9.0 requires ext-bcmath * -> it is missing from your system
+#
+# The final stage installs bcmath already, so only this build stage was short.
+# Keep this list a superset of the ext-* the locked tree requires, minus the ones
+# ignored below.
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN install-php-extensions intl sockets zip
+RUN install-php-extensions intl sockets zip bcmath
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
