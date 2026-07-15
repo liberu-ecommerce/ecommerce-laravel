@@ -12,6 +12,9 @@ class WebhookEndpoint extends Model
 
     protected $fillable = ['url', 'secret', 'events', 'is_active'];
 
+    /** The signing secret is returned once at creation (see the controller's store) and never serialised again. */
+    protected $hidden = ['secret'];
+
     protected $casts = [
         'events' => 'array',
         'is_active' => 'boolean',

@@ -3,9 +3,19 @@
 // Place this file at public/installer.php
 //
 // Security:
-// - Set INSTALLER_ENABLED=true in .env to enable this UI.
-// - Optionally set INSTALLER_KEY in .env and provide ?key=... or send key in POST to authenticate.
-// - Remove/disable after use.
+// - Set INSTALLER_ENABLED=true in .env to enable this UI. Disabled by default.
+// - INSTALLER_KEY is REQUIRED, not optional: enabling without one used to grant
+//   anonymous access to every action below, which includes shelling out
+//   (composer_install, npm_build, migrate_seed), rewriting .env (save_settings)
+//   and minting a user with any role (create_users). That is unauthenticated RCE.
+//   check_key() now fails closed: no key set, no access.
+// - Remove this file after use. Nothing in the docs or setup.sh needs it —
+//   setup.sh already performs the same install steps from the CLI.
+//
+// Residual risk, deliberately left alone here because fixing it is a UX change:
+// the key is read from $_REQUEST and this file redirects it into the query
+// string, so it lands in access logs, Referer headers and browser history.
+// Treat INSTALLER_KEY as burned after use.
 
 function dotenv_get($key) {
     // Try getenv first
@@ -43,7 +53,10 @@ function enabled() {
 
 function check_key() {
     $required = dotenv_get('INSTALLER_KEY');
-    if ($required === false || $required === '') return true; // not configured
+    // Fail closed. This previously returned true when no key was configured,
+    // so INSTALLER_ENABLED=true on its own exposed shell execution, .env rewrite
+    // and arbitrary-role user creation to anyone who found the URL.
+    if ($required === false || $required === '') return false;
     $provided = $_REQUEST['key'] ?? null;
     return is_string($provided) && hash_equals((string)$required, (string)$provided);
 }

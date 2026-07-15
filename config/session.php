@@ -168,7 +168,12 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Secure-by-default outside local/testing. This was env('SESSION_SECURE_COOKIE')
+    // with no default, and nothing set that variable in .env.example, docker-compose
+    // or k8s/configmap.yaml — so the session cookie shipped without the Secure flag
+    // everywhere. The k8s ingress does an ssl-redirect, and the pre-redirect plaintext
+    // request carries the cookie. Opt out per-environment if you genuinely serve HTTP.
+    'secure' => env('SESSION_SECURE_COOKIE', ! in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
 
     /*
     |--------------------------------------------------------------------------

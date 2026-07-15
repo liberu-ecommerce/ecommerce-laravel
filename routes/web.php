@@ -63,7 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/wishlist/share', [WishlistController::class, 'share'])->name('wishlist.share');
 });
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search')->middleware('throttle:30,1');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 Route::post('/products/{product}/notify-me', [ProductController::class, 'notifyMe'])->name('products.notify-me')->middleware('throttle:10,1');
 
@@ -83,7 +83,9 @@ Route::get('/tags/{tag}', [ProductTagController::class, 'show'])->name('tags.sho
 
 // Checkout routes
 Route::get('/checkout', [CheckoutController::class, 'initiateCheckout'])->name('checkout.initiate');
-Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+// Throttled: guest checkout captures payment with a posted card token, so an
+// unbounded route is a card-testing / BIN-enumeration oracle on our Stripe account.
+Route::post('/checkout/process', [CheckoutController::class, 'processCheckout'])->name('checkout.process')->middleware('throttle:10,1');
 // Live carrier rates for the current cart + destination — each is persisted as a
 // session-scoped quote the buyer then selects by id (server bills the stored amount).
 Route::post('/checkout/shipping-rates', [CheckoutController::class, 'shippingRates'])->name('checkout.shipping-rates');
