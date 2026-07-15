@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Filament\App\Resources\Articles\ArticleResource;
+use App\Filament\App\Resources\Collections\CollectionResource;
+use App\Filament\App\Resources\Orders\OrderResource;
+use App\Filament\App\Resources\Products\ProductResource;
 use App\Models\Team;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -105,19 +109,16 @@ class AppPanelAccessTest extends TestCase
     }
 
     /**
-     * The permission-backed resources deny a user who holds no permissions.
+     * Every app-panel resource denies a user who holds no permissions.
      *
-     * Deliberately not asserted here: ArticleResource and CollectionResource have no
-     * policy, and strictAuthorization is off, so Filament's authorization helper
-     * returns allow() for them — a team member can CRUD their own tenant's articles
-     * and collections (price included) without any permission check. That is a real
-     * gap, but a separate change: the Shield permission set has no article_* or
-     * collection_* entries at all, so adding the obvious policy would deny everyone
-     * including super_admin and break the feature. It needs policies AND seeded
-     * permissions together. Tracked, not smuggled in here.
-     *
-     * It is no longer reachable by a stranger either way — that took a team, and
-     * registration no longer hands one out.
+     * Article and Collection are in this list now. They used to be the exception:
+     * no policy, and strictAuthorization off, so Filament's authorization helper
+     * returned allow() and any team member could CRUD the tenant's articles and
+     * collections, price included. Closing it needed policies AND seeded
+     * permissions together — the Shield set had no article or collection entries
+     * at all, so a policy on its own would have denied super_admin too.
+     * AppPanelAuthorizationTest covers that pair in detail; they are here so this
+     * file's list is the whole panel rather than a subset.
      */
     #[Test]
     public function permission_backed_resources_deny_a_user_without_permissions(): void
@@ -126,8 +127,10 @@ class AppPanelAccessTest extends TestCase
         $this->actingAs($user);
 
         foreach ([
-            \App\Filament\App\Resources\Products\ProductResource::class,
-            \App\Filament\App\Resources\Orders\OrderResource::class,
+            ProductResource::class,
+            OrderResource::class,
+            ArticleResource::class,
+            CollectionResource::class,
         ] as $resource) {
             $this->assertFalse($resource::canViewAny(), $resource.' must not be viewable without permission.');
             $this->assertFalse($resource::canCreate(), $resource.' must not be creatable without permission.');
