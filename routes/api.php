@@ -33,7 +33,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // controller — the catalog is open, me/orders + mutations require a token.
 Route::post('/graphql', GraphQLController::class);
 
-// Dropshipping API routes
+// Dropshipping API routes (staff-only: these spend the merchant's supplier API key,
+// so every method role-checks in the controller — there is no `role:` middleware alias here).
 Route::middleware('auth:sanctum')->prefix('dropshipping')->group(function () {
     Route::get('/suppliers', [DropshippingController::class, 'suppliers']);
     Route::post('/check-availability', [DropshippingController::class, 'checkAvailability']);
