@@ -20,7 +20,7 @@
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource/ibm-plex-mono": "^5.2.7",
         "@fortawesome/fontawesome-free": "^7.1.0",
-        "@tailwindcss/postcss": "^4.1.11",
+        "@tailwindcss/postcss": "^4.3.3",
         "flowbite": "^4.0.2",
         "preline": "^4.2.0",
         "vite-plugin-static-copy": "4.1"
